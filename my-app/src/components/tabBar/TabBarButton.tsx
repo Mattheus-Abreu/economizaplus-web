@@ -1,4 +1,4 @@
-import { Pressable, Text } from 'react-native'
+import { Pressable, Text, View } from 'react-native'
 import tabBarStyle from '@/styles/tabBarStyle'
 import theme from '@/app/themes/theme'
 import Animated, { interpolate, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated'
@@ -52,12 +52,14 @@ const TabBarButton = ({ color, label, isFocused, onPress, onLongPress, routeName
             style={tabBarStyle.tabbarItem}
             >
             <Animated.View style={animatedIconStyle}>
-                {icon[routeName]?.({ color: isFocused ? theme.colors.background : theme.colors.gray })}
+                <View style={{ backgroundColor: isFocused ? "rgba(124,58,237,0.15)" : "transparent"}}>
+                    {icon[routeName]?.({ color: isFocused ? theme.colors.primary : theme.colors.textSecondary })}
+                </View>
             </Animated.View>
             
             <Animated.Text
                 style={[
-                    { color: isFocused ? theme.colors.background : theme.colors.gray },
+                    { color: isFocused ? "#A78BFA" : theme.colors.textSecondary },
                     animatedTextStyle
                 ]}
                 >

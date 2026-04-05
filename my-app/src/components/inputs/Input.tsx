@@ -1,3 +1,4 @@
+import theme from "@/app/themes/theme"
 import { StyleSheet, TextInput, TextInputProps } from "react-native"
 
 function Input({...rest}: TextInputProps) {
@@ -8,14 +9,16 @@ function Input({...rest}: TextInputProps) {
 
 const style = StyleSheet.create({
     input: {
-        width: "100%",
-        height: 48,
-        borderWidth: 1,
-        borderColor: "#ccc",
-        borderRadius: 8,
-        fontSize: 16,
-        color: "#d4d4d4",
-        paddingLeft: 16,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 10,
+        backgroundColor: "rgba(255,255,255,0.04)",
+        borderWidth: 0.5,
+        borderColor: "rgba(255,255,255,0.1)",
+        borderRadius: 14,
+        height: 54,
+        paddingHorizontal: 16,
+        color: theme.colors.text,
     }
 })
 

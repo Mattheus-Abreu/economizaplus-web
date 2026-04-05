@@ -47,8 +47,28 @@ const signinStyle = StyleSheet.create({
     color: "#d4dee6",
   },
   footerLink: {
-    color: "#a26ee7",
+    color: theme.colors.primary,
     fontWeight: 700,
+  },
+    dividerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 24,
+    marginTop: 16,
+    marginBottom: 16,
+    gap: 12,
+  },
+  divider: {
+    flex: 1,
+    height: 0.5,
+    backgroundColor: "rgba(255,255,255,0.08)",
+  },
+  dividerLabel: {
+    fontSize: 11,
+    fontWeight: "500",
+    color: theme.colors.textSecondary,
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
   },
 });
 

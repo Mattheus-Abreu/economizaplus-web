@@ -26,7 +26,7 @@ const signupStyle = StyleSheet.create({
     color: "#d4dee6",
   },
   footerLink: {
-    color: "#a26ee7",
+    color: theme.colors.primary,
     fontWeight: 700,
   },
 });
