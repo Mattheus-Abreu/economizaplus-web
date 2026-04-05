@@ -18,21 +18,19 @@ import {
   View,
 } from "react-native";
 import signinStyle from "../../styles/signinStyle";
+import theme from "../themes/theme";
 
 function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { signIn } = useAuth();
 
-  const redirectUri = AuthSession.makeRedirectUri();
+  const redirectUri = "https://auth.expo.io/@rdavila_mesquita/my-app";
+
   const [request, response, promptAsync] = Google.useAuthRequest({
-    androidClientId:
-      "956093747088-67binljo0e9sai2t090900crbb6hcm68.apps.googleusercontent.com",
-    iosClientId:
-      "956093747088-q63rf6lnhogtpa3mvl181335m0jk90et.apps.googleusercontent.com",
-    clientId:
-      "956093747088-0400ghkmq73pmpuuroqnsr2p63cm49db.apps.googleusercontent.com",
+    clientId: "956093747088-0400ghkmq73pmpuuroqnsr2p63cm49db.apps.googleusercontent.com",
     redirectUri,
+    scopes: ["openid", "profile", "email"],
   });
 
   async function handleGoogleSignin() {
@@ -41,14 +39,19 @@ function SignInPage() {
 
   useEffect(() => {
     async function fetchGoogleLogin() {
-      if (response?.type === "success") {
-        const { authentication } = response;
+      if (response?.type !== "success") return;
 
-        const res = await api.post("/api/login/google", {
-          idToken: authentication?.idToken,
-        });
+      const idToken = response.authentication?.idToken;
+      if (!idToken) {
+        Alert.alert("Erro", "Não foi possível obter o token do Google");
+        return;
+      }
+
+      try {
+        const res = await api.post("/api/login/google", { idToken });
         signIn(res.data.token);
-        
+      } catch (error: any) {
+        Alert.alert("Erro", error.response?.data?.error || "Erro ao autenticar com Google");
       }
     }
 
@@ -102,11 +105,13 @@ function SignInPage() {
               <Input
                 placeholder="E-mail"
                 keyboardType="email-address"
+                placeholderTextColor={theme.colors.textSecondary}
                 onChangeText={setEmail}
               />
               <Input
                 placeholder="Senha"
                 secureTextEntry
+                placeholderTextColor={theme.colors.textSecondary}
                 onChangeText={setPassword}
               />
               <Text
@@ -118,7 +123,11 @@ function SignInPage() {
               <Button label="Entrar" onPress={handleSignIn} />
             </View>
 
-            <Text style={signinStyle.orText}>ou</Text>
+            <View style={signinStyle.dividerRow}>
+              <View style={signinStyle.divider} />
+              <Text style={signinStyle.dividerLabel}>ou</Text>
+              <View style={signinStyle.divider} />
+            </View>
 
             <Button
               label="Entrar com Google"

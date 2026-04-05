@@ -15,6 +15,7 @@ import {
   View,
 } from "react-native";
 import signupStyle from "../../styles/signupStyle";
+import theme from "../themes/theme";
 
 function signup() {
   const [name, setName] = useState("");
@@ -75,16 +76,19 @@ function signup() {
               <Input
                 placeholder="E-mail"
                 keyboardType="email-address"
+                placeholderTextColor={theme.colors.textSecondary}
                 onChangeText={setEmail}
               />
               <Input
                 placeholder="Senha"
                 secureTextEntry
+                placeholderTextColor={theme.colors.textSecondary}
                 onChangeText={setPassword}
               />
               <Input
                 placeholder="Confirme sua senha"
                 secureTextEntry
+                placeholderTextColor={theme.colors.textSecondary}
                 onChangeText={setConfirmPassword}
               />
               <Button label="Cadastrar" onPress={handleSignup} />

@@ -32,7 +32,9 @@ function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
     <View onLayout={onTabbarLayout} style={tabBarStyle.tabbar}>
       <Animated.View style={[animatedStyle,{
         position: "absolute",
-        backgroundColor: theme.colors.gray,
+        backgroundColor: "rgba(124,58,237,0.15)",
+        borderWidth: 1,
+        borderColor: "rgba(124,58,237,0.3)",
         borderRadius: 40,
         marginHorizontal: 12,
         height: dimensions.height - 17,
@@ -78,7 +80,7 @@ function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
             isFocused={isFocused}
             routeName={route.name}
             label={label}
-            color={isFocused ? theme.colors.text : theme.colors.gray}
+            color={isFocused ? theme.colors.text : theme.colors.textSecondary}
           />
         );
       })}

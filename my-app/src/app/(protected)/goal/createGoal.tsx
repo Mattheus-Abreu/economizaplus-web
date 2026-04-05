@@ -1,49 +1,435 @@
-import Button from '@/components/Button';
-import Input from '@/components/inputs/Input';
-import Screen from '@/components/Screen';
-import { FontAwesome } from '@expo/vector-icons';
-import { useRouter } from 'expo-router'
-import { StyleSheet, Text, Touchable, TouchableOpacity, View } from 'react-native'
+import theme from "@/app/themes/theme";
+import Screen from "@/components/Screen";
+import { CircularProgress } from "@/components/circular-progress";
+import Input from "@/components/inputs/Input";
+import { useGoals } from "@/contexts/goalContext";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
+import { useState } from "react";
+import { BaseButton } from "react-native-gesture-handler";
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useSharedValue } from "react-native-reanimated";
 
 function createGoal() {
   const router = useRouter();
-  
-  function redirectPage() {
-    return router.replace("/home");
+  const { addGoal, updateGoal } = useGoals();
+
+  const params = useLocalSearchParams<{
+    id?: string;
+    name?: string;
+    targetAmount?: string;
+    deadline?: string;
+  }>();
+
+  const isEditing = !!params.id;
+
+  const [name, setName] = useState(params.name ?? "");
+  const [targetAmount, setTargetAmount] = useState(params.targetAmount ?? "");
+  const [deadline, setDeadline] = useState(
+    params.deadline ?? new Date().toISOString()
+  );
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const progress = useSharedValue(0);
+
+  function formatDisplayDate(iso: string): string {
+    const date = new Date(iso);
+    if (isNaN(date.getTime())) return "";
+    return date.toLocaleDateString("pt-BR");
   }
+
+  function getDaysRemaining(iso: string): string {
+    const date = new Date(iso);
+    const today = new Date();
+    const diff = Math.ceil(
+      (date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    if (diff < 0) return "Expirado";
+    if (diff === 0) return "Hoje";
+    return `${diff} dias`;
+  }
+
+  function formatAmount(value: string): string {
+    const num = parseFloat(value);
+    if (isNaN(num)) return "–";
+    return num.toLocaleString("pt-BR", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    });
+  }
+
+  async function handleSubmit() {
+    if (!name.trim() || !targetAmount || !deadline) {
+      return Alert.alert("Atenção", "Preencha todos os campos!");
+    }
+
+    try {
+      if (isEditing) {
+        await updateGoal(params.id!, {
+          name,
+          targetAmount: Number(targetAmount),
+          deadline,
+        });
+        Alert.alert("Sucesso", "Meta atualizada com sucesso!");
+      } else {
+        await addGoal({
+          name,
+          targetAmount: Number(targetAmount),
+          deadline,
+        });
+        Alert.alert("Sucesso", "Meta criada com sucesso!");
+      }
+      router.back();
+    } catch (error: any) {
+      console.log(error);
+      Alert.alert("Erro", error.message || "Erro ao salvar meta!");
+    }
+  }
+
   return (
-    <Screen>
-    <View style={styles.container}>
-      <TouchableOpacity onPress={redirectPage}>
-        <FontAwesome name="arrow-left" size={24} color="white" />
-      </TouchableOpacity>
-        <Text style={styles.text}>Crie uma nova meta</Text>
-        <Input placeholder="Nome" />
-        <Input placeholder="Quanto você quer juntar?" />
-        <Input placeholder="Prazo" />
-        <Button label="Criar meta" onPress={redirectPage}></Button>
-    </View>
+    <Screen style={{ padding: 0 }}>
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+            <FontAwesome
+              name="chevron-left"
+              size={16}
+              color={theme.colors.textSecondary}
+            />
+          </TouchableOpacity>
+        </View>
+
+        
+        <View style={styles.hero}>
+          <Text style={styles.heroLabel}>
+            {isEditing ? "Editar meta" : "Nova meta"}
+          </Text>
+          <Text style={styles.heroTitle}>
+            {isEditing
+              ? "Redefina seu\nsobjetivo"
+              : "Qual é o seu\npróximo objetivo?"}
+          </Text>
+          <Text style={styles.heroSub}>
+            {isEditing
+              ? "Atualize os dados da sua meta"
+              : "Defina uma meta e acompanhe seu progresso"}
+          </Text>
+        </View>
+
+        
+        <View style={styles.form}>
+
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>Nome da meta</Text>
+            <View style={[styles.fieldInput, name.length > 0 && styles.fieldInputActive]}>
+              <Ionicons
+                name="pencil-outline"
+                size={18}
+                color={name.length > 0 ? theme.colors.primary : "#94A3B8"}
+              />
+              <Input
+                style={styles.inlineInput}
+                placeholder="Ex: Viagem para Europa"
+                placeholderTextColor={theme.colors.textSecondary}
+                value={name}
+                onChangeText={setName}
+              />
+            </View>
+          </View>
+
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>Valor alvo</Text>
+            <View style={[styles.fieldInput, targetAmount.length > 0 && styles.fieldInputActive]}>
+              <FontAwesome
+                name="dollar"
+                size={18}
+                color={targetAmount.length > 0 ? theme.colors.primary : "#94A3B8"}
+              />
+              <Text style={styles.currencyPrefix}>R$</Text>
+              <Input
+                style={[styles.inlineInput, styles.amountInput]}
+                placeholder="0"
+                placeholderTextColor={theme.colors.textSecondary}
+                value={targetAmount}
+                onChangeText={setTargetAmount}
+                keyboardType="numeric"
+              />
+            </View>
+          </View>
+
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>Prazo</Text>
+            <BaseButton onPress={() => setShowDatePicker(true)}>
+              <View style={[styles.fieldInput, styles.fieldInputActive]}>
+                <Ionicons
+                  name="calendar-outline"
+                  size={18}
+                  color={theme.colors.primary}
+                />
+                <Text style={styles.dateText}>{formatDisplayDate(deadline)}</Text>
+                <View style={styles.daysBadge}>
+                  <Text style={styles.daysBadgeText}>{getDaysRemaining(deadline)}</Text>
+                </View>
+              </View>
+            </BaseButton>
+          </View>
+        </View>
+
+        <DateTimePickerModal
+          date={new Date(deadline)}
+          isVisible={showDatePicker}
+          locale="pt-BR"
+          mode="date"
+          onConfirm={(date) => {
+            setDeadline(date.toISOString());
+            setShowDatePicker(false);
+          }}
+          onCancel={() => setShowDatePicker(false)}
+        />
+
+        <View style={styles.dividerRow}>
+          <View style={styles.divider} />
+          <Text style={styles.dividerLabel}>Prévia</Text>
+          <View style={styles.divider} />
+        </View>
+
+        <View style={styles.previewWrapper}>
+          <LinearGradient
+            colors={["#7C3AED", "#A78BFA"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.previewCard}
+          >
+            <View style={styles.previewLeft}>
+              <Text style={styles.previewName} numberOfLines={1}>
+                {name || "Nome da meta"}
+              </Text>
+              <Text style={styles.previewAmount}>
+                Meta: R$ {formatAmount(targetAmount) || "–"} ·{" "}
+                {new Date(deadline).toLocaleDateString("pt-BR", {
+                  month: "short",
+                  year: "numeric",
+                })}
+              </Text>
+            </View>
+            <CircularProgress
+              progress={progress}
+              size={52}
+              strokeWidth={4}
+              outerCircleColor="rgba(255,255,255,0.2)"
+              progressCircleColor="#ffffff"
+              backgroundColor="rgba(0,0,0,0.1)"
+            />
+          </LinearGradient>
+        </View>
+
+        <View style={styles.cta}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.submitBtn,
+              pressed && styles.submitBtnPressed,
+            ]}
+            onPress={handleSubmit}
+          >
+            <Text style={styles.submitText}>
+              {isEditing ? "Salvar alterações" : "Criar meta"}
+            </Text>
+            <Ionicons name="arrow-forward" size={18} color="#fff" />
+          </Pressable>
+        </View>
+      </ScrollView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  header: {
+    paddingTop: 56,
+    paddingHorizontal: 24,
+    paddingBottom: 4,
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 0.5,
+    borderColor: "rgba(255,255,255,0.1)",
+    alignItems: "center",
     justifyContent: "center",
-    gap: 20
   },
-  text:{
-    fontSize: 32,
-    fontWeight: 900,
-    color: "#fff"
+  hero: {
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 28,
   },
-  link:{
-    fontSize: 24,
-    fontWeight: 900,
+  heroLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: theme.colors.primary,
+    letterSpacing: 1.4,
+    textTransform: "uppercase",
+    marginBottom: 8,
+  },
+  heroTitle: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: theme.colors.text,
+    lineHeight: 34,
+  },
+  heroSub: {
+    fontSize: 13,
+    color: theme.colors.textSecondary,
+    marginTop: 8,
+    lineHeight: 18,
+  },
+  form: {
+    paddingHorizontal: 24,
+    gap: 16,
+  },
+  field: {
+    gap: 6,
+  },
+  fieldLabel: {
+    fontSize: 11,
+    fontWeight: "500",
+    color: theme.colors.textSecondary,
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    paddingLeft: 2,
+  },
+  fieldInput: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    borderWidth: 0.5,
+    borderColor: "rgba(255,255,255,0.1)",
+    borderRadius: 14,
+    height: 54,
+    paddingHorizontal: 16,
+  },
+  fieldInputActive: {
+    borderColor: theme.colors.primary,
+    backgroundColor: "rgba(124,58,237,0.06)",
+  },
+  inlineInput: {
+    flex: 1,
+    height: 54,
+    borderWidth: 0,
+    borderRadius: 0,
+    paddingLeft: 0,
+    color: theme.colors.text,
+    fontSize: 15,
+  },
+  currencyPrefix: {
+    fontSize: 15,
+    color: theme.colors.textSecondary,
+    flexShrink: 0,
+  },
+  amountInput: {
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  dateText: {
+    flex: 1,
+    fontSize: 15,
+    color: theme.colors.text,
+  },
+  daysBadge: {
+    backgroundColor: "rgba(124,58,237,0.15)",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  daysBadgeText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: theme.colors.primary,
+  },
+  dividerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 24,
+    marginTop: 28,
+    marginBottom: 16,
+    gap: 12,
+  },
+  divider: {
+    flex: 1,
+    height: 0.5,
+    backgroundColor: "rgba(255,255,255,0.08)",
+  },
+  dividerLabel: {
+    fontSize: 11,
+    fontWeight: "500",
+    color: theme.colors.textSecondary,
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+  },
+  previewWrapper: {
+    paddingHorizontal: 24,
+  },
+  previewCard: {
+    borderRadius: 18,
+    padding: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  previewLeft: {
+    flex: 1,
+    marginRight: 16,
+  },
+  previewName: {
+    fontSize: 16,
+    fontWeight: "600",
     color: "#fff",
-    fontStyle: "italic",
-    alignContent: "flex-end"
-  }
+  },
+  previewAmount: {
+    fontSize: 12,
+    color: "rgba(255,255,255,0.7)",
+    marginTop: 4,
+  },
+  cta: {
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 32,
+  },
+  submitBtn: {
+    width: "100%",
+    height: 54,
+    backgroundColor: theme.colors.primary,
+    borderRadius: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  submitBtnPressed: {
+    opacity: 0.85,
+    transform: [{ scale: 0.98 }],
+  },
+  submitText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#fff",
+  },
 });
 
-export default createGoal
+export default createGoal;
