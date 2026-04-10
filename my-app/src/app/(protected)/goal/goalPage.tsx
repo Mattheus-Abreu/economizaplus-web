@@ -5,12 +5,25 @@ import Screen from "@/components/Screen";
 import { useGoals } from "@/contexts/goalContext";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { SymbolView } from "expo-symbols";
 import {
+  Empty,
+  EmptyButton,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/empty-state";
+import {
+  StyleSheet,
   Text,
   TouchableOpacity,
   View
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
+import Arrow from "@/assets/images/Arrow.svg";
 
 function goalPage() {
   const router = useRouter();
@@ -23,24 +36,46 @@ function goalPage() {
         showsVerticalScrollIndicator={false}
       >
         <View style={{ flex: 1 }}>
-          <View style={{ marginTop: 40, gap: 20 }}>
-            <Text
-              style={{
-                fontSize: theme.fontSize.title,
-                fontWeight: 900,
-                color: theme.colors.text,
-                textAlign: "center",
-                margin: 20,
-              }}
-            >
-              Minhas Metas
-            </Text>
+          <View style={{ flex: 1, gap: 20 }}>
+            <View style={styles.header}>
+              <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+                <FontAwesome
+                  name="arrow-left"
+                  size={16}
+                  color={theme.colors.textSecondary}
+                />
+              </TouchableOpacity>
+            </View>
 
             {goals.length === 0 ? (
-              <Text style={{ color: theme.colors.text }}>
-                Nenhuma meta criada ainda
-              </Text>
+              <SafeAreaView style={styles.container}>
+                <Empty>
+                  <EmptyHeader>
+                    <EmptyMedia
+                      variant="icon"
+                      style={{ backgroundColor: theme.colors.surface }}
+                    >
+                      <SymbolView name="gauge.open.with.lines.needle.33percent" size={60} tintColor={"#fff"} />
+                    </EmptyMedia>
+                    <EmptyTitle>Nenhuma meta</EmptyTitle>
+                    <View style={{
+                          position: "absolute",
+                          bottom: -240,
+                          right: -80,
+                          gap: 15,
+                          alignItems: "center"
+                        }}>
+                      <EmptyDescription>
+                        Que tal começar criando uma meta
+                      </EmptyDescription>
+                      <Arrow width={100} height={60} style={{ transform: [{ rotate: "20deg" }] }} />
+                    </View>
+                  </EmptyHeader>
+                </Empty>
+              </SafeAreaView>
+
             ) : (
+              
               goals.map((item, index) => (
                 <GoalCard
                   key={item.id}
@@ -70,5 +105,27 @@ function goalPage() {
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: "center",
+    paddingTop: 56,
+  },
+  header: {
+    paddingTop: 56,
+    paddingBottom: 4,
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 0.5,
+    borderColor: "rgba(255,255,255,0.1)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+})
 
 export default goalPage;

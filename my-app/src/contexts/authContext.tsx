@@ -32,29 +32,34 @@ export function AuthProvider({ children }: PropsWithChildren) {
 }
 
   async function signOut() {
+    delete api.defaults.headers.common["Authorization"];
     setIsLoggedIn(false);
     setToken(null);
     await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
   }
 
-  useEffect(() => {
-    async function loadStorageState() {
-      try {
-        const stored = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
-        const state = stored ? JSON.parse(stored) : null;
+ useEffect(() => {
+  async function loadStorageState() {
+    try {
+      const stored = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
+      const state = stored ? JSON.parse(stored) : null;
 
-        setIsLoggedIn(state?.isLoggedIn ?? false);
-        setToken(state?.token ?? null);
-      } catch (error) {
-        console.log("ERROR_GET_STORAGE", error);
-        setIsLoggedIn(false);
-      } finally {
-        setIsReady(true);
+      if (state?.token) {
+        api.defaults.headers.common["Authorization"] = `Bearer ${state.token}`;
       }
-    }
 
-    loadStorageState();
-  }, []);
+      setIsLoggedIn(state?.isLoggedIn ?? false);
+      setToken(state?.token ?? null);
+    } catch (error) {
+      console.log("ERROR_GET_STORAGE", error);
+      setIsLoggedIn(false);
+    } finally {
+      setIsReady(true);
+    }
+  }
+
+  loadStorageState();
+}, []);
 
 useEffect(() => {
   const interceptor = api.interceptors.request.use((config) => {

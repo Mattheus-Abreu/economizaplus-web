@@ -7,7 +7,6 @@ import { CircularProgress } from "./circular-progress";
 import theme from "@/app/themes/theme";
 import Goal from "@/types/goal";
 
-// paleta de gradientes — atribuída por índice no home
 export const GRADIENTS: [string, string][] = [
   ["#F43F5E", "#FB7185"],
   ["#7C3AED", "#A78BFA"],
@@ -17,24 +16,40 @@ export const GRADIENTS: [string, string][] = [
   ["#EC4899", "#F9A8D4"],
 ];
 
+function formatAmount(value: string): string {
+    const num = parseFloat(value);
+    if (isNaN(num)) return "–";
+    return num.toLocaleString("pt-BR", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    });
+  }
+
 type Props = {
   item: Goal;
   fontLoaded: boolean;
-  gradientIndex?: number; // índice para escolher o gradiente
+  gradientIndex?: number; 
 };
 
-const CardMeta = ({ item, fontLoaded, gradientIndex = 0 }: Props) => {
+const CardHome = ({ item, fontLoaded, gradientIndex = 0 }: Props) => {
   const router = useRouter();
   const progress = useSharedValue(0);
 
-  const progressPercent = 0;
-
   useEffect(() => {
-    progress.value = withTiming(progressPercent, {
-      easing: Easing.bezier(0.95, 0.1, 0.95, 1),
-      duration: 2000,
-    });
-  }, [progressPercent]);
+  const current = Number(item.currentAmount);
+  const target = Number(item.targetAmount);
+
+  if (!current || !target || target <= 0) {
+    progress.value = withTiming(0, { duration: 600 });
+    return;
+  }
+
+  const percent = Math.min((current / target) * 100, 100);
+  progress.value = withTiming(percent, {
+    duration: 800,
+    easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+  });
+}, [item.currentAmount, item.targetAmount]);
 
   const gradient = GRADIENTS[gradientIndex % GRADIENTS.length];
 
@@ -74,7 +89,7 @@ const CardMeta = ({ item, fontLoaded, gradientIndex = 0 }: Props) => {
             {item.name}
           </Text>
           <Text style={[styles.cardSubtitle, fontLoaded && { fontFamily: "InterRegular" }]}>
-            Meta de R$ {item.targetAmount}
+            Meta de R$ {formatAmount(item.targetAmount.toString()) || "0,00"}
           </Text>
         </View>
       </Pressable>
@@ -82,7 +97,7 @@ const CardMeta = ({ item, fontLoaded, gradientIndex = 0 }: Props) => {
   );
 };
 
-export default CardMeta;
+export default CardHome;
 
 const styles = StyleSheet.create({
   card: {

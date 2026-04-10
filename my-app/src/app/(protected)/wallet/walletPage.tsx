@@ -19,11 +19,11 @@ import { useRouter } from "expo-router";
 import { useTransactions } from "@/contexts/transactionContext";
 import { ScrollView } from "react-native-gesture-handler";
 import Arrow from "@/assets/images/Arrow.svg";
-import { useCategory } from "@/contexts/categoryContext";
+import { useWallets } from "@/contexts/walletContext";
 
 function walletPage() {
   const router = useRouter();
-  const { categories } = useCategory();
+  const { wallets } = useWallets();
   
   return (
     <Screen style={{ padding: 20 }}>
@@ -43,7 +43,7 @@ function walletPage() {
               </TouchableOpacity>
             </View>
 
-            {categories.length === 0 ? (
+            {wallets.length === 0 ? (
               <SafeAreaView style={styles.container}>
               <Empty>
                 <EmptyHeader>
@@ -55,7 +55,7 @@ function walletPage() {
                   >
                   <SymbolView name="gift.fill" size={60} tintColor={"#fff"} />
                   </EmptyMedia>
-                  <EmptyTitle>Nenhuma categoria</EmptyTitle>
+                  <EmptyTitle>Nenhuma caixinha</EmptyTitle>
                   <View style={{
                       position: "absolute",
                       bottom: -240,
@@ -64,7 +64,7 @@ function walletPage() {
                       alignItems: "center"
                     }}>
                   <EmptyDescription>
-                    Que tal começar criando uma categoria
+                    Que tal começar criando uma caixinha
                   </EmptyDescription>
                   <Arrow width={100} height={60} style={{ transform: [{ rotate: "20deg" }] }} />
                 </View>
@@ -73,7 +73,7 @@ function walletPage() {
             </SafeAreaView>
             ) : (
               <View>
-                {categories.map((index, item) => (
+                {wallets.map((index, item) => (
                   <View>
                     <Text>{item}</Text>
                   </View>
@@ -92,7 +92,7 @@ function walletPage() {
               borderRadius: 80,
             }}
           >
-            <TouchableOpacity onPress={() => router.push("/(protected)/transaction/createTransaction")}>
+            <TouchableOpacity onPress={() => router.push("/(protected)/wallet/createWallet")}>
               <FontAwesome name="plus" size={30} color="white" />
             </TouchableOpacity>
           </View>
