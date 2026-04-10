@@ -17,7 +17,7 @@ type Props = {
 }
 const TabBarButton = ({ color, label, isFocused, onPress, onLongPress, routeName }: Props) => {
     const icon: Record<string, (props: {color: string}) => JSX.Element> = {
-        "home": (props) => <FontAwesome name="home" size={24} {...props} />,
+        "index": (props) => <FontAwesome name="home" size={24} {...props} />,
         "cards": (props) => <FontAwesome name="credit-card" size={24} {...props} />,
         "grafics": (props) => <FontAwesome name="bar-chart" size={24} {...props} />,
         "profile": (props) => <FontAwesome name="user" size={24} {...props} />,

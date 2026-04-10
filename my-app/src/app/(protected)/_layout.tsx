@@ -1,7 +1,7 @@
 import useAuth from "@/hooks/useAuth"
 import { Redirect, Stack } from "expo-router"
 import { ActivityIndicator, View } from "react-native";
-import { GoalProvider } from "@/contexts/goalContext";
+import AppProviders from "./providers";
 
 function ProtectedLayout() {
   const { isLoggedIn, isReady } = useAuth();
@@ -19,12 +19,12 @@ function ProtectedLayout() {
   }
 
   return (
-    <GoalProvider>
+    <AppProviders>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
       </Stack>
-    </GoalProvider>
-  );
+    </AppProviders>
+);
 }
 
 export default ProtectedLayout;

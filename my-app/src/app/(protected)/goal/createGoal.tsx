@@ -1,4 +1,5 @@
 import theme from "@/app/themes/theme";
+import Button from "@/components/Button";
 import Screen from "@/components/Screen";
 import { CircularProgress } from "@/components/circular-progress";
 import Input from "@/components/inputs/Input";
@@ -7,18 +8,17 @@ import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BaseButton } from "react-native-gesture-handler";
 import {
   Alert,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { useSharedValue } from "react-native-reanimated";
+import { Easing, useSharedValue, withTiming } from "react-native-reanimated";
 
 function createGoal() {
   const router = useRouter();
@@ -28,6 +28,7 @@ function createGoal() {
     id?: string;
     name?: string;
     targetAmount?: string;
+    currentAmount?: string;
     deadline?: string;
   }>();
 
@@ -35,12 +36,29 @@ function createGoal() {
 
   const [name, setName] = useState(params.name ?? "");
   const [targetAmount, setTargetAmount] = useState(params.targetAmount ?? "");
+  const [currentAmount, setCurrentAmount] = useState(params.currentAmount ?? "");
   const [deadline, setDeadline] = useState(
     params.deadline ?? new Date().toISOString()
   );
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const progress = useSharedValue(0);
+
+  useEffect(() => {
+  const current = parseFloat(currentAmount);
+  const target = parseFloat(targetAmount);
+
+  if (!current || !target || target <= 0) {
+    progress.value = withTiming(0, { duration: 600 });
+    return;
+  }
+
+  const percent = Math.min((current / target) * 100, 100);
+  progress.value = withTiming(percent, {
+    duration: 800,
+    easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+  });
+}, [currentAmount, targetAmount]);
 
   function formatDisplayDate(iso: string): string {
     const date = new Date(iso);
@@ -78,6 +96,7 @@ function createGoal() {
         await updateGoal(params.id!, {
           name,
           targetAmount: Number(targetAmount),
+          currentAmount: Number(currentAmount),
           deadline,
         });
         Alert.alert("Sucesso", "Meta atualizada com sucesso!");
@@ -85,6 +104,7 @@ function createGoal() {
         await addGoal({
           name,
           targetAmount: Number(targetAmount),
+          currentAmount: Number(currentAmount),
           deadline,
         });
         Alert.alert("Sucesso", "Meta criada com sucesso!");
@@ -102,19 +122,17 @@ function createGoal() {
         contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-      >
-
+      > 
         <View style={styles.header}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <FontAwesome
-              name="chevron-left"
+              name="arrow-left"
               size={16}
               color={theme.colors.textSecondary}
             />
           </TouchableOpacity>
         </View>
 
-        
         <View style={styles.hero}>
           <Text style={styles.heroLabel}>
             {isEditing ? "Editar meta" : "Nova meta"}
@@ -131,9 +149,7 @@ function createGoal() {
           </Text>
         </View>
 
-        
         <View style={styles.form}>
-
           <View style={styles.field}>
             <Text style={styles.fieldLabel}>Nome da meta</Text>
             <View style={[styles.fieldInput, name.length > 0 && styles.fieldInputActive]}>
@@ -155,8 +171,8 @@ function createGoal() {
           <View style={styles.field}>
             <Text style={styles.fieldLabel}>Valor alvo</Text>
             <View style={[styles.fieldInput, targetAmount.length > 0 && styles.fieldInputActive]}>
-              <FontAwesome
-                name="dollar"
+              <Ionicons
+                name="cash-outline"
                 size={18}
                 color={targetAmount.length > 0 ? theme.colors.primary : "#94A3B8"}
               />
@@ -167,6 +183,26 @@ function createGoal() {
                 placeholderTextColor={theme.colors.textSecondary}
                 value={targetAmount}
                 onChangeText={setTargetAmount}
+                keyboardType="numeric"
+              />
+          </View>
+
+          </View>
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>Valor atual</Text>
+            <View style={[styles.fieldInput, currentAmount.length > 0 && styles.fieldInputActive]}>
+              <Ionicons
+                name="cash-outline"
+                size={18}
+                color={currentAmount.length > 0 ? theme.colors.primary : "#94A3B8"}
+              />
+              <Text style={styles.currencyPrefix}>R$</Text>
+              <Input
+                style={[styles.inlineInput, styles.amountInput]}
+                placeholder="0"
+                placeholderTextColor={theme.colors.textSecondary}
+                value={currentAmount}
+                onChangeText={setCurrentAmount}
                 keyboardType="numeric"
               />
             </View>
@@ -202,12 +238,14 @@ function createGoal() {
           onCancel={() => setShowDatePicker(false)}
         />
 
+       
         <View style={styles.dividerRow}>
           <View style={styles.divider} />
           <Text style={styles.dividerLabel}>Prévia</Text>
           <View style={styles.divider} />
         </View>
 
+       
         <View style={styles.previewWrapper}>
           <LinearGradient
             colors={["#7C3AED", "#A78BFA"]}
@@ -238,19 +276,13 @@ function createGoal() {
           </LinearGradient>
         </View>
 
+       
         <View style={styles.cta}>
-          <Pressable
-            style={({ pressed }) => [
-              styles.submitBtn,
-              pressed && styles.submitBtnPressed,
-            ]}
+          <Button
+            label={isEditing ? "Salvar alterações" : "Criar meta"}
             onPress={handleSubmit}
           >
-            <Text style={styles.submitText}>
-              {isEditing ? "Salvar alterações" : "Criar meta"}
-            </Text>
-            <Ionicons name="arrow-forward" size={18} color="#fff" />
-          </Pressable>
+          </Button>
         </View>
       </ScrollView>
     </Screen>
@@ -317,12 +349,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    backgroundColor: "rgba(255,255,255,0.04)",
-    borderWidth: 0.5,
-    borderColor: "rgba(255,255,255,0.1)",
     borderRadius: 14,
     height: 54,
     paddingHorizontal: 16,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    borderWidth: 0.5,
+    borderColor: "rgba(255,255,255,0.1)",
   },
   fieldInputActive: {
     borderColor: theme.colors.primary,
@@ -331,11 +363,10 @@ const styles = StyleSheet.create({
   inlineInput: {
     flex: 1,
     height: 54,
+    backgroundColor: "transparent",
     borderWidth: 0,
     borderRadius: 0,
-    paddingLeft: 0,
-    color: theme.colors.text,
-    fontSize: 15,
+    paddingHorizontal: 0,
   },
   currencyPrefix: {
     fontSize: 15,
@@ -410,25 +441,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 20,
     paddingBottom: 32,
-  },
-  submitBtn: {
-    width: "100%",
-    height: 54,
-    backgroundColor: theme.colors.primary,
-    borderRadius: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  submitBtnPressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.98 }],
-  },
-  submitText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#fff",
   },
 });
 

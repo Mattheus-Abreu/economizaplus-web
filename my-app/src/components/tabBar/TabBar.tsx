@@ -12,7 +12,7 @@ function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const { buildHref } = useLinkBuilder();
 
   const [dimensions, setDimensions] = useState({ width: 100, height: 20 });
-  const routes = state.routes.filter(route => route.name !== "index");
+  const routes = state.routes.filter(route => route.name);
   const buttonWidth = dimensions.width / routes.length;
   const onTabbarLayout = (event: LayoutChangeEvent) =>{
     setDimensions({

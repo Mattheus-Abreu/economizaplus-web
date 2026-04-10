@@ -16,6 +16,9 @@ import {
 } from "react-native";
 import signupStyle from "../../styles/signupStyle";
 import theme from "../themes/theme";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import signinStyle from "@/styles/signinStyle";
+import Logo from "@/components/Logo";
 
 function signup() {
   const [name, setName] = useState("");
@@ -64,33 +67,88 @@ function signup() {
           showsVerticalScrollIndicator={false}
         >
           <View>
-            <SignUp width={300} height={300} style={signupStyle.illustration} />
 
-            <Text style={signupStyle.title}>Cadastrar</Text>
-            <Text style={signupStyle.subtitle}>
-              Crie sua conta para acessar.
-            </Text>
+           <View style={signinStyle.header}>
+            <View style={signinStyle.logoArea}>
+              <Logo size="lg" />
+            </View>
+              <Text style={signinStyle.title}>Novo Por aqui?</Text>
+              <Text style={signinStyle.subtitle}>Crie uma conta para continuar</Text>
+          </View>
+            
 
             <View style={signupStyle.form}>
-              <Input placeholder="Usuário" onChangeText={setName} />
-              <Input
-                placeholder="E-mail"
-                keyboardType="email-address"
-                placeholderTextColor={theme.colors.textSecondary}
-                onChangeText={setEmail}
-              />
-              <Input
-                placeholder="Senha"
-                secureTextEntry
-                placeholderTextColor={theme.colors.textSecondary}
-                onChangeText={setPassword}
-              />
-              <Input
-                placeholder="Confirme sua senha"
-                secureTextEntry
-                placeholderTextColor={theme.colors.textSecondary}
-                onChangeText={setConfirmPassword}
-              />
+              <View style={signupStyle.field}>
+              <Text style={signupStyle.fieldLabel}>nome</Text>
+                <View style={[signupStyle.fieldInput, name.length > 0 && signupStyle.fieldInputActive]}>
+                  <FontAwesome
+                    name="user-o"
+                    size={18}
+                    color={name.length > 0 ? theme.colors.primary : "#94A3B8"}
+                  />
+                  <Input
+                    style={signupStyle.inlineInput}
+                    placeholder="Nome"
+                    placeholderTextColor={theme.colors.textSecondary}
+                    value={name}
+                    onChangeText={setName}
+                  />
+                </View>
+              </View>
+              <View style={signupStyle.field}>
+              <Text style={signupStyle.fieldLabel}>email</Text>
+                <View style={[signupStyle.fieldInput, email.length > 0 && signupStyle.fieldInputActive]}>
+                  <FontAwesome
+                    name="envelope-o"
+                    size={18}
+                    color={email.length > 0 ? theme.colors.primary : "#94A3B8"}
+                  />
+                  <Input
+                    style={signupStyle.inlineInput}
+                    placeholder="Ex.: fulano@example.com"
+                    placeholderTextColor={theme.colors.textSecondary}
+                    keyboardType="email-address"
+                    value={email}
+                    onChangeText={setEmail}
+                  />
+                </View>
+              </View>
+              <View style={signupStyle.field}>
+              <Text style={signupStyle.fieldLabel}>senha</Text>
+                <View style={[signupStyle.fieldInput, password.length > 0 && signupStyle.fieldInputActive]}>
+                  <Ionicons
+                    name="lock-closed-outline"
+                    size={20}
+                    color={password.length > 0 ? theme.colors.primary : "#94A3B8"}
+                  />
+                  <Input
+                    style={signupStyle.inlineInput}
+                    placeholder="Senha"
+                    placeholderTextColor={theme.colors.textSecondary}
+                    secureTextEntry
+                    value={password}
+                    onChangeText={setPassword}
+                  />
+                </View>
+              </View>
+              <View style={signupStyle.field}>
+              <Text style={signupStyle.fieldLabel}>confirmar senha</Text>
+                <View style={[signupStyle.fieldInput, confirmPassword.length > 0 && signupStyle.fieldInputActive]}>
+                  <Ionicons
+                    name="lock-closed-outline"
+                    size={20}
+                    color={confirmPassword.length > 0 ? theme.colors.primary : "#94A3B8"}
+                  />
+                  <Input
+                    style={signupStyle.inlineInput}
+                    placeholder="Confirmar Senha"
+                    placeholderTextColor={theme.colors.textSecondary}
+                    secureTextEntry
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                  />
+                </View>
+            </View>
               <Button label="Cadastrar" onPress={handleSignup} />
             </View>
 

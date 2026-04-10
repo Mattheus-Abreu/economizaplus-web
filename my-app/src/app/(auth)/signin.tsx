@@ -4,8 +4,7 @@ import Input from "@/components/inputs/Input";
 import Screen from "@/components/Screen";
 import useAuth from "@/hooks/useAuth";
 import { api } from "@/services/api";
-import { FontAwesome } from "@expo/vector-icons";
-import * as AuthSession from "expo-auth-session";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import * as Google from "expo-auth-session/providers/google";
 import { Link } from "expo-router";
 import { useEffect, useState } from "react";
@@ -19,6 +18,7 @@ import {
 } from "react-native";
 import signinStyle from "../../styles/signinStyle";
 import theme from "../themes/theme";
+import Logo from "@/components/Logo";
 
 function SignInPage() {
   const [email, setEmail] = useState("");
@@ -89,31 +89,58 @@ function SignInPage() {
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.select({ ios: "padding", android: "padding" })}
-    >
+    ><Screen style={signinStyle.screen}>
       <ScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <Screen>
-          <View>
-            <SignIn width={300} height={300} style={signinStyle.illustration} />
-
-            <Text style={signinStyle.title}>Entrar</Text>
+        
+        <View style={signinStyle.header}>
+          <View style={signinStyle.logoArea}>
+            <Logo size="lg" />
+          </View>
+            <Text style={signinStyle.title}>Bem-vindo de volta</Text>
+            <Text style={signinStyle.subtitle}>Entre na sua conta para continuar</Text>
+        </View>
 
             <View style={signinStyle.form}>
-              <Input
-                placeholder="E-mail"
-                keyboardType="email-address"
-                placeholderTextColor={theme.colors.textSecondary}
-                onChangeText={setEmail}
-              />
-              <Input
-                placeholder="Senha"
-                secureTextEntry
-                placeholderTextColor={theme.colors.textSecondary}
-                onChangeText={setPassword}
-              />
+              <View style={signinStyle.field}>
+              <Text style={signinStyle.fieldLabel}>email</Text>
+              <View style={[signinStyle.fieldInput, email.length > 0 && signinStyle.fieldInputActive]}>
+                <FontAwesome
+                  name="envelope-o"
+                  size={18}
+                  color={email.length > 0 ? theme.colors.primary : "#94A3B8"}
+                />
+                <Input
+                  style={signinStyle.inlineInput}
+                  placeholder="Ex.: fulano@example.com"
+                  placeholderTextColor={theme.colors.textSecondary}
+                  keyboardType="email-address"
+                  value={email}
+                  onChangeText={setEmail}
+                />
+              </View>
+            </View>
+              <View style={signinStyle.field}>
+              <Text style={signinStyle.fieldLabel}>senha</Text>
+              <View style={[signinStyle.fieldInput, password.length > 0 && signinStyle.fieldInputActive]}>
+                <Ionicons
+                    name="lock-closed-outline"
+                    size={20}
+                  color={password.length > 0 ? theme.colors.primary : "#94A3B8"}
+                />
+                <Input
+                  style={signinStyle.inlineInput}
+                  placeholder="Senha"
+                  placeholderTextColor={theme.colors.textSecondary}
+                  secureTextEntry
+                  value={password}
+                  onChangeText={setPassword}
+                />
+              </View>
+            </View>
               <Text
                 style={signinStyle.forgotPassword}
                 onPress={handleForgotPassword}
@@ -144,9 +171,9 @@ function SignInPage() {
                 Cadastre-se aqui
               </Link>
             </Text>
-          </View>
+          </ScrollView>
         </Screen>
-      </ScrollView>
+      
     </KeyboardAvoidingView>
   );
 }

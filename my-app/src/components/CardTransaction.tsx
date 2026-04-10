@@ -5,14 +5,15 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Alert, StyleSheet, Text, View } from "react-native";
 import { AnimatedProgressBar } from "./progressBar";
-import { AnimatedCircularProgress } from "react-native-circular-progress";
+import Card from "./Card";
+import Transaction from "@/types/transaction";
 
 type Props = {
-  item: Goal;
+  item: Transaction;
   gradient?: [string, string];
 };
 
-function GoalCard({ item, gradient }: Props) {
+function CardTransaction({ item, gradient }: Props) {
   const router = useRouter();
   const { deleteGoal } = useGoals();
 
@@ -25,29 +26,28 @@ function GoalCard({ item, gradient }: Props) {
     });
   }
 
-  const progress = Math.min(
-    Number(item.currentAmount) / Number(item.targetAmount || 1),
-    1
-  );
-
-  const remaining =
-    Number(item.targetAmount) - Number(item.currentAmount);
-
   function handleEdit() {
     router.push({
-      pathname: "/(protected)/goal/createGoal",
+      pathname: "/(protected)/transaction/createTransaction",
       params: {
         id: item.id,
-        name: item.name,
-        targetAmount: item.targetAmount,
-        currentAmount: item.currentAmount,
-        deadline: item.deadline,
+        type: item.type,
+        paymentMethod: item.paymentMethod,
+        amount: item.amount.toString(),
+        description: item.description,
+        transactionDate: item.transactionDate,
+        walletId: item.walletId,
+        goalId: item.goalId,
+        categoryId: item.categoryId,
+        isInstallment: String(item.isInstallment),
+        installmentNumber: String(item.installmentNumber),
+        installmentTotal: String(item.installmentTotal),
       },
     });
   }
 
   function handleDelete() {
-    Alert.alert("Deletar meta", "Tem certeza que deseja excluir essa meta?", [
+    Alert.alert("Deletar transação", "Tem certeza que deseja excluir essa transação?", [
       { text: "Cancelar", style: "cancel" },
       {
         text: "Excluir",
@@ -61,33 +61,10 @@ function GoalCard({ item, gradient }: Props) {
     <View style={styles.card}>
       <View style={styles.header}>
         <View>
-          <AnimatedCircularProgress 
-            size={180}
-            width={15}
-            fill={60}
-            tintColor="#6C5CE7"
-            backgroundColor="#2D2D2D"
-            rotation={-90}
-            arcSweepAngle={180}
-          />
-          <Text style={styles.title}>{item.name}</Text>
-
-          <Text style={styles.subtitle}>
-            Meta de R$ {formatAmount(item.targetAmount.toString())}
-          </Text>
-
-          <Text style={styles.subtitle}>
-            Guardado: R$ {formatAmount(item.currentAmount.toString())}
-          </Text>
-
-          <Text style={styles.subtitle}>
-            Quanto falta: R$ {formatAmount(remaining.toString())}
-          </Text>
-
-          <Text style={{ ...styles.subtitle, fontSize: 12 }}>
-            Prazo:{" "}
-            {new Date(item.deadline).toLocaleDateString("pt-BR")}
-          </Text>
+          <Text style={styles.title}>{item.type}</Text>
+          <Text style={styles.subtitle}>transação de R$ {formatAmount(item.amount.toString()) || "–"}</Text>
+          <Text style={styles.subtitle}>{item.description}</Text>
+          <Text style={{...styles.subtitle, fontSize: 12}}>Prazo: {new Date(item.transactionDate).toLocaleDateString("pt-BR")}</Text>
         </View>
 
         <Dropdown>
@@ -102,20 +79,21 @@ function GoalCard({ item, gradient }: Props) {
             </Dropdown.Item>
 
             <Dropdown.Item onPress={handleDelete}>
-              <Text style={[styles.itemText, styles.destructive]}>
-                Deletar
-              </Text>
-              <Ionicons
-                name="trash-outline"
-                size={16}
-                color="#dc2626"
-              />
+              <Text style={[styles.itemText, styles.destructive]}>Deletar</Text>
+              <Ionicons name="trash-outline" size={16} color="#dc2626" />
             </Dropdown.Item>
           </Dropdown.Content>
         </Dropdown>
+        
       </View>
-
-      
+      <AnimatedProgressBar 
+        progress={0.5}
+        useGradient
+        gradientColors={gradient ?? ["#4dabf7", "#3b5bdb"]}
+        trackColor="rgba(255,255,255,0.08)"
+        showPercentage
+        width={"85%"}
+       /> 
     </View>
   );
 }
@@ -165,6 +143,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingVertical: 6,
     paddingHorizontal: 4,
+
     shadowColor: "#000",
     shadowOpacity: 0.15,
     shadowRadius: 10,
@@ -182,4 +161,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default GoalCard;
+export default CardTransaction;

@@ -19,11 +19,10 @@ import { useRouter } from "expo-router";
 import { useTransactions } from "@/contexts/transactionContext";
 import { ScrollView } from "react-native-gesture-handler";
 import Arrow from "@/assets/images/Arrow.svg";
-import { useCategory } from "@/contexts/categoryContext";
 
-function walletPage() {
+function transactionPage() {
   const router = useRouter();
-  const { categories } = useCategory();
+  const { transactions } = useTransactions();
   
   return (
     <Screen style={{ padding: 20 }}>
@@ -43,7 +42,7 @@ function walletPage() {
               </TouchableOpacity>
             </View>
 
-            {categories.length === 0 ? (
+            {transactions.length === 0 ? (
               <SafeAreaView style={styles.container}>
               <Empty>
                 <EmptyHeader>
@@ -53,18 +52,18 @@ function walletPage() {
                       backgroundColor: theme.colors.surface
                     }}
                   >
-                  <SymbolView name="gift.fill" size={60} tintColor={"#fff"} />
+                    <SymbolView name="arrow.down.left.arrow.up.right.square" size={60} tintColor={"#fff"} />
                   </EmptyMedia>
-                  <EmptyTitle>Nenhuma categoria</EmptyTitle>
+                  <EmptyTitle>Nenhuma transação</EmptyTitle>
                   <View style={{
                       position: "absolute",
                       bottom: -240,
-                      right: -70,
+                      right: -60,
                       gap: 15,
                       alignItems: "center"
                     }}>
                   <EmptyDescription>
-                    Que tal começar criando uma categoria
+                    Que tal começar criando uma transação
                   </EmptyDescription>
                   <Arrow width={100} height={60} style={{ transform: [{ rotate: "20deg" }] }} />
                 </View>
@@ -73,7 +72,7 @@ function walletPage() {
             </SafeAreaView>
             ) : (
               <View>
-                {categories.map((index, item) => (
+                {transactions.map((index, item) => (
                   <View>
                     <Text>{item}</Text>
                   </View>
@@ -102,7 +101,7 @@ function walletPage() {
   );
 }
 
-export default walletPage;
+export default transactionPage;
 
 const styles = StyleSheet.create({
   container: {
