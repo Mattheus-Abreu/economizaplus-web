@@ -1,24 +1,23 @@
-import SignUp from "@/assets/images/SignUp.svg";
+import { api } from "@/api/api";
 import Button from "@/components/Button";
 import Input from "@/components/inputs/Input";
+import Logo from "@/components/Logo";
 import Screen from "@/components/Screen";
 import useAuth from "@/hooks/useAuth";
-import { api } from "@/services/api";
+import signinStyle from "@/styles/signinStyle";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import { useState } from "react";
 import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Text,
-  View,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    Text,
+    View,
 } from "react-native";
 import signupStyle from "../../styles/signupStyle";
 import theme from "../themes/theme";
-import { FontAwesome, Ionicons } from "@expo/vector-icons";
-import signinStyle from "@/styles/signinStyle";
-import Logo from "@/components/Logo";
 
 function signup() {
   const [name, setName] = useState("");
@@ -67,20 +66,25 @@ function signup() {
           showsVerticalScrollIndicator={false}
         >
           <View>
-
-           <View style={signinStyle.header}>
-            <View style={signinStyle.logoArea}>
-              <Logo size="lg" />
-            </View>
+            <View style={signinStyle.header}>
+              <View style={signinStyle.logoArea}>
+                <Logo size="lg" />
+              </View>
               <Text style={signinStyle.title}>Novo Por aqui?</Text>
-              <Text style={signinStyle.subtitle}>Crie uma conta para continuar</Text>
-          </View>
-            
+              <Text style={signinStyle.subtitle}>
+                Crie uma conta para continuar
+              </Text>
+            </View>
 
             <View style={signupStyle.form}>
               <View style={signupStyle.field}>
-              <Text style={signupStyle.fieldLabel}>nome</Text>
-                <View style={[signupStyle.fieldInput, name.length > 0 && signupStyle.fieldInputActive]}>
+                <Text style={signupStyle.fieldLabel}>nome</Text>
+                <View
+                  style={[
+                    signupStyle.fieldInput,
+                    name.length > 0 && signupStyle.fieldInputActive,
+                  ]}
+                >
                   <FontAwesome
                     name="user-o"
                     size={18}
@@ -96,8 +100,13 @@ function signup() {
                 </View>
               </View>
               <View style={signupStyle.field}>
-              <Text style={signupStyle.fieldLabel}>email</Text>
-                <View style={[signupStyle.fieldInput, email.length > 0 && signupStyle.fieldInputActive]}>
+                <Text style={signupStyle.fieldLabel}>email</Text>
+                <View
+                  style={[
+                    signupStyle.fieldInput,
+                    email.length > 0 && signupStyle.fieldInputActive,
+                  ]}
+                >
                   <FontAwesome
                     name="envelope-o"
                     size={18}
@@ -114,12 +123,19 @@ function signup() {
                 </View>
               </View>
               <View style={signupStyle.field}>
-              <Text style={signupStyle.fieldLabel}>senha</Text>
-                <View style={[signupStyle.fieldInput, password.length > 0 && signupStyle.fieldInputActive]}>
+                <Text style={signupStyle.fieldLabel}>senha</Text>
+                <View
+                  style={[
+                    signupStyle.fieldInput,
+                    password.length > 0 && signupStyle.fieldInputActive,
+                  ]}
+                >
                   <Ionicons
                     name="lock-closed-outline"
                     size={20}
-                    color={password.length > 0 ? theme.colors.primary : "#94A3B8"}
+                    color={
+                      password.length > 0 ? theme.colors.primary : "#94A3B8"
+                    }
                   />
                   <Input
                     style={signupStyle.inlineInput}
@@ -132,12 +148,21 @@ function signup() {
                 </View>
               </View>
               <View style={signupStyle.field}>
-              <Text style={signupStyle.fieldLabel}>confirmar senha</Text>
-                <View style={[signupStyle.fieldInput, confirmPassword.length > 0 && signupStyle.fieldInputActive]}>
+                <Text style={signupStyle.fieldLabel}>confirmar senha</Text>
+                <View
+                  style={[
+                    signupStyle.fieldInput,
+                    confirmPassword.length > 0 && signupStyle.fieldInputActive,
+                  ]}
+                >
                   <Ionicons
                     name="lock-closed-outline"
                     size={20}
-                    color={confirmPassword.length > 0 ? theme.colors.primary : "#94A3B8"}
+                    color={
+                      confirmPassword.length > 0
+                        ? theme.colors.primary
+                        : "#94A3B8"
+                    }
                   />
                   <Input
                     style={signupStyle.inlineInput}
@@ -148,7 +173,7 @@ function signup() {
                     onChangeText={setConfirmPassword}
                   />
                 </View>
-            </View>
+              </View>
               <Button label="Cadastrar" onPress={handleSignup} />
             </View>
 

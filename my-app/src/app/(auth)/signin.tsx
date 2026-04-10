@@ -1,24 +1,23 @@
-import SignIn from "@/assets/images/SignIn.svg";
+import { api } from "@/api/api";
 import Button from "@/components/Button";
 import Input from "@/components/inputs/Input";
+import Logo from "@/components/Logo";
 import Screen from "@/components/Screen";
 import useAuth from "@/hooks/useAuth";
-import { api } from "@/services/api";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import * as Google from "expo-auth-session/providers/google";
 import { Link } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Text,
-  View,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    Text,
+    View,
 } from "react-native";
 import signinStyle from "../../styles/signinStyle";
 import theme from "../themes/theme";
-import Logo from "@/components/Logo";
 
 function SignInPage() {
   const [email, setEmail] = useState("");
@@ -28,7 +27,8 @@ function SignInPage() {
   const redirectUri = "https://auth.expo.io/@rdavila_mesquita/my-app";
 
   const [request, response, promptAsync] = Google.useAuthRequest({
-    clientId: "956093747088-0400ghkmq73pmpuuroqnsr2p63cm49db.apps.googleusercontent.com",
+    clientId:
+      "956093747088-0400ghkmq73pmpuuroqnsr2p63cm49db.apps.googleusercontent.com",
     redirectUri,
     scopes: ["openid", "profile", "email"],
   });
@@ -51,7 +51,10 @@ function SignInPage() {
         const res = await api.post("/api/login/google", { idToken });
         signIn(res.data.token);
       } catch (error: any) {
-        Alert.alert("Erro", error.response?.data?.error || "Erro ao autenticar com Google");
+        Alert.alert(
+          "Erro",
+          error.response?.data?.error || "Erro ao autenticar com Google",
+        );
       }
     }
 
@@ -89,25 +92,32 @@ function SignInPage() {
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.select({ ios: "padding", android: "padding" })}
-    ><Screen style={signinStyle.screen}>
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        
-        <View style={signinStyle.header}>
-          <View style={signinStyle.logoArea}>
-            <Logo size="lg" />
-          </View>
+    >
+      <Screen style={signinStyle.screen}>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={signinStyle.header}>
+            <View style={signinStyle.logoArea}>
+              <Logo size="lg" />
+            </View>
             <Text style={signinStyle.title}>Bem-vindo de volta</Text>
-            <Text style={signinStyle.subtitle}>Entre na sua conta para continuar</Text>
-        </View>
+            <Text style={signinStyle.subtitle}>
+              Entre na sua conta para continuar
+            </Text>
+          </View>
 
-            <View style={signinStyle.form}>
-              <View style={signinStyle.field}>
+          <View style={signinStyle.form}>
+            <View style={signinStyle.field}>
               <Text style={signinStyle.fieldLabel}>email</Text>
-              <View style={[signinStyle.fieldInput, email.length > 0 && signinStyle.fieldInputActive]}>
+              <View
+                style={[
+                  signinStyle.fieldInput,
+                  email.length > 0 && signinStyle.fieldInputActive,
+                ]}
+              >
                 <FontAwesome
                   name="envelope-o"
                   size={18}
@@ -123,12 +133,17 @@ function SignInPage() {
                 />
               </View>
             </View>
-              <View style={signinStyle.field}>
+            <View style={signinStyle.field}>
               <Text style={signinStyle.fieldLabel}>senha</Text>
-              <View style={[signinStyle.fieldInput, password.length > 0 && signinStyle.fieldInputActive]}>
+              <View
+                style={[
+                  signinStyle.fieldInput,
+                  password.length > 0 && signinStyle.fieldInputActive,
+                ]}
+              >
                 <Ionicons
-                    name="lock-closed-outline"
-                    size={20}
+                  name="lock-closed-outline"
+                  size={20}
                   color={password.length > 0 ? theme.colors.primary : "#94A3B8"}
                 />
                 <Input
@@ -141,39 +156,38 @@ function SignInPage() {
                 />
               </View>
             </View>
-              <Text
-                style={signinStyle.forgotPassword}
-                onPress={handleForgotPassword}
-              >
-                Esqueci minha senha
-              </Text>
-              <Button label="Entrar" onPress={handleSignIn} />
-            </View>
-
-            <View style={signinStyle.dividerRow}>
-              <View style={signinStyle.divider} />
-              <Text style={signinStyle.dividerLabel}>ou</Text>
-              <View style={signinStyle.divider} />
-            </View>
-
-            <Button
-              label="Entrar com Google"
-              onPress={handleGoogleSignin}
-              style={signinStyle.googleButton}
-              textStyle={{ color: "#000" }}
+            <Text
+              style={signinStyle.forgotPassword}
+              onPress={handleForgotPassword}
             >
-              <FontAwesome name="google" size={24} color="black" />
-            </Button>
-
-            <Text style={signinStyle.footerText}>
-              Não tem conta?{" "}
-              <Link href="/signup" style={signinStyle.footerLink}>
-                Cadastre-se aqui
-              </Link>
+              Esqueci minha senha
             </Text>
-          </ScrollView>
-        </Screen>
-      
+            <Button label="Entrar" onPress={handleSignIn} />
+          </View>
+
+          <View style={signinStyle.dividerRow}>
+            <View style={signinStyle.divider} />
+            <Text style={signinStyle.dividerLabel}>ou</Text>
+            <View style={signinStyle.divider} />
+          </View>
+
+          <Button
+            label="Entrar com Google"
+            onPress={handleGoogleSignin}
+            style={signinStyle.googleButton}
+            textStyle={{ color: "#000" }}
+          >
+            <FontAwesome name="google" size={24} color="black" />
+          </Button>
+
+          <Text style={signinStyle.footerText}>
+            Não tem conta?{" "}
+            <Link href="/signup" style={signinStyle.footerLink}>
+              Cadastre-se aqui
+            </Link>
+          </Text>
+        </ScrollView>
+      </Screen>
     </KeyboardAvoidingView>
   );
 }

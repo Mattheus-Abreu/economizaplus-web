@@ -1,12 +1,11 @@
+import { api } from "@/api/api";
 import theme from "@/app/themes/theme";
-import Button from "@/components/Button"
+import Button from "@/components/Button";
 import Screen from "@/components/Screen";
 import useAuth from "@/hooks/useAuth";
-import { api } from "@/services/api";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useLocalSearchParams, useRouter } from "expo-router"
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native"
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 function IAScreen() {
   const router = useRouter();
@@ -33,20 +32,22 @@ function IAScreen() {
 
   useEffect(() => {
     async function load() {
-      if(!token){
+      if (!token) {
         console.log("esperando token");
         return;
       }
-      
-      const result = await api.post("/api/ai/tips", 
+
+      const result = await api.post(
+        "/api/ai/tips",
         {
-          goals: parsedGoals
+          goals: parsedGoals,
         },
         {
-        headers: {
-          Authorization: `Bearer ${token}`
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
       console.log(token);
 
       try {
@@ -67,25 +68,22 @@ function IAScreen() {
   return (
     <Screen>
       <ScrollView>
-        {content && content.sections.map((section: Section) => (
-          <View key={section.title} style={styles.container}>
-            <Text style={styles.title}>{section.title}</Text>
+        {content &&
+          content.sections.map((section: Section) => (
+            <View key={section.title} style={styles.container}>
+              <Text style={styles.title}>{section.title}</Text>
 
-            {section.tips.map((tip: Tip) => (
-              <View key={tip.title}>
-                <Text style={styles.subtitle}>{tip.title}</Text>
-                <Text style={styles.text}>{tip.description}</Text>
-              </View>
-            ))}
-          </View>
-        ))}
-        <Text style={styles.text}>
-          Que tal começar? Crie uma meta.
-      </Text>
-      <Button label="Criar meta" onPress={redirectPage} />
+              {section.tips.map((tip: Tip) => (
+                <View key={tip.title}>
+                  <Text style={styles.subtitle}>{tip.title}</Text>
+                  <Text style={styles.text}>{tip.description}</Text>
+                </View>
+              ))}
+            </View>
+          ))}
+        <Text style={styles.text}>Que tal começar? Crie uma meta.</Text>
+        <Button label="Criar meta" onPress={redirectPage} />
       </ScrollView>
-
-      
     </Screen>
   );
 }
@@ -103,13 +101,13 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: theme.fontSize.subtitle,
     fontWeight: 800,
-    color: theme.colors.text
+    color: theme.colors.text,
   },
-  text:{
+  text: {
     fontSize: theme.fontSize.text,
     fontWeight: 400,
-    color: theme.colors.text
-  }
+    color: theme.colors.text,
+  },
 });
 
-export default IAScreen
+export default IAScreen;

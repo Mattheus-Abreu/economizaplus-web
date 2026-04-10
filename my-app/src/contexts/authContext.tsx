@@ -1,6 +1,6 @@
-import { createContext, PropsWithChildren, useEffect, useState } from "react";
+import { api } from "@/api/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { api } from "@/services/api";
+import { createContext, PropsWithChildren, useEffect, useState } from "react";
 
 type AuthState = {
   isLoggedIn: boolean;
@@ -20,16 +20,16 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [token, setToken] = useState<string | null>(null);
 
   async function signIn(newToken: string) {
-  api.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
+    api.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
 
-  await AsyncStorage.setItem(
-    AUTH_STORAGE_KEY,
-    JSON.stringify({ isLoggedIn: true, token: newToken })
-  );
+    await AsyncStorage.setItem(
+      AUTH_STORAGE_KEY,
+      JSON.stringify({ isLoggedIn: true, token: newToken }),
+    );
 
-  setToken(newToken);
-  setIsLoggedIn(true);
-}
+    setToken(newToken);
+    setIsLoggedIn(true);
+  }
 
   async function signOut() {
     delete api.defaults.headers.common["Authorization"];
@@ -38,42 +38,43 @@ export function AuthProvider({ children }: PropsWithChildren) {
     await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
   }
 
- useEffect(() => {
-  async function loadStorageState() {
-    try {
-      const stored = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
-      const state = stored ? JSON.parse(stored) : null;
+  useEffect(() => {
+    async function loadStorageState() {
+      try {
+        const stored = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
+        const state = stored ? JSON.parse(stored) : null;
 
-      if (state?.token) {
-        api.defaults.headers.common["Authorization"] = `Bearer ${state.token}`;
+        if (state?.token) {
+          api.defaults.headers.common["Authorization"] =
+            `Bearer ${state.token}`;
+        }
+
+        setIsLoggedIn(state?.isLoggedIn ?? false);
+        setToken(state?.token ?? null);
+      } catch (error) {
+        console.log("ERROR_GET_STORAGE", error);
+        setIsLoggedIn(false);
+      } finally {
+        setIsReady(true);
+      }
+    }
+
+    loadStorageState();
+  }, []);
+
+  useEffect(() => {
+    const interceptor = api.interceptors.request.use((config) => {
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
       }
 
-      setIsLoggedIn(state?.isLoggedIn ?? false);
-      setToken(state?.token ?? null);
-    } catch (error) {
-      console.log("ERROR_GET_STORAGE", error);
-      setIsLoggedIn(false);
-    } finally {
-      setIsReady(true);
-    }
-  }
+      return config;
+    });
 
-  loadStorageState();
-}, []);
-
-useEffect(() => {
-  const interceptor = api.interceptors.request.use((config) => {
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
-    return config;
-  });
-
-  return () => {
-    api.interceptors.request.eject(interceptor);
-  };
-}, [token]);
+    return () => {
+      api.interceptors.request.eject(interceptor);
+    };
+  }, [token]);
 
   return (
     <AuthContext.Provider

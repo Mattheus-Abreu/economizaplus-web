@@ -1,11 +1,11 @@
-import { View, Text, StyleSheet, Pressable } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
-import { useSharedValue, withTiming, Easing } from "react-native-reanimated";
-import { useEffect } from "react";
-import { CircularProgress } from "./circular-progress";
 import theme from "@/app/themes/theme";
 import Goal from "@/types/goal";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
+import { useEffect } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Easing, useSharedValue, withTiming } from "react-native-reanimated";
+import { CircularProgress } from "./circular-progress";
 
 export const GRADIENTS: [string, string][] = [
   ["#F43F5E", "#FB7185"],
@@ -17,18 +17,18 @@ export const GRADIENTS: [string, string][] = [
 ];
 
 function formatAmount(value: string): string {
-    const num = parseFloat(value);
-    if (isNaN(num)) return "–";
-    return num.toLocaleString("pt-BR", {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    });
-  }
+  const num = parseFloat(value);
+  if (isNaN(num)) return "–";
+  return num.toLocaleString("pt-BR", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  });
+}
 
 type Props = {
   item: Goal;
   fontLoaded: boolean;
-  gradientIndex?: number; 
+  gradientIndex?: number;
 };
 
 const CardHome = ({ item, fontLoaded, gradientIndex = 0 }: Props) => {
@@ -36,20 +36,20 @@ const CardHome = ({ item, fontLoaded, gradientIndex = 0 }: Props) => {
   const progress = useSharedValue(0);
 
   useEffect(() => {
-  const current = Number(item.currentAmount);
-  const target = Number(item.targetAmount);
+    const current = Number(item.currentAmount);
+    const target = Number(item.targetAmount);
 
-  if (!current || !target || target <= 0) {
-    progress.value = withTiming(0, { duration: 600 });
-    return;
-  }
+    if (!current || !target || target <= 0) {
+      progress.value = withTiming(0, { duration: 600 });
+      return;
+    }
 
-  const percent = Math.min((current / target) * 100, 100);
-  progress.value = withTiming(percent, {
-    duration: 800,
-    easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-  });
-}, [item.currentAmount, item.targetAmount]);
+    const percent = Math.min((current / target) * 100, 100);
+    progress.value = withTiming(percent, {
+      duration: 800,
+      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+    });
+  }, [item.currentAmount, item.targetAmount]);
 
   const gradient = GRADIENTS[gradientIndex % GRADIENTS.length];
 
@@ -70,7 +70,10 @@ const CardHome = ({ item, fontLoaded, gradientIndex = 0 }: Props) => {
         }
         style={({ pressed }) => [
           styles.pressable,
-          { opacity: pressed ? 0.85 : 1, transform: [{ scale: pressed ? 0.97 : 1 }] },
+          {
+            opacity: pressed ? 0.85 : 1,
+            transform: [{ scale: pressed ? 0.97 : 1 }],
+          },
         ]}
       >
         <View style={styles.progressContainer}>
@@ -85,10 +88,20 @@ const CardHome = ({ item, fontLoaded, gradientIndex = 0 }: Props) => {
         </View>
 
         <View style={styles.cardMiddle}>
-          <Text style={[styles.cardTitle, fontLoaded && { fontFamily: "InterMedium" }]}>
+          <Text
+            style={[
+              styles.cardTitle,
+              fontLoaded && { fontFamily: "InterMedium" },
+            ]}
+          >
             {item.name}
           </Text>
-          <Text style={[styles.cardSubtitle, fontLoaded && { fontFamily: "InterRegular" }]}>
+          <Text
+            style={[
+              styles.cardSubtitle,
+              fontLoaded && { fontFamily: "InterRegular" },
+            ]}
+          >
             Meta de R$ {formatAmount(item.targetAmount.toString()) || "0,00"}
           </Text>
         </View>

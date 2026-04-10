@@ -1,12 +1,10 @@
 import Dropdown from "@/components/dropdown";
 import { useGoals } from "@/contexts/goalContext";
-import Goal from "@/types/goal";
+import Transaction from "@/types/transaction";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Alert, StyleSheet, Text, View } from "react-native";
 import { AnimatedProgressBar } from "./progressBar";
-import Card from "./Card";
-import Transaction from "@/types/transaction";
 
 type Props = {
   item: Transaction;
@@ -47,14 +45,18 @@ function CardTransaction({ item, gradient }: Props) {
   }
 
   function handleDelete() {
-    Alert.alert("Deletar transação", "Tem certeza que deseja excluir essa transação?", [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Excluir",
-        style: "destructive",
-        onPress: () => deleteGoal(item.id),
-      },
-    ]);
+    Alert.alert(
+      "Deletar transação",
+      "Tem certeza que deseja excluir essa transação?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Excluir",
+          style: "destructive",
+          onPress: () => deleteGoal(item.id),
+        },
+      ],
+    );
   }
 
   return (
@@ -62,9 +64,13 @@ function CardTransaction({ item, gradient }: Props) {
       <View style={styles.header}>
         <View>
           <Text style={styles.title}>{item.type}</Text>
-          <Text style={styles.subtitle}>transação de R$ {formatAmount(item.amount.toString()) || "–"}</Text>
+          <Text style={styles.subtitle}>
+            transação de R$ {formatAmount(item.amount.toString()) || "–"}
+          </Text>
           <Text style={styles.subtitle}>{item.description}</Text>
-          <Text style={{...styles.subtitle, fontSize: 12}}>Prazo: {new Date(item.transactionDate).toLocaleDateString("pt-BR")}</Text>
+          <Text style={{ ...styles.subtitle, fontSize: 12 }}>
+            Prazo: {new Date(item.transactionDate).toLocaleDateString("pt-BR")}
+          </Text>
         </View>
 
         <Dropdown>
@@ -84,16 +90,15 @@ function CardTransaction({ item, gradient }: Props) {
             </Dropdown.Item>
           </Dropdown.Content>
         </Dropdown>
-        
       </View>
-      <AnimatedProgressBar 
+      <AnimatedProgressBar
         progress={0.5}
         useGradient
         gradientColors={gradient ?? ["#4dabf7", "#3b5bdb"]}
         trackColor="rgba(255,255,255,0.08)"
         showPercentage
         width={"85%"}
-       /> 
+      />
     </View>
   );
 }
