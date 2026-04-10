@@ -4,7 +4,6 @@ import Goal from "@/types/goal";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Alert, StyleSheet, Text, View } from "react-native";
-import { AnimatedProgressBar } from "./progressBar";
 import { AnimatedCircularProgress } from "react-native-circular-progress";
 
 type Props = {
@@ -27,11 +26,10 @@ function GoalCard({ item, gradient }: Props) {
 
   const progress = Math.min(
     Number(item.currentAmount) / Number(item.targetAmount || 1),
-    1
+    1,
   );
 
-  const remaining =
-    Number(item.targetAmount) - Number(item.currentAmount);
+  const remaining = Number(item.targetAmount) - Number(item.currentAmount);
 
   function handleEdit() {
     router.push({
@@ -61,7 +59,7 @@ function GoalCard({ item, gradient }: Props) {
     <View style={styles.card}>
       <View style={styles.header}>
         <View>
-          <AnimatedCircularProgress 
+          <AnimatedCircularProgress
             size={180}
             width={15}
             fill={60}
@@ -85,8 +83,7 @@ function GoalCard({ item, gradient }: Props) {
           </Text>
 
           <Text style={{ ...styles.subtitle, fontSize: 12 }}>
-            Prazo:{" "}
-            {new Date(item.deadline).toLocaleDateString("pt-BR")}
+            Prazo: {new Date(item.deadline).toLocaleDateString("pt-BR")}
           </Text>
         </View>
 
@@ -102,20 +99,12 @@ function GoalCard({ item, gradient }: Props) {
             </Dropdown.Item>
 
             <Dropdown.Item onPress={handleDelete}>
-              <Text style={[styles.itemText, styles.destructive]}>
-                Deletar
-              </Text>
-              <Ionicons
-                name="trash-outline"
-                size={16}
-                color="#dc2626"
-              />
+              <Text style={[styles.itemText, styles.destructive]}>Deletar</Text>
+              <Ionicons name="trash-outline" size={16} color="#dc2626" />
             </Dropdown.Item>
           </Dropdown.Content>
         </Dropdown>
       </View>
-
-      
     </View>
   );
 }

@@ -1,4 +1,5 @@
 import theme from "@/app/themes/theme";
+import CardHome from "@/components/CardHome";
 import Logo from "@/components/Logo";
 import QuickActions from "@/components/QuickActions";
 import Screen from "@/components/Screen";
@@ -11,12 +12,11 @@ import { Link, Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import {
-  GestureHandlerRootView,
-  ScrollView,
+    GestureHandlerRootView,
+    ScrollView,
 } from "react-native-gesture-handler";
 import { BlurCarousel } from "../../../components/carousel";
 import Icons from "../../../components/Icons";
-import CardHome from "@/components/CardHome";
 
 const QUICK_ACTIONS_HEIGHT = 90;
 
@@ -42,14 +42,54 @@ function Home() {
   const routes = useRouter();
 
   const CATEGORIES = [
-    { name: "plus", label: "Add", color: "#f171f1", route: "/category/createCategory" },
-    { name: "lightbulb-o", label: "Luz", color: "#FACC15", route: "/category/categoryPage" },
-    { name: "tint", label: "Água", color: "#38BDF8", route: "/category/categoryPage" },
-    { name: "wifi", label: "Internet", color: "#A78BFA", route: "/category/categoryPage" },
-    { name: "shopping-cart", label: "Compras", color: "#34D399", route: "/category/categoryPage" },
-    { name: "car", label: "Transporte", color: "#FB7185", route: "/category/categoryPage" },
-    { name: "cutlery", label: "Comida", color: "#F97316", route: "/category/categoryPage" },
-    { name: "heartbeat", label: "Saúde", color: "#EF4444", route: "/category/categoryPage" },
+    {
+      name: "plus",
+      label: "Add",
+      color: "#f171f1",
+      route: "/category/createCategory",
+    },
+    {
+      name: "lightbulb-o",
+      label: "Luz",
+      color: "#FACC15",
+      route: "/category/categoryPage",
+    },
+    {
+      name: "tint",
+      label: "Água",
+      color: "#38BDF8",
+      route: "/category/categoryPage",
+    },
+    {
+      name: "wifi",
+      label: "Internet",
+      color: "#A78BFA",
+      route: "/category/categoryPage",
+    },
+    {
+      name: "shopping-cart",
+      label: "Compras",
+      color: "#34D399",
+      route: "/category/categoryPage",
+    },
+    {
+      name: "car",
+      label: "Transporte",
+      color: "#FB7185",
+      route: "/category/categoryPage",
+    },
+    {
+      name: "cutlery",
+      label: "Comida",
+      color: "#F97316",
+      route: "/category/categoryPage",
+    },
+    {
+      name: "heartbeat",
+      label: "Saúde",
+      color: "#EF4444",
+      route: "/category/categoryPage",
+    },
   ];
 
   return (
@@ -85,7 +125,6 @@ function Home() {
           </View>
 
           <View style={styles.surface}>
-
             <View style={styles.quickActionsWrapper}>
               <QuickActions />
             </View>
@@ -100,20 +139,19 @@ function Home() {
               </Link>
             </View>
             <View style={styles.categoriesGrid}>
-              
-                {CATEGORIES.map((item, index) => (
-                  <TouchableOpacity 
-                    key={item.name}
-                    onPress={() => routes.push(item.route as Route)}>
+              {CATEGORIES.map((item, index) => (
+                <TouchableOpacity
+                  key={item.name}
+                  onPress={() => routes.push(item.route as Route)}
+                >
                   <Icons
                     key={index}
                     name={item.name as any}
                     label={item.label}
                     color={item.color}
                   />
-                  </TouchableOpacity>
-                ))}
-              
+                </TouchableOpacity>
+              ))}
             </View>
 
             <View style={styles.sectionHeader}>
