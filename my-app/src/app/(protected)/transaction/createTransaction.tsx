@@ -23,11 +23,9 @@ import { useSharedValue } from "react-native-reanimated";
 import { useTransactions } from "@/contexts/transactionContext";
 import { useGoals } from "@/contexts/goalContext";
 import { useCategory } from "@/contexts/categoryContext";
+import { useWallets } from "@/contexts/walletContext";
 
-type PaymentMethod = "Dinheiro" | "Cartão" | "Pix" | "Transferencia" 
-type TransactionType = "Entrada" | "Saída"
 type isInstallmentType = "Sim" | "Não"
-type CardType = "Crédito" | "Débito"
 
 function CreateTransaction() {
   const router = useRouter();
@@ -37,6 +35,7 @@ function CreateTransaction() {
     id?: string;
     type?: TransactionType;
     paymentMethod?: PaymentMethod;
+    walletId?: string;
     card?: CardType;
     interestRate?: string;
     amount?: string;
@@ -53,6 +52,7 @@ function CreateTransaction() {
 
   const [type, setType] = useState(params.type ?? "");
   const [paymentMethod, setPaymentMethod] = useState(params.paymentMethod ?? "");
+  const [walletId, setWalletId] = useState(params.walletId ?? "");
   const [card, setCard] = useState(params.card ?? "");
   const [amount, setAmount] = useState(params.amount ?? "");
   const [description, setDescription] = useState(params.description ?? "");
@@ -66,30 +66,40 @@ function CreateTransaction() {
 
   const progress = useSharedValue(0);
 
-  const types: TransactionType[] = [
-    "Entrada",
-    "Saída",
+  type TransactionType = "INCOME" | "EXPENSE" | "TRANSFER";
+
+  const transactionsTypes: { id: TransactionType; name: string }[] = [
+    { id: "INCOME", name: "Entrada" },
+    { id: "EXPENSE", name: "Saída" },
+    { id: "TRANSFER", name: "Transferência" },
   ];
 
-  const payments: PaymentMethod[] = [
-    "Dinheiro",
-    "Cartão",
-    "Pix",
-    "Transferencia",
+  type PaymentMethod = "CASH" | "CREDIT_CARD" | "DEBIT_CARD" | "PIX" | "BANK_TRANSFER";
+
+  const paymentMethods: { id: PaymentMethod; name: string }[] = [
+    { id: "CASH", name: "Dinheiro" },
+    { id: "CREDIT_CARD", name: "Cartão de Crédito" },
+    { id: "DEBIT_CARD", name: "Cartão de Débito" },
+    { id: "PIX", name: "Pix" },
   ];
 
-  const installments: isInstallmentType[] = [
-    "Sim",
-    "Não",
+  type InstallmentType = "Sim" | "Nao";
+
+  const installments: { id: InstallmentType; name: string }[] = [
+    { id: "Sim", name: "Sim" },
+    { id: "Nao", name: "Não" },
   ];
 
-  const cardTypes: CardType[] = [
-    "Crédito",
-    "Débito",
+  type CardType = "CREDIT" | "DEBIT";
+
+  const cardTypes: { id: CardType; name: string }[] = [
+    { id: "CREDIT", name: "Crédito" },
+    { id: "DEBIT", name: "Debito" },
   ];
 
   const { goals } = useGoals();
   const { categories } = useCategory();
+  const { wallets } = useWallets();
 
 
   function formatAmount(value: string): string {
@@ -155,13 +165,35 @@ function calculateTotal() {
   }
 
   const CATEGORIES = [
-    {name: "Alimentação", id: 1},
-    {name: "Lazer", id: 2},
-    {name: "Trabalho", id: 3},
-    {name: "Transporte", id: 4},
-    {name: "Saude", id: 5},
-    {name: "Outros", id: 6},
-  ]
+    {
+      id: "1",
+      name: "Luz",
+    },
+    {
+      id: "2",
+      name: "Água",
+    },
+    {
+      id: "3",
+      name: "Internet",
+    },
+    {
+      id: "4",
+      name: "Compras",
+    },
+    {
+      id: "5",
+      name: "Transporte",
+    },
+    {
+      id: "6",
+      name: "Comida",
+    },
+    {
+      id: "7",
+      name: "Saúde",
+    },
+  ];
 
   return (
     <KeyboardAvoidingView
@@ -208,22 +240,22 @@ function calculateTotal() {
             <View style={styles.field}>
               <Text style={styles.fieldLabel}>Tipo de transação</Text>
                 <View style={styles.typeContainer}>
-                  {types.map((t) => (
+                  {transactionsTypes.map((t) => (
                     <TouchableOpacity
-                      key={t}
-                      onPress={() => setType(t)}
+                      key={t.id}
+                      onPress={() => setType(t.id)}
                       style={[
                         styles.typeButton,
-                        type === t && styles.typeButtonActive,
+                        type === t.id && styles.typeButtonActive,
                       ]}
                     >
                       <Text
                         style={{
                           color:
-                            type === t ? "#fff" : theme.colors.text,
+                            type === t.id ? "#fff" : theme.colors.text,
                         }}
                       >
-                        {t}
+                        {t.name}
                       </Text>
                     </TouchableOpacity>
                   ))}
@@ -251,75 +283,77 @@ function calculateTotal() {
             </View>
             
             <View style={styles.field}>
+              <Text style={styles.fieldLabel}>Escolha uma carteira</Text>
+                <View style={styles.typeContainer}>
+                  {wallets.length === 0 ? (
+                    <Text style={styles.emptyField}>Nenhuma carteira cadastrada</Text>
+                  ) : (
+                    wallets.map((w) => (
+                      <TouchableOpacity
+                        key={w.id}
+                        onPress={() => setWalletId(w.id)}
+                        style={[
+                          styles.typeButton,
+                          walletId === w.id && styles.typeButtonActive,
+                        ]}
+                      >
+                        <Text
+                          style={{
+                            color: walletId === w.id ? "#fff" : theme.colors.text,
+                          }}
+                        >
+                          {w.name}
+                        </Text>
+                      </TouchableOpacity>
+                    ))
+                  )}
+                </View>
+            </View>
+
+            <View style={styles.field}>
               <Text style={styles.fieldLabel}>Método de pagamento</Text>
                 <View style={styles.typeContainer}>
-                  {payments.map((p) => (
+                  {paymentMethods.map((p) => (
                     <TouchableOpacity
-                      key={p}
-                      onPress={() => setPaymentMethod(p)}
+                      key={p.id}
+                      onPress={() => setPaymentMethod(p.id)}
                       style={[
                         styles.typeButton,
-                        paymentMethod === p && styles.typeButtonActive,
+                        paymentMethod === p.id && styles.typeButtonActive,
                       ]}
                     >
                       <Text
                         style={{
                           color:
-                            paymentMethod === p ? "#fff" : theme.colors.text,
+                            paymentMethod === p.id ? "#fff" : theme.colors.text,
                         }}
                       >
-                        {p}
+                        {p.name}
                       </Text>
                     </TouchableOpacity>
                   ))}
               </View>
             </View>
-            {paymentMethod === "Cartão" && (
-              <View style={styles.field}>
-                <Text style={styles.fieldLabel}>Tipo do cartão</Text>
-                  <View style={styles.typeContainer}>
-                    {cardTypes.map((c) => (
-                      <TouchableOpacity
-                        key={c}
-                        onPress={() => setCard(c)}
-                        style={[
-                          styles.typeButton,
-                          card === c && styles.typeButtonActive,
-                        ]}
-                      >
-                        <Text
-                          style={{
-                            color:
-                              card === c ? "#fff" : theme.colors.text,
-                          }}
-                        >
-                          {c}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                </View>
-              </View>
-            )}
-            {paymentMethod === "Cartão" && (
+            {(paymentMethod === "CREDIT_CARD" || paymentMethod === "DEBIT_CARD") && (
               <View style={styles.field}>
                 <Text style={styles.fieldLabel}>Pagou parcelado?</Text>
                   <View style={styles.typeContainer}>
                     {installments.map((i) => (
                       <TouchableOpacity
-                        key={i}
-                        onPress={() => setIsInstallment(i)}
+                        key={i.id}
+                        onPress={() => setIsInstallment(i.id)}
                         style={[
                           styles.typeButton,
-                          isInstallment === i && styles.typeButtonActive,
+                          isInstallment === i.id && styles.typeButtonActive,
                         ]}
                       >
                         <Text
                           style={{
                             color:
-                              isInstallment === i ? "#fff" : theme.colors.text,
+                              isInstallment === i.id ? "#fff" : theme.colors.text,
                           }}
                         >
-                          {i}
+                          {i.name}
                         </Text>
                       </TouchableOpacity>
                     ))}
@@ -605,7 +639,6 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: theme.colors.glass,
     backgroundColor: theme.colors.surface,
-
   },
   inlineInput: {
     flex: 1,

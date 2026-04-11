@@ -19,6 +19,7 @@ import { useRouter } from "expo-router";
 import { useTransactions } from "@/contexts/transactionContext";
 import { ScrollView } from "react-native-gesture-handler";
 import Arrow from "@/assets/images/Arrow.svg";
+import FloatingButton from "@/components/FloatingButton";
 
 function transactionPage() {
   const router = useRouter();
@@ -57,7 +58,7 @@ function transactionPage() {
                   <EmptyTitle>Nenhuma transação</EmptyTitle>
                   <View style={{
                       position: "absolute",
-                      bottom: -240,
+                      bottom: -260,
                       right: -60,
                       gap: 15,
                       alignItems: "center"
@@ -80,23 +81,12 @@ function transactionPage() {
               </View>
           )}
           </View>
-
-          <View
-            style={{
-              position: "absolute",
-              bottom: 20,
-              right: 20,
-              padding: 25,
-              backgroundColor: theme.colors.primary,
-              borderRadius: 80,
-            }}
-          >
-            <TouchableOpacity onPress={() => router.push("/(protected)/transaction/createTransaction")}>
-              <FontAwesome name="plus" size={30} color="white" />
-            </TouchableOpacity>
-          </View>
         </View>
       </ScrollView>
+      <FloatingButton 
+        style={{ position: "absolute", bottom: 20, right: 20, padding: 25}}
+        onPress={() => router.push("/transaction/createTransaction")}
+      />
     </Screen>
   );
 }

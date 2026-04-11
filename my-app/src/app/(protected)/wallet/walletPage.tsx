@@ -20,6 +20,8 @@ import { useTransactions } from "@/contexts/transactionContext";
 import { ScrollView } from "react-native-gesture-handler";
 import Arrow from "@/assets/images/Arrow.svg";
 import { useWallets } from "@/contexts/walletContext";
+import CardWallet from "@/components/CardWallet";
+import FloatingButton from "@/components/FloatingButton";
 
 function walletPage() {
   const router = useRouter();
@@ -53,18 +55,18 @@ function walletPage() {
                       backgroundColor: theme.colors.surface
                     }}
                   >
-                  <SymbolView name="gift.fill" size={60} tintColor={"#fff"} />
+                  <SymbolView name="wallet.bifold" size={60} tintColor={"#fff"} />
                   </EmptyMedia>
-                  <EmptyTitle>Nenhuma caixinha</EmptyTitle>
+                  <EmptyTitle>Nenhuma carteira</EmptyTitle>
                   <View style={{
                       position: "absolute",
-                      bottom: -240,
+                      bottom: -260,
                       right: -70,
                       gap: 15,
                       alignItems: "center"
                     }}>
                   <EmptyDescription>
-                    Que tal começar criando uma caixinha
+                    Que tal começar criando uma carteira
                   </EmptyDescription>
                   <Arrow width={100} height={60} style={{ transform: [{ rotate: "20deg" }] }} />
                 </View>
@@ -72,32 +74,20 @@ function walletPage() {
               </Empty>
             </SafeAreaView>
             ) : (
-              <View>
-                {wallets.map((index, item) => (
-                  <View>
-                    <Text>{item}</Text>
-                  </View>
+              <View style={{ gap: 16, paddingHorizontal: 16 }}>
+                {wallets.map((item) => (
+                  <CardWallet key={item.id} item={item}/>
                 ))}
               </View>
           )}
           </View>
 
-          <View
-            style={{
-              position: "absolute",
-              bottom: 20,
-              right: 20,
-              padding: 25,
-              backgroundColor: theme.colors.primary,
-              borderRadius: 80,
-            }}
-          >
-            <TouchableOpacity onPress={() => router.push("/(protected)/wallet/createWallet")}>
-              <FontAwesome name="plus" size={30} color="white" />
-            </TouchableOpacity>
-          </View>
         </View>
       </ScrollView>
+      <FloatingButton 
+        style={{ position: "absolute", bottom: 20, right: 20, padding: 25}}
+        onPress={() => router.push("/wallet/createWallet")}
+      />
     </Screen>
   );
 }

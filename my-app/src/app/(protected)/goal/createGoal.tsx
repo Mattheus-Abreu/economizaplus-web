@@ -19,6 +19,7 @@ import {
   View,
 } from "react-native";
 import { Easing, useSharedValue, withTiming } from "react-native-reanimated";
+import { useWallets } from "@/contexts/walletContext";
 
 function createGoal() {
   const router = useRouter();
@@ -27,6 +28,7 @@ function createGoal() {
   const params = useLocalSearchParams<{
     id?: string;
     name?: string;
+    walletId?: string;
     targetAmount?: string;
     currentAmount?: string;
     deadline?: string;
@@ -37,10 +39,13 @@ function createGoal() {
   const [name, setName] = useState(params.name ?? "");
   const [targetAmount, setTargetAmount] = useState(params.targetAmount ?? "");
   const [currentAmount, setCurrentAmount] = useState(params.currentAmount ?? "");
+  const [walletId, setWalletId] = useState(params.walletId ?? "");
   const [deadline, setDeadline] = useState(
     params.deadline ?? new Date().toISOString()
   );
   const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const {wallets} = useWallets();
 
   const progress = useSharedValue(0);
 
@@ -167,6 +172,34 @@ function createGoal() {
               />
             </View>
           </View>
+
+          <View style={styles.field}>
+              <Text style={styles.fieldLabel}>Escolha uma carteira</Text>
+                <View style={styles.typeContainer}>
+                  {wallets.length === 0 ? (
+                    <Text style={styles.emptyField}>Nenhuma carteira cadastrada</Text>
+                  ) : (
+                    wallets.map((w) => (
+                      <TouchableOpacity
+                        key={w.id}
+                        onPress={() => setWalletId(w.id)}
+                        style={[
+                          styles.typeButton,
+                          walletId === w.id && styles.typeButtonActive,
+                        ]}
+                      >
+                        <Text
+                          style={{
+                            color: walletId === w.id ? "#fff" : theme.colors.text,
+                          }}
+                        >
+                          {w.name}
+                        </Text>
+                      </TouchableOpacity>
+                    ))
+                  )}
+                </View>
+            </View>
 
           <View style={styles.field}>
             <Text style={styles.fieldLabel}>Valor alvo</Text>
@@ -359,6 +392,29 @@ const styles = StyleSheet.create({
   fieldInputActive: {
     borderColor: theme.colors.primary,
     backgroundColor: "rgba(124,58,237,0.06)",
+  },
+    typeContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  typeButton: {
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: theme.colors.glass,
+    backgroundColor: theme.colors.surface,
+  },
+  typeButtonActive: {
+    backgroundColor: theme.colors.primary,
+  },
+    emptyField:{
+    color: theme.colors.text,
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: theme.colors.glass,
+    backgroundColor: theme.colors.surface,
   },
   inlineInput: {
     flex: 1,

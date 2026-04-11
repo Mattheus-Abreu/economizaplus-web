@@ -24,6 +24,7 @@ import {
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import Arrow from "@/assets/images/Arrow.svg";
+import FloatingButton from "@/components/FloatingButton";
 
 function goalPage() {
   const router = useRouter();
@@ -60,7 +61,7 @@ function goalPage() {
                     <EmptyTitle>Nenhuma meta</EmptyTitle>
                     <View style={{
                           position: "absolute",
-                          bottom: -240,
+                          bottom: -260,
                           right: -80,
                           gap: 15,
                           alignItems: "center"
@@ -86,22 +87,12 @@ function goalPage() {
             )}
           </View>
 
-          <View
-            style={{
-              position: "absolute",
-              bottom: 20,
-              right: 20,
-              padding: 25,
-              backgroundColor: theme.colors.primary,
-              borderRadius: 80,
-            }}
-          >
-            <TouchableOpacity onPress={() => router.push("/goal/createGoal")}>
-              <FontAwesome name="plus" size={30} color="white" />
-            </TouchableOpacity>
-          </View>
         </View>
       </ScrollView>
+      <FloatingButton 
+        style={{ position: "absolute", bottom: 20, right: 20, padding: 25}}
+        onPress={() => router.push("/goal/createGoal")}
+      />
     </Screen>
   );
 }

@@ -91,14 +91,14 @@ function CardTransaction({ item, gradient }: Props) {
           </Dropdown.Content>
         </Dropdown>
       </View>
-      <AnimatedProgressBar
+      {/* <AnimatedProgressBar
         progress={0.5}
         useGradient
         gradientColors={gradient ?? ["#4dabf7", "#3b5bdb"]}
         trackColor="rgba(255,255,255,0.08)"
         showPercentage
         width={"85%"}
-      />
+      /> */}
     </View>
   );
 }

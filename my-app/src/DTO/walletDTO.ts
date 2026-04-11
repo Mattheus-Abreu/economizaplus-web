@@ -1,4 +1,4 @@
-type WalletType = "Dinheiro" | "Investimento" | "Poupança" | "Corrente";
+type  WalletType =  "CHECKING_ACCOUNT" | "SAVINGS_ACCOUNT" | "CASH" | "INVESTMENT";
 
 type CreateWalletDTO = {
   name: string;
