@@ -1,4 +1,4 @@
-type WalletType = "Dinheiro" | "Poupança" | "Investimento" | "Corrente";
+type  WalletType =  "CHECKING_ACCOUNT" | "SAVINGS_ACCOUNT" | "CASH" | "INVESTMENT";
 
 type Wallet = {
     id: string;

@@ -28,7 +28,19 @@ function createCategory<T>() {
   const [icon, setIcon] = useState<IconName>("home");
   const [name, setName] = useState("");
 
-  const icons: IconName[] = ["home", "car", "shopping-cart", "film", "music", "pencil", "user", "heart", "heart-o", "star", "star-o"];
+  const icons: IconName[] = [
+  "home",
+  "credit-card",
+  "shopping-bag",
+  "car",
+  "bullseye",
+  "calendar",
+  "user",
+  "cog",
+  "gift",
+  "plane",
+  "pencil",
+];
 
   return (
     <GestureHandlerRootView style={styles.container}>

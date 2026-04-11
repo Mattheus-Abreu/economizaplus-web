@@ -1,6 +1,6 @@
-type TransactionType = "Entrada" | "Saída"
-type PaymentMethod = "Dinheiro" | "Cartão" | "Pix" | "Transferencia"
-type CardType = "Credito" | "Debito" 
+type TransactionType = "INCOME" | "EXPENSE" |"TRANSFER";
+type PaymentMethod = "CASH" | "CREDIT_CARD" | "DEBIT_CARD" | "PIX" | "BANK_TRANSFER";
+type CardType = "CREDIT" | "DEBIT";
 
 type Transaction = {
     id: string,

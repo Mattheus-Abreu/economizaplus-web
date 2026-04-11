@@ -16,7 +16,7 @@ import {
 import { useWallets } from "@/contexts/walletContext";
 import { LinearGradient } from "expo-linear-gradient";
 
-type WalletType = "Dinheiro" | "Investimento" | "Poupança" | "Corrente";
+type  WalletType =  "CHECKING_ACCOUNT" | "SAVINGS_ACCOUNT" | "CASH" | "INVESTMENT";
 
 function createWallet() {
   const router = useRouter();
@@ -44,12 +44,14 @@ function createWallet() {
     paramBalance ? String(paramBalance) : ""
   );
 
-  const types: WalletType[] = [
-    "Dinheiro",
-    "Investimento",
-    "Poupança",
-    "Corrente",
-  ];
+type WalletType = "CHECKING_ACCOUNT" | "SAVINGS_ACCOUNT" | "CASH" | "INVESTMENT";
+
+const walletTypes: { id: WalletType; name: string }[] = [
+  { id: "CHECKING_ACCOUNT", name: "Corrente" },
+  { id: "SAVINGS_ACCOUNT", name: "Poupança" },
+  { id: "CASH", name: "Dinheiro" },
+  { id: "INVESTMENT", name: "Investimento" },
+];
 
   function formatAmount(value: string): string {
     const num = parseFloat(value);
@@ -72,20 +74,20 @@ function createWallet() {
           type,
           balance: Number(balance),
         });
-        Alert.alert("Sucesso", "Caixinha atualizada com sucesso!");
+        Alert.alert("Sucesso", "Carteira atualizada com sucesso!");
       } else {
         await addWallet({
           name,
           type,
           balance: Number(balance),
         });
-        Alert.alert("Sucesso", "Caixinha criada com sucesso!");
+        Alert.alert("Sucesso", "Carteira criada com sucesso!");
       }
 
       router.back();
     } catch (error: any) {
       console.log(error);
-      Alert.alert("Erro", error.message || "Erro ao salvar caixinha!");
+      Alert.alert("Erro", error.message || "Erro ao salvar Carteira!");
     }
   }
 
@@ -111,7 +113,7 @@ function createWallet() {
 
         <View style={styles.hero}>
           <Text style={styles.heroLabel}>
-            {isEditing ? "Editar caixinha" : "Nova caixinha"}
+            {isEditing ? "Editar Carteira" : "Nova Carteira"}
           </Text>
 
           <Text style={styles.heroTitle}>
@@ -122,15 +124,15 @@ function createWallet() {
 
           <Text style={styles.heroSub}>
             {isEditing
-              ? "Atualize os dados da sua caixinha"
-              : "Defina uma caixinha e acompanhe seu progresso"}
+              ? "Atualize os dados da sua Carteira"
+              : "Defina uma Carteira e acompanhe seu progresso"}
           </Text>
         </View>
 
         <View style={styles.form}>
 
           <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Nome da caixinha</Text>
+            <Text style={styles.fieldLabel}>Nome da Carteira</Text>
 
             <View
               style={[
@@ -148,7 +150,7 @@ function createWallet() {
 
               <Input
                 style={styles.inlineInput}
-                placeholder="Ex: Viagem para Europa"
+                placeholder="Ex: Carteira de Investimentos"
                 placeholderTextColor={theme.colors.textSecondary}
                 value={name}
                 onChangeText={setName}
@@ -157,25 +159,24 @@ function createWallet() {
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Tipo</Text>
+            <Text style={styles.fieldLabel}>Escolha um tipo</Text>
 
             <View style={styles.typeContainer}>
-              {types.map((t) => (
+              {walletTypes.map((w) => (
                 <TouchableOpacity
-                  key={t}
-                  onPress={() => setType(t)}
+                  key={w.id}
+                  onPress={() => setType(w.id)}
                   style={[
                     styles.typeButton,
-                    type === t && styles.typeButtonActive,
+                    type === w.id && styles.typeButtonActive,
                   ]}
                 >
                   <Text
                     style={{
-                      color:
-                        type === t ? "#fff" : theme.colors.text,
+                      color: type === w.id ? "#fff" : theme.colors.text,
                     }}
                   >
-                    {t}
+                    {w.name}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -229,7 +230,7 @@ function createWallet() {
                     >
             <View style={styles.previewLeft}>
               <Text style={styles.previewName} numberOfLines={1}>
-                {name || "Nome da caixinha"} • {type || "tipo"}
+                {name || "Nome da Carteira"} • {walletTypes.find((w) => w.id === type)?.name || "tipo"}
               </Text>
 
               <Text style={styles.previewAmount}>
@@ -244,7 +245,7 @@ function createWallet() {
               label={
                 isEditing
                   ? "Salvar alterações"
-                  : "Criar caixinha"
+                  : "Criar Carteira"
               }
               onPress={handleSubmit}
             />
@@ -326,6 +327,14 @@ const styles = StyleSheet.create({
   fieldInputActive: {
     borderColor: theme.colors.primary,
     backgroundColor: "rgba(124,58,237,0.06)",
+  },
+   emptyField:{
+    color: theme.colors.text,
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: theme.colors.glass,
+    backgroundColor: theme.colors.surface,
   },
   typeContainer: {
     flexDirection: "row",

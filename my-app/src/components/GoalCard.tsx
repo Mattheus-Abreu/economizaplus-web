@@ -3,8 +3,11 @@ import { useGoals } from "@/contexts/goalContext";
 import Goal from "@/types/goal";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useEffect } from "react";
 import { Alert, StyleSheet, Text, View } from "react-native";
 import { AnimatedCircularProgress } from "react-native-circular-progress";
+import { useSharedValue, withTiming } from "react-native-reanimated";
+import { SemiCircularProgress } from "./semi-circular-progress";
 
 type Props = {
   item: Goal;
@@ -24,12 +27,26 @@ function GoalCard({ item, gradient }: Props) {
     });
   }
 
-  const progress = Math.min(
-    Number(item.currentAmount) / Number(item.targetAmount || 1),
-    1,
-  );
+  const progress = useSharedValue(0);
+
+  const percentage =
+  Number(item.currentAmount) / Number(item.targetAmount || 1);
 
   const remaining = Number(item.targetAmount) - Number(item.currentAmount);
+
+useEffect(() => {
+  progress.value = withTiming(percentage * 100, {
+    duration: 1200,
+  });
+}, [item.currentAmount, item.targetAmount]);
+
+
+  const InfoItem = ({ label, value }: any) => (
+    <View style={styles.infoItem}>
+      <Text style={styles.infoLabel}>{label}</Text>
+      <Text style={styles.infoValue}>{value}</Text>
+    </View>
+  );
 
   function handleEdit() {
     router.push({
@@ -57,35 +74,9 @@ function GoalCard({ item, gradient }: Props) {
 
   return (
     <View style={styles.card}>
-      <View style={styles.header}>
-        <View>
-          <AnimatedCircularProgress
-            size={180}
-            width={15}
-            fill={60}
-            tintColor="#6C5CE7"
-            backgroundColor="#2D2D2D"
-            rotation={-90}
-            arcSweepAngle={180}
-          />
-          <Text style={styles.title}>{item.name}</Text>
-
-          <Text style={styles.subtitle}>
-            Meta de R$ {formatAmount(item.targetAmount.toString())}
-          </Text>
-
-          <Text style={styles.subtitle}>
-            Guardado: R$ {formatAmount(item.currentAmount.toString())}
-          </Text>
-
-          <Text style={styles.subtitle}>
-            Quanto falta: R$ {formatAmount(remaining.toString())}
-          </Text>
-
-          <Text style={{ ...styles.subtitle, fontSize: 12 }}>
-            Prazo: {new Date(item.deadline).toLocaleDateString("pt-BR")}
-          </Text>
-        </View>
+      
+      <View style={styles.topBar}>
+        <Text style={styles.title}>{item.name}</Text>
 
         <Dropdown>
           <Dropdown.Trigger style={styles.trigger}>
@@ -99,30 +90,60 @@ function GoalCard({ item, gradient }: Props) {
             </Dropdown.Item>
 
             <Dropdown.Item onPress={handleDelete}>
-              <Text style={[styles.itemText, styles.destructive]}>Deletar</Text>
+              <Text style={[styles.itemText, styles.destructive]}>
+                Deletar
+              </Text>
               <Ionicons name="trash-outline" size={16} color="#dc2626" />
             </Dropdown.Item>
           </Dropdown.Content>
         </Dropdown>
       </View>
+
+      <View style={styles.chart}>
+        <SemiCircularProgress
+          progress={progress}
+          useGradient={true}
+          gradientColors={gradient || ["#6C5CE7", "#A3A3A3"]}
+          renderCenter={() => (
+            <View style={{ alignItems: "center", gap: 5, marginTop: 50 }}>
+              <Text style={styles.percent}>
+                {Math.round(percentage * 100)}%
+              </Text>
+              <Text style={styles.subtitle}>
+                de R$ {formatAmount(item.targetAmount.toString())}
+              </Text>
+            </View>
+          )}
+        />
+      </View>
+
+      <View style={styles.infoRow}>
+        <InfoItem
+          label="Guardado"
+          value={`R$ ${formatAmount(item.currentAmount.toString())}`}
+        />
+        <InfoItem
+          label="Falta"
+          value={`R$ ${formatAmount(remaining.toString())}`}
+        />
+        <InfoItem
+          label="Prazo"
+          value={new Date(item.deadline).toLocaleDateString("pt-BR")}
+        />
+      </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+ const styles = StyleSheet.create({
   card: {
-    width: "100%",
     borderRadius: 24,
     padding: 20,
     backgroundColor: "#1A0F2E",
-    shadowColor: "#000",
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 5,
-    gap: 12,
+    gap: 20,
   },
 
-  header: {
+  topBar: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -130,13 +151,43 @@ const styles = StyleSheet.create({
 
   title: {
     fontSize: 18,
-    fontWeight: "600",
-    color: "#FFFFFF",
+    fontWeight: "700",
+    color: "#fff",
+  },
+
+  chart: {
+    alignItems: "center",
+  },
+
+  percent: {
+    fontSize: 26,
+    fontWeight: "700",
+    color: "#fff",
   },
 
   subtitle: {
-    fontSize: 14,
+    fontSize: 13,
     color: "rgba(255,255,255,0.6)",
+  },
+
+  infoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+
+  infoItem: {
+    alignItems: "center",
+  },
+
+  infoLabel: {
+    fontSize: 12,
+    color: "rgba(255,255,255,0.5)",
+  },
+
+  infoValue: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#fff",
     marginTop: 4,
   },
 
@@ -150,20 +201,14 @@ const styles = StyleSheet.create({
   },
 
   menu: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#fff",
     borderRadius: 14,
-    paddingVertical: 6,
-    paddingHorizontal: 4,
-    shadowColor: "#000",
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 6,
+    padding: 6,
   },
 
   itemText: {
     fontSize: 15,
     color: "#111",
-    fontWeight: "500",
   },
 
   destructive: {

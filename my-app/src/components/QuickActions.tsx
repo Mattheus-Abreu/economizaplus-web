@@ -24,8 +24,8 @@ const ACTIONS: Action[] = [
     route: "/(protected)/transaction/transactionsPage",
   },
   {
-    label: "Caixinhas",
-    icon: "gift-outline",
+    label: "Carteiras",
+    icon: "wallet-outline",
     color: "#38BDF8",
     route: "/(protected)/wallet/walletPage",
   },
