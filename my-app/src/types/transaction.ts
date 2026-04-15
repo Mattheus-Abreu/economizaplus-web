@@ -1,6 +1,6 @@
-export type TransactionType = "INCOME" | "EXPENSE"
-export type PaymentMethod = "CASH" | "CREDIT_CARD" | "DEBIT_CARD" | "PIX" | "TRANSFER"
-export type CardType = "    CREDIT" | "DEBIT" 
+type TransactionType = "INCOME" | "EXPENSE" |"TRANSFER";
+type PaymentMethod = "CASH" | "CREDIT_CARD" | "DEBIT_CARD" | "PIX" | "BANK_TRANSFER";
+type CardType = "CREDIT" | "DEBIT";
 
 type Transaction = {
     id: string,

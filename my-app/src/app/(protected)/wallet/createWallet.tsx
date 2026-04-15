@@ -148,7 +148,7 @@ const walletTypes: { id: WalletType; name: string }[] = [
 
               <Input
                 style={styles.inlineInput}
-                placeholder="Ex: Viagem para Europa"
+                placeholder="Ex: Carteira de Investimentos"
                 placeholderTextColor={theme.colors.textSecondary}
                 value={name}
                 onChangeText={setName}
@@ -157,7 +157,7 @@ const walletTypes: { id: WalletType; name: string }[] = [
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Tipo</Text>
+            <Text style={styles.fieldLabel}>Escolha um tipo</Text>
 
             <View style={styles.typeContainer}>
               {walletTypes.map((t) => (
@@ -326,6 +326,14 @@ const styles = StyleSheet.create({
   fieldInputActive: {
     borderColor: theme.colors.primary,
     backgroundColor: "rgba(124,58,237,0.06)",
+  },
+   emptyField:{
+    color: theme.colors.text,
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: theme.colors.glass,
+    backgroundColor: theme.colors.surface,
   },
   typeContainer: {
     flexDirection: "row",

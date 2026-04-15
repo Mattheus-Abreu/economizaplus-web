@@ -1,4 +1,5 @@
 import theme from "@/app/themes/theme";
+import CardHome from "@/components/CardHome";
 import Logo from "@/components/Logo";
 import QuickActions from "@/components/QuickActions";
 import Screen from "@/components/Screen";
@@ -11,8 +12,8 @@ import { Link, Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import {
-  GestureHandlerRootView,
-  ScrollView,
+    GestureHandlerRootView,
+    ScrollView,
 } from "react-native-gesture-handler";
 import { BlurCarousel } from "../../../components/carousel";
 import Icons from "../../../components/Icons";
@@ -88,7 +89,6 @@ function Home() {
           </View>
 
           <View style={styles.surface}>
-
             <View style={styles.quickActionsWrapper}>
               <QuickActions />
             </View>
@@ -114,9 +114,8 @@ function Home() {
                     label={item.label}
                     color={item.color}
                   />
-                  </TouchableOpacity>
-                ))}
-              
+                </TouchableOpacity>
+              ))}
             </View>
 
             <View style={styles.sectionHeader}>

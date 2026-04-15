@@ -702,7 +702,6 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: theme.colors.glass,
     backgroundColor: theme.colors.surface,
-
   },
   inlineInput: {
     flex: 1,

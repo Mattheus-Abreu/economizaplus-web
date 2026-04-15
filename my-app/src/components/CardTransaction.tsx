@@ -128,7 +128,6 @@ function CardTransaction({ item }: Props) {
             </Dropdown.Item>
           </Dropdown.Content>
         </Dropdown>
-        
       </View>
     </View>
   );
