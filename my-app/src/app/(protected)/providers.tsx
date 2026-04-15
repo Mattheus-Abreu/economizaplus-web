@@ -1,5 +1,6 @@
 import { CategoryProvider } from "@/contexts/categoryContext";
 import { GoalProvider } from "@/contexts/goalContext";
+import { SavingProvider } from "@/contexts/savingContext";
 import TransactionProvider from "@/contexts/transactionContext";
 import { WalletProvider } from "@/contexts/walletContext";
 
@@ -9,9 +10,11 @@ function AppProviders({ children }: any) {
     <WalletProvider>
       <CategoryProvider>
         <GoalProvider>
-          <TransactionProvider>
-            {children}
-          </TransactionProvider>
+          <SavingProvider>
+            <TransactionProvider>
+              {children}
+            </TransactionProvider>
+          </SavingProvider>
         </GoalProvider>
       </CategoryProvider>
     </WalletProvider>

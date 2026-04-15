@@ -20,67 +20,61 @@ import {
 } from "react-native";
 import { Easing, useSharedValue, withTiming } from "react-native-reanimated";
 import { useWallets } from "@/contexts/walletContext";
+import { useSaving } from "@/contexts/savingContext";
 
-function createGoal() {
+function createSavings() {
   const router = useRouter();
-  const { addGoal, updateGoal } = useGoals();
+  const { addSaving } = useSaving();
   const { wallets } = useWallets();
+  const { goals } = useGoals();
 
   const params = useLocalSearchParams<{
     id?: string;
-    name?: string;
-    description?: string;
+    goalId?: string;
+    goalName?: string;
     walletId?: string;
-    targetAmount?: string;
-    currentAmount?: string;
-    deadline?: string;
+    amount?: string;
   }>();
 
   const isEditing = !!params.id;
 
-  const [name, setName] = useState(params.name ?? "");
-  const [description, setDescription] = useState(params.description ?? "");
+  const [goalId, setGoalId] = useState(params.goalId ?? "");
   const [walletId, setWalletId] = useState(params.walletId ?? "");
-  const [targetAmount, setTargetAmount] = useState(params.targetAmount ?? "");
-  const [currentAmount, setCurrentAmount] = useState(params.currentAmount ?? "");
-  const [deadline, setDeadline] = useState(
-    params.deadline ?? new Date().toISOString()
-  );
+  const [amount, setAmount] = useState(params.amount ?? "");
+  const [createdAt, setCreatedAt] = useState(new Date().toISOString());
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const progress = useSharedValue(0);
 
+  const selectedGoal = goals.find((g) => g.id === goalId);
+
   useEffect(() => {
-  const current = parseFloat(currentAmount);
-  const target = parseFloat(targetAmount);
+    if (!selectedGoal) {
+        progress.value = withTiming(0, { duration: 400 });
+        return;
+    }
 
-  if (!current || !target || target <= 0) {
-    progress.value = withTiming(0, { duration: 600 });
-    return;
-  }
+    const current = Number(selectedGoal.currentAmount);
+    const target = Number(selectedGoal.targetAmount);
+    const deposit = Number(amount) || 0;
 
-  const percent = Math.min((current / target) * 100, 100);
-  progress.value = withTiming(percent, {
-    duration: 800,
-    easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-  });
-}, [currentAmount, targetAmount]);
+    const currentWithDeposit = current + deposit;
+
+    const percent =
+        target > 0
+        ? Math.min((currentWithDeposit / target) * 100, 100)
+        : 0;
+
+    progress.value = withTiming(percent, {
+        duration: 800,
+        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+    });
+    }, [goalId, amount, selectedGoal]);
 
   function formatDisplayDate(iso: string): string {
     const date = new Date(iso);
     if (isNaN(date.getTime())) return "";
     return date.toLocaleDateString("pt-BR");
-  }
-
-  function getDaysRemaining(iso: string): string {
-    const date = new Date(iso);
-    const today = new Date();
-    const diff = Math.ceil(
-      (date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-    );
-    if (diff < 0) return "Expirado";
-    if (diff === 0) return "Hoje";
-    return `${diff} dias`;
   }
 
   function formatAmount(value: string): string {
@@ -92,33 +86,43 @@ function createGoal() {
     });
   }
 
+  function getProgressPercent(): number {
+    if (!selectedGoal) return 0;
+
+    const current = Number(selectedGoal.currentAmount);
+    const target = Number(selectedGoal.targetAmount);
+    const deposit = Number(amount) || 0;
+
+    return Math.min(
+        Math.round(((current + deposit) / target) * 100),
+        100
+    );
+    }
+
   async function handleSubmit() {
-    if (!name.trim() || !targetAmount || !deadline) {
-      return Alert.alert("Atenção", "Preencha todos os campos!");
+    if (!walletId || !goalId || !amount) {
+      Alert.alert("Atenção", "Selecione a carteira, a meta e informe o valor.");
+      return;
+    }
+
+    const numAmount = parseFloat(amount);
+    if (isNaN(numAmount) || numAmount <= 0) {
+      Alert.alert("Atenção", "Informe um valor válido para o depósito.");
+      return;
     }
 
     try {
-      if (isEditing) {
-        await updateGoal(params.id!, {
-          name,
-          targetAmount: Number(targetAmount),
-          currentAmount: Number(currentAmount),
-          deadline,
-        });
-        Alert.alert("Sucesso", "Meta atualizada com sucesso!");
-      } else {
-        await addGoal({
-          name,
-          targetAmount: Number(targetAmount),
-          currentAmount: Number(currentAmount),
-          deadline,
-        });
-        Alert.alert("Sucesso", "Meta criada com sucesso!");
-      }
+      await addSaving({
+        goalId,
+        walletId,
+        amount: numAmount,
+        createdAt,
+      });
+      Alert.alert("Sucesso", "Depósito realizado com sucesso!");
       router.back();
     } catch (error: any) {
       console.log(error);
-      Alert.alert("Erro", error.message || "Erro ao salvar meta!");
+      Alert.alert("Erro", error.message || "Erro ao realizar depósito!");
     }
   }
 
@@ -128,7 +132,7 @@ function createGoal() {
         contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-      > 
+      >
         <View style={styles.header}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <FontAwesome
@@ -141,108 +145,90 @@ function createGoal() {
 
         <View style={styles.hero}>
           <Text style={styles.heroLabel}>
-            {isEditing ? "Editar meta" : "Nova meta"}
+            {isEditing ? "Editar depósito" : "Novo depósito"}
           </Text>
           <Text style={styles.heroTitle}>
-            {isEditing
-              ? "Redefina seu\nsobjetivo"
-              : "Qual é o seu\npróximo objetivo?"}
+            {params.goalName
+              ? `Depositar em\n"${params.goalName}"`
+              : "Quanto você\nquer depositar?"}
           </Text>
           <Text style={styles.heroSub}>
-            {isEditing
-              ? "Atualize os dados da sua meta"
-              : "Defina uma meta e acompanhe seu progresso"}
+            O valor será debitado da carteira selecionada e adicionado à meta
           </Text>
         </View>
 
         <View style={styles.form}>
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Nome da meta</Text>
-            <View style={[styles.fieldInput, name.length > 0 && styles.fieldInputActive]}>
-              <Ionicons
-                name="pencil-outline"
-                size={18}
-                color={name.length > 0 ? theme.colors.primary : "#94A3B8"}
-              />
-              <Input
-                style={styles.inlineInput}
-                placeholder="Ex: Viagem para Europa"
-                placeholderTextColor={theme.colors.textSecondary}
-                value={name}
-                onChangeText={setName}
-              />
-            </View>
-          </View>
 
           <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Descrição</Text>
-            <View style={[styles.fieldInput, description.length > 0 && styles.fieldInputActive]}>
-              <Ionicons
-                name="pencil-outline"
-                size={18}
-                color={description.length > 0 ? theme.colors.primary : "#94A3B8"}
-              />
-              <Input
-                style={styles.inlineInput}
-                placeholder="Ex: Viajar para Europa no próximo verão"
-                placeholderTextColor={theme.colors.textSecondary}
-                value={description}
-                onChangeText={setDescription}
-              />
-            </View>
-          </View>
-
-          <View style={styles.field}>
-              <Text style={styles.fieldLabel}>Escolha uma carteira</Text>
-                <View style={styles.typeContainer}>
-                  {wallets.length === 0 ? (
-                    <Text style={styles.emptyField}>Nenhuma carteira cadastrada</Text>
-                  ) : (
-                    wallets.map((w) => (
-                      <TouchableOpacity
-                        key={w.id}
-                        onPress={() => setWalletId(w.id)}
-                        style={[
-                          styles.typeButton,
-                          walletId === w.id && styles.typeButtonActive,
-                        ]}
-                      >
-                        <Text
-                          style={{
-                            color: walletId === w.id ? "#fff" : theme.colors.text,
-                          }}
-                        >
-                          {w.name}
-                        </Text>
-                      </TouchableOpacity>
-                    ))
-                  )}
-                </View>
-            </View>
-
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Valor alvo</Text>
-            <View style={[styles.fieldInput, targetAmount.length > 0 && styles.fieldInputActive]}>
+            <Text style={styles.fieldLabel}>Valor do depósito</Text>
+            <View style={[styles.fieldInput, amount.length > 0 && styles.fieldInputActive]}>
               <Ionicons
                 name="cash-outline"
                 size={18}
-                color={targetAmount.length > 0 ? theme.colors.primary : "#94A3B8"}
+                color={amount.length > 0 ? theme.colors.primary : "#94A3B8"}
               />
               <Text style={styles.currencyPrefix}>R$</Text>
               <Input
                 style={[styles.inlineInput, styles.amountInput]}
                 placeholder="0"
                 placeholderTextColor={theme.colors.textSecondary}
-                value={targetAmount}
-                onChangeText={setTargetAmount}
+                value={amount}
+                onChangeText={setAmount}
                 keyboardType="numeric"
               />
-          </View>
-
+            </View>
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Prazo</Text>
+            <Text style={styles.fieldLabel}>Debitar da carteira</Text>
+            <View style={styles.typeContainer}>
+              {wallets.length === 0 ? (
+                <Text style={styles.emptyField}>Nenhuma carteira cadastrada</Text>
+              ) : (
+                wallets.map((w) => (
+                  <TouchableOpacity
+                    key={w.id}
+                    onPress={() => setWalletId(w.id)}
+                    style={[
+                      styles.typeButton,
+                      walletId === w.id && styles.typeButtonActive,
+                    ]}
+                  >
+                    <Text style={{ color: walletId === w.id ? "#fff" : theme.colors.text }}>
+                      {w.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))
+              )}
+            </View>
+          </View>
+
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>Meta</Text>
+            <View style={styles.typeContainer}>
+              {goals.length === 0 ? (
+                <Text style={styles.emptyField}>Nenhuma meta cadastrada</Text>
+              ) : (
+                goals.map((g) => (
+                  <TouchableOpacity
+                    key={g.id}
+                    onPress={() => setGoalId(g.id)}
+                    style={[
+                      styles.typeButton,
+                      goalId === g.id && styles.typeButtonActive,
+                    ]}
+                  >
+                    <Text style={{ color: goalId === g.id ? "#fff" : theme.colors.text }}>
+                      {g.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))
+              )}
+            </View>
+          </View>
+
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>Data do depósito</Text>
             <BaseButton onPress={() => setShowDatePicker(true)}>
               <View style={[styles.fieldInput, styles.fieldInputActive]}>
                 <Ionicons
@@ -250,35 +236,31 @@ function createGoal() {
                   size={18}
                   color={theme.colors.primary}
                 />
-                <Text style={styles.dateText}>{formatDisplayDate(deadline)}</Text>
-                <View style={styles.daysBadge}>
-                  <Text style={styles.daysBadgeText}>{getDaysRemaining(deadline)}</Text>
-                </View>
+                <Text style={styles.dateText}>{formatDisplayDate(createdAt)}</Text>
               </View>
             </BaseButton>
           </View>
+
         </View>
 
         <DateTimePickerModal
-          date={new Date(deadline)}
+          date={new Date(createdAt)}
           isVisible={showDatePicker}
           locale="pt-BR"
           mode="date"
           onConfirm={(date) => {
-            setDeadline(date.toISOString());
+            setCreatedAt(date.toISOString());
             setShowDatePicker(false);
           }}
           onCancel={() => setShowDatePicker(false)}
         />
 
-       
         <View style={styles.dividerRow}>
           <View style={styles.divider} />
           <Text style={styles.dividerLabel}>Prévia</Text>
           <View style={styles.divider} />
         </View>
 
-       
         <View style={styles.previewWrapper}>
           <LinearGradient
             colors={["#7C3AED", "#A78BFA"]}
@@ -288,15 +270,24 @@ function createGoal() {
           >
             <View style={styles.previewLeft}>
               <Text style={styles.previewName} numberOfLines={1}>
-                {name || "Nome da meta"}
+                {selectedGoal?.name || params.goalName || "Selecione uma meta"}
               </Text>
               <Text style={styles.previewAmount}>
-                Meta: R$ {formatAmount(targetAmount) || "–"} ·{" "}
-                {new Date(deadline).toLocaleDateString("pt-BR", {
-                  month: "short",
-                  year: "numeric",
-                })}
+                Depósito: R$ {formatAmount(amount) || "–"}
               </Text>
+              {selectedGoal && (
+                <Text style={styles.previewAmount}>
+                    Após depósito: R${" "}
+                    {(
+                    Number(selectedGoal.currentAmount) + (Number(amount) || 0)
+                    ).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}{" "}
+                    de R${" "}
+                    {Number(selectedGoal.targetAmount).toLocaleString("pt-BR", {
+                    minimumFractionDigits: 2,
+                    })}{" "}
+                    ({getProgressPercent()}%)
+                </Text>
+                )}
             </View>
             <CircularProgress
               progress={progress}
@@ -309,13 +300,11 @@ function createGoal() {
           </LinearGradient>
         </View>
 
-       
         <View style={styles.cta}>
           <Button
-            label={isEditing ? "Salvar alterações" : "Criar meta"}
+            label={isEditing ? "Salvar alterações" : "Realizar depósito"}
             onPress={handleSubmit}
-          >
-          </Button>
+          />
         </View>
       </ScrollView>
     </Screen>
@@ -396,21 +385,26 @@ const styles = StyleSheet.create({
   typeContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 12,
-    marginTop: 8,
+    gap: 10,
   },
   typeButton: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.04)",
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: theme.colors.glass,
+    backgroundColor: theme.colors.surface,
   },
   typeButtonActive: {
     backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
   },
   emptyField: {
-    fontSize: 14,
     color: theme.colors.textSecondary,
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: theme.colors.glass,
+    backgroundColor: theme.colors.surface,
   },
   inlineInput: {
     flex: 1,
@@ -433,17 +427,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     color: theme.colors.text,
-  },
-  daysBadge: {
-    backgroundColor: "rgba(124,58,237,0.15)",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  daysBadgeText: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: theme.colors.primary,
   },
   dividerRow: {
     flexDirection: "row",
@@ -474,10 +457,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    gap: 16,
   },
   previewLeft: {
     flex: 1,
-    marginRight: 16,
+    gap: 4,
   },
   previewName: {
     fontSize: 16,
@@ -487,7 +471,6 @@ const styles = StyleSheet.create({
   previewAmount: {
     fontSize: 12,
     color: "rgba(255,255,255,0.7)",
-    marginTop: 4,
   },
   cta: {
     paddingHorizontal: 24,
@@ -496,4 +479,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default createGoal;
+export default createSavings;

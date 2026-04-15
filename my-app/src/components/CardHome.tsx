@@ -64,7 +64,7 @@ const CardHome = ({ item, fontLoaded, gradientIndex = 0 }: Props) => {
       <Pressable
         onPress={() =>
           router.push({
-            pathname: "/(protected)/goal/goalPage",
+            pathname: "/(protected)/goal/goalDetail",
             params: { id: item.id },
           })
         }

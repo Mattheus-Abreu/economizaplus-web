@@ -4,6 +4,9 @@ type Goal = {
   targetAmount: number;
   deadline: string;
   currentAmount: number;
+  description: string;
+  walletId: string;
+  isCompleted: boolean;
 };
 
 export default Goal;
