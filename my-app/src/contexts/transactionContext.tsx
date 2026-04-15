@@ -1,69 +1,70 @@
-import Transaction from "@/types/transaction"
-import * as transactionService from "@/services/transactionService"
-import React, { createContext, useContext, useEffect, useState } from "react"
+import Transaction from "@/types/transaction";
+import * as transactionService from "@/services/transactionService";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { AuthContext } from "./authContext";
+import { useWallets } from "./walletContext";
 
-type transactionContextType = {
-    transactions: Transaction[],
-    loadTransactions: () => Promise<void>,
-    addTransaction: (data: any) => Promise<void>,
-    updateTransaction: (id: string, data: any) => Promise<void>,
-    deleteTransaction: (id: string) => Promise<void>,
+type TransactionContextType = {
+  transactions: Transaction[];
+  loadTransactions: () => Promise<void>;
+  addTransaction: (data: any) => Promise<void>;
+  updateTransaction: (id: string, data: any) => Promise<void>;
+  deleteTransaction: (id: string) => Promise<void>;
+};
 
-}
-
-const transactionContext = createContext({} as transactionContextType);
+const TransactionContext = createContext({} as TransactionContextType);
 
 export function TransactionProvider({ children }: any) {
-    const [transactions, setTransactions] = useState<Transaction[]>([]);
-    const { token, isReady } = useContext(AuthContext);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const { token, isReady } = useContext(AuthContext);
+  const { loadWallets } = useWallets(); 
 
-    async function loadTransactions() {
-        
+  async function loadTransactions() {
+    try {
+      const data = await transactionService.getTransactions();
+      setTransactions(data);
+    } catch (error) {
+      console.log("Erro ao carregar transações:", error);
     }
+  }
 
-    async function addTransaction(data: any) {
-        const newTransaction = await transactionService.addTransaction(data);
-        
-        setTransactions((prev) => [...prev, newTransaction]);
-    }
+  async function addTransaction(data: any) {
+    await transactionService.addTransaction(data);
+    await Promise.all([loadTransactions(), loadWallets()]);
+  }
 
-    async function updateTransaction(id: string, data: any) {
-        const updateTransaction = await transactionService.updateTransaction(id, data);
-        
-        setTransactions((prev) => prev.map((transaction) => (transaction.id === id ? updateTransaction : transaction)));
-    } 
+  async function updateTransaction(id: string, data: any) {
+    await transactionService.updateTransaction(id, data);
+    await Promise.all([loadTransactions(), loadWallets()]);
+  }
 
-    async function deleteTransaction(id: string) {
-        const deletedTransaction = await transactionService.deleteTransaction(id);       
-        
-        setTransactions((prev) => prev.filter((transaction) => transaction.id !== id));
-    }
+  async function deleteTransaction(id: string) {
+    await transactionService.deleteTransaction(id);
+    await Promise.all([loadTransactions(), loadWallets()]);
+  }
 
-   
+  useEffect(() => {
+    if (!token || !isReady) return;
+    loadTransactions();
+  }, [token, isReady]);
 
-    useEffect(() => {
-        if(!token || !isReady) return
-        loadTransactions();
-    }, [token, isReady]);
-
-    return(
-        <transactionContext.Provider
-            value={{
-                transactions,
-                loadTransactions,
-                addTransaction,
-                updateTransaction,
-                deleteTransaction
-            }}
-        >
-            {children}
-        </transactionContext.Provider>
-    )
+  return (
+    <TransactionContext.Provider
+      value={{
+        transactions,
+        loadTransactions,
+        addTransaction,
+        updateTransaction,
+        deleteTransaction,
+      }}
+    >
+      {children}
+    </TransactionContext.Provider>
+  );
 }
 
 export function useTransactions() {
-    return useContext(transactionContext);
+  return useContext(TransactionContext);
 }
 
-export default TransactionProvider
+export default TransactionProvider;

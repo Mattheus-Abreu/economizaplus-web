@@ -17,19 +17,16 @@ import {
 } from "react-native-gesture-handler";
 import { BlurCarousel } from "../../../components/carousel";
 import Icons from "../../../components/Icons";
+import { useBalance } from "@/hooks/useBalance";
+import CardHome from "@/components/CardHome";
 
 const QUICK_ACTIONS_HEIGHT = 90;
 
 function Home() {
   const { signOut } = useAuth();
   const { goals } = useGoals();
-
-  function handleLogout() {
-    Alert.alert("Sair", "tem certeza que deseja sair?", [
-      { text: "Cancelar", style: "cancel" },
-      { text: "Sair", onPress: signOut },
-    ]);
-  }
+  const { formattedBalance } = useBalance();
+  const router = useRouter();
 
   const [fontLoaded] = useFonts({
     InterRegular: require("@/assets/fonts/Inter-Regular.otf"),
@@ -37,72 +34,38 @@ function Home() {
     InterBold: require("@/assets/fonts/Inter-Bold.otf"),
   });
 
-  type Route = "/category/createCategory" | "/category/categoryPage";
-
-  const routes = useRouter();
+  function handleLogout() {
+    Alert.alert("Sair", "Tem certeza que deseja sair?", [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Sair", onPress: signOut },
+    ]);
+  }
 
   const CATEGORIES = [
-    {
-      name: "plus",
-      label: "Add",
-      color: "#f171f1",
-      route: "/category/createCategory",
-    },
-    {
-      name: "lightbulb-o",
-      label: "Luz",
-      color: "#FACC15",
-      route: "/category/categoryPage",
-    },
-    {
-      name: "tint",
-      label: "Água",
-      color: "#38BDF8",
-      route: "/category/categoryPage",
-    },
-    {
-      name: "wifi",
-      label: "Internet",
-      color: "#A78BFA",
-      route: "/category/categoryPage",
-    },
-    {
-      name: "shopping-cart",
-      label: "Compras",
-      color: "#34D399",
-      route: "/category/categoryPage",
-    },
-    {
-      name: "car",
-      label: "Transporte",
-      color: "#FB7185",
-      route: "/category/categoryPage",
-    },
-    {
-      name: "cutlery",
-      label: "Comida",
-      color: "#F97316",
-      route: "/category/categoryPage",
-    },
-    {
-      name: "heartbeat",
-      label: "Saúde",
-      color: "#EF4444",
-      route: "/category/categoryPage",
-    },
+    { name: "plus", label: "Add", color: "#f171f1", route: "/(protected)/category/createCategory" },
+    { name: "lightbulb-o", label: "Luz", color: "#FACC15", route: "/(protected)/category/categoryPage" },
+    { name: "tint", label: "Água", color: "#38BDF8", route: "/(protected)/category/categoryPage" },
+    { name: "wifi", label: "Internet", color: "#A78BFA", route: "/(protected)/category/categoryPage" },
+    { name: "shopping-cart", label: "Compras", color: "#34D399", route: "/(protected)/category/categoryPage" },
+    { name: "car", label: "Transporte", color: "#FB7185", route: "/(protected)/category/categoryPage" },
+    { name: "cutlery", label: "Comida", color: "#F97316", route: "/(protected)/category/categoryPage" },
+    { name: "heartbeat", label: "Saúde", color: "#EF4444", route: "/(protected)/category/categoryPage" },
   ];
 
   return (
-    <Screen style={{ padding: "auto" }}>
+    <Screen style={{ padding: 0 }}>
       <GestureHandlerRootView>
         <StatusBar style="light" />
+
         <ScrollView
           contentContainerStyle={{ flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
+
           <View style={styles.header}>
             <Logo size="md" />
+
             <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
               <FontAwesome
                 name="sign-out"
@@ -114,13 +77,14 @@ function Home() {
 
           <View style={styles.balanceArea}>
             <Text style={styles.balanceLabel}>Saldo atual</Text>
+
             <Text
               style={[
                 styles.balanceValue,
                 fontLoaded && { fontFamily: "InterBold" },
               ]}
             >
-              R$ 1.000,00
+              {formattedBalance ?? "R$ 0,00"}
             </Text>
           </View>
 
@@ -138,14 +102,14 @@ function Home() {
                 Ver mais
               </Link>
             </View>
+
             <View style={styles.categoriesGrid}>
-              {CATEGORIES.map((item, index) => (
+              {CATEGORIES.map((item) => (
                 <TouchableOpacity
                   key={item.name}
-                  onPress={() => routes.push(item.route as Route)}
+                  onPress={() => router.push(item.route as any)}
                 >
                   <Icons
-                    key={index}
                     name={item.name as any}
                     label={item.label}
                     color={item.color}
@@ -163,18 +127,15 @@ function Home() {
                 Ver mais
               </Link>
             </View>
-            {goals.length === 0 ? (
-              <Text style={styles.emptyText}>Nenhuma meta criada ainda</Text>
+
+            {goals?.length === 0 ? (
+              <Text style={styles.emptyText}>
+                Nenhuma meta criada ainda
+              </Text>
             ) : (
               <BlurCarousel
-                data={goals}
-                renderItem={({
-                  item,
-                  index,
-                }: {
-                  item: Goal;
-                  index: number;
-                }) => (
+                data={goals ?? []}
+                renderItem={({ item, index }: { item: Goal; index: number }) => (
                   <CardHome
                     item={item}
                     fontLoaded={fontLoaded}
@@ -231,12 +192,12 @@ const styles = StyleSheet.create({
   },
   surface: {
     backgroundColor: theme.colors.surface,
+    flex: 1,
     borderTopStartRadius: 36,
     borderTopEndRadius: 36,
     paddingTop: QUICK_ACTIONS_HEIGHT / 2 + 5,
     padding: 24,
     gap: 20,
-    paddingBottom: 60,
   },
   quickActionsWrapper: {
     position: "absolute",
@@ -269,7 +230,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     color: theme.colors.textSecondary,
-    paddingVertical: 20,
+    paddingVertical: 50,
     textAlign: "center",
   },
 });

@@ -1,30 +1,28 @@
 import theme from "@/app/themes/theme";
+import Arrow from "@/assets/images/Arrow.svg";
 import { GRADIENTS } from "@/components/CardHome";
-import GoalCard from "@/components/GoalCard";
-import Screen from "@/components/Screen";
-import { useGoals } from "@/contexts/goalContext";
-import { FontAwesome } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { SymbolView } from "expo-symbols";
 import {
   Empty,
-  EmptyButton,
-  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
-  EmptyTitle,
+  EmptyTitle
 } from "@/components/empty-state";
+import FloatingButton from "@/components/FloatingButton";
+import GoalCard from "@/components/GoalCard";
+import Screen from "@/components/Screen";
+import { useGoals } from "@/contexts/goalContext";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { SymbolView } from "expo-symbols";
 import {
+  Platform,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
-import Arrow from "@/assets/images/Arrow.svg";
-import FloatingButton from "@/components/FloatingButton";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 function goalPage() {
   const router = useRouter();
@@ -39,7 +37,10 @@ function goalPage() {
         <View style={{ flex: 1 }}>
           <View style={{ flex: 1, gap: 20 }}>
             <View style={styles.header}>
-              <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+              <TouchableOpacity
+                style={styles.backBtn}
+                onPress={() => router.back()}
+              >
                 <FontAwesome
                   name="arrow-left"
                   size={16}
@@ -56,41 +57,66 @@ function goalPage() {
                       variant="icon"
                       style={{ backgroundColor: theme.colors.surface }}
                     >
-                      <SymbolView name="gauge.open.with.lines.needle.33percent" size={60} tintColor={"#fff"} />
+                      {Platform.OS === "ios" ? (
+                        <SymbolView name="target" size={60} tintColor="#fff" />
+                      ) : (
+                        <Ionicons
+                          name="trending-up-outline"
+                          size={60}
+                          color="#fff"
+                        />
+                      )}
                     </EmptyMedia>
                     <EmptyTitle>Nenhuma meta</EmptyTitle>
-                    <View style={{
-                          position: "absolute",
-                          bottom: -260,
-                          right: -80,
-                          gap: 15,
-                          alignItems: "center"
-                        }}>
+                    <View
+                      style={{
+                        position: "absolute",
+                        bottom: -320,
+                        left: 0,
+                        gap: 15,
+                        alignItems: "center",
+                      }}
+                    >
                       <EmptyDescription>
                         Que tal começar criando uma meta
                       </EmptyDescription>
-                      <Arrow width={100} height={60} style={{ transform: [{ rotate: "20deg" }] }} />
+                      <Arrow
+                        width={100}
+                        height={60}
+                        style={{ transform: [{ rotate: "20deg" }] }}
+                      />
                     </View>
                   </EmptyHeader>
                 </Empty>
               </SafeAreaView>
-
             ) : (
-              
               goals.map((item, index) => (
+               <TouchableOpacity
+                key={item.id}
+                onPress={() =>
+                  router.push({
+                    pathname: "/goal/goalDetail",
+                    params: { id: item.id },
+                  })
+                }
+              >
                 <GoalCard
-                  key={item.id}
                   item={item}
                   gradient={GRADIENTS[index % GRADIENTS.length]}
                 />
+              </TouchableOpacity>
               ))
             )}
           </View>
-
         </View>
       </ScrollView>
-      <FloatingButton 
-        style={{ position: "absolute", bottom: 20, right: 20, padding: 25}}
+      <FloatingButton
+        style={{
+          position: "absolute",
+          bottom: 20,
+          right: 20,
+          padding: 25,
+        }}
         onPress={() => router.push("/goal/createGoal")}
       />
     </Screen>
@@ -117,6 +143,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-})
+});
 
 export default goalPage;

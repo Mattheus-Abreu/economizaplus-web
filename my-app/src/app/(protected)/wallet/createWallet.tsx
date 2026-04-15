@@ -16,7 +16,7 @@ import {
 import { useWallets } from "@/contexts/walletContext";
 import { LinearGradient } from "expo-linear-gradient";
 
-type  WalletType =  "CHECKING_ACCOUNT" | "SAVINGS_ACCOUNT" | "CASH" | "INVESTMENT";
+type WalletType = "CASH" | "INVESTMENT" | "SAVINGS_ACCOUNT" | "CHECKING_ACCOUNT";
 
 function createWallet() {
   const router = useRouter();
@@ -43,8 +43,6 @@ function createWallet() {
   const [balance, setBalance] = useState(
     paramBalance ? String(paramBalance) : ""
   );
-
-type WalletType = "CHECKING_ACCOUNT" | "SAVINGS_ACCOUNT" | "CASH" | "INVESTMENT";
 
 const walletTypes: { id: WalletType; name: string }[] = [
   { id: "CHECKING_ACCOUNT", name: "Corrente" },
@@ -74,20 +72,20 @@ const walletTypes: { id: WalletType; name: string }[] = [
           type,
           balance: Number(balance),
         });
-        Alert.alert("Sucesso", "Carteira atualizada com sucesso!");
+        Alert.alert("Sucesso", "carteira atualizada com sucesso!");
       } else {
         await addWallet({
           name,
           type,
           balance: Number(balance),
         });
-        Alert.alert("Sucesso", "Carteira criada com sucesso!");
+        Alert.alert("Sucesso", "carteira criada com sucesso!");
       }
 
       router.back();
     } catch (error: any) {
       console.log(error);
-      Alert.alert("Erro", error.message || "Erro ao salvar Carteira!");
+      Alert.alert("Erro", error.message || "Erro ao salvar carteira!");
     }
   }
 
@@ -113,7 +111,7 @@ const walletTypes: { id: WalletType; name: string }[] = [
 
         <View style={styles.hero}>
           <Text style={styles.heroLabel}>
-            {isEditing ? "Editar Carteira" : "Nova Carteira"}
+            {isEditing ? "Editar carteira" : "Nova carteira"}
           </Text>
 
           <Text style={styles.heroTitle}>
@@ -124,15 +122,15 @@ const walletTypes: { id: WalletType; name: string }[] = [
 
           <Text style={styles.heroSub}>
             {isEditing
-              ? "Atualize os dados da sua Carteira"
-              : "Defina uma Carteira e acompanhe seu progresso"}
+              ? "Atualize os dados da sua carteira"
+              : "Defina uma carteira e acompanhe seu progresso"}
           </Text>
         </View>
 
         <View style={styles.form}>
 
           <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Nome da Carteira</Text>
+            <Text style={styles.fieldLabel}>Nome da carteira</Text>
 
             <View
               style={[
@@ -162,21 +160,22 @@ const walletTypes: { id: WalletType; name: string }[] = [
             <Text style={styles.fieldLabel}>Escolha um tipo</Text>
 
             <View style={styles.typeContainer}>
-              {walletTypes.map((w) => (
+              {walletTypes.map((t) => (
                 <TouchableOpacity
-                  key={w.id}
-                  onPress={() => setType(w.id)}
+                  key={t.id}
+                  onPress={() => setType(t.id)}
                   style={[
                     styles.typeButton,
-                    type === w.id && styles.typeButtonActive,
+                    type === t.id && styles.typeButtonActive,
                   ]}
                 >
                   <Text
                     style={{
-                      color: type === w.id ? "#fff" : theme.colors.text,
+                      color:
+                        type === t.id ? "#fff" : theme.colors.text,
                     }}
                   >
-                    {w.name}
+                    {t.name}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -230,7 +229,7 @@ const walletTypes: { id: WalletType; name: string }[] = [
                     >
             <View style={styles.previewLeft}>
               <Text style={styles.previewName} numberOfLines={1}>
-                {name || "Nome da Carteira"} • {walletTypes.find((w) => w.id === type)?.name || "tipo"}
+                {name || "Nome da carteira"} • {walletTypes.find((t) => t.id === type)?.name || "tipo"}
               </Text>
 
               <Text style={styles.previewAmount}>
@@ -245,7 +244,7 @@ const walletTypes: { id: WalletType; name: string }[] = [
               label={
                 isEditing
                   ? "Salvar alterações"
-                  : "Criar Carteira"
+                  : "Criar carteira"
               }
               onPress={handleSubmit}
             />

@@ -1,27 +1,50 @@
 import Dropdown from "@/components/dropdown";
-import { useGoals } from "@/contexts/goalContext";
+import { useTransactions } from "@/contexts/transactionContext";
 import Transaction from "@/types/transaction";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Alert, StyleSheet, Text, View } from "react-native";
-import { AnimatedProgressBar } from "./progressBar";
 
 type Props = {
   item: Transaction;
-  gradient?: [string, string];
 };
 
-function CardTransaction({ item, gradient }: Props) {
+function CardTransaction({ item }: Props) {
   const router = useRouter();
-  const { deleteGoal } = useGoals();
+  const { deleteTransaction } = useTransactions();
 
-  function formatAmount(value: string): string {
-    const num = parseFloat(value);
-    if (isNaN(num)) return "–";
-    return num.toLocaleString("pt-BR", {
-      minimumFractionDigits: 0,
+  function formatAmount(value: number): string {
+    if (!value) return "–";
+    return value.toLocaleString("pt-BR", {
+      minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
+  }
+
+  function getTypeName(type: string) {
+    switch (type) {
+      case "INCOME":
+        return "Entrada";
+      case "EXPENSE":
+        return "Saída";
+      case "TRANSFER":
+        return "Transferência";
+      default:
+        return type;
+    }
+  }
+
+  function getTypeColor(type: string) {
+    switch (type) {
+      case "INCOME":
+        return "#22C55E"; 
+      case "EXPENSE":
+        return "#F43F5E"; 
+      case "TRANSFER":
+        return "#7C3AED"; 
+      default:
+        return "#fff";
+    }
   }
 
   function handleEdit() {
@@ -35,11 +58,10 @@ function CardTransaction({ item, gradient }: Props) {
         description: item.description,
         transactionDate: item.transactionDate,
         walletId: item.walletId,
-        goalId: item.goalId,
+        goal_id: item.goalId,
         categoryId: item.categoryId,
         isInstallment: String(item.isInstallment),
-        installmentNumber: String(item.installmentNumber),
-        installmentTotal: String(item.installmentTotal),
+
       },
     });
   }
@@ -53,23 +75,37 @@ function CardTransaction({ item, gradient }: Props) {
         {
           text: "Excluir",
           style: "destructive",
-          onPress: () => deleteGoal(item.id),
+          onPress: () => deleteTransaction(item.id),
         },
-      ],
+      ]
     );
   }
 
   return (
     <View style={styles.card}>
       <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>{item.type}</Text>
-          <Text style={styles.subtitle}>
-            transação de R$ {formatAmount(item.amount.toString()) || "–"}
+        <View style={{ flex: 1 }}>
+          <Text
+            style={[
+              styles.title,
+              { color: getTypeColor(item.type) },
+            ]}
+          >
+            {getTypeName(item.type)}
           </Text>
-          <Text style={styles.subtitle}>{item.description}</Text>
-          <Text style={{ ...styles.subtitle, fontSize: 12 }}>
-            Prazo: {new Date(item.transactionDate).toLocaleDateString("pt-BR")}
+
+          <Text style={styles.amount}>
+            R$ {formatAmount(item.amount)}
+          </Text>
+
+          {item.description && (
+            <Text style={styles.subtitle}>
+              {item.description}
+            </Text>
+          )}
+
+          <Text style={styles.date}>
+            {new Date(item.transactionDate).toLocaleDateString("pt-BR")}
           </Text>
         </View>
 
@@ -85,20 +121,14 @@ function CardTransaction({ item, gradient }: Props) {
             </Dropdown.Item>
 
             <Dropdown.Item onPress={handleDelete}>
-              <Text style={[styles.itemText, styles.destructive]}>Deletar</Text>
+              <Text style={[styles.itemText, styles.destructive]}>
+                Deletar
+              </Text>
               <Ionicons name="trash-outline" size={16} color="#dc2626" />
             </Dropdown.Item>
           </Dropdown.Content>
         </Dropdown>
       </View>
-      {/* <AnimatedProgressBar
-        progress={0.5}
-        useGradient
-        gradientColors={gradient ?? ["#4dabf7", "#3b5bdb"]}
-        trackColor="rgba(255,255,255,0.08)"
-        showPercentage
-        width={"85%"}
-      /> */}
     </View>
   );
 }
@@ -106,31 +136,41 @@ function CardTransaction({ item, gradient }: Props) {
 const styles = StyleSheet.create({
   card: {
     width: "100%",
-    borderRadius: 24,
-    padding: 20,
+    borderRadius: 20,
+    padding: 16,
     backgroundColor: "#1A0F2E",
     shadowColor: "#000",
     shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 5,
-    gap: 12,
+    shadowRadius: 10,
+    elevation: 4,
   },
 
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
   },
 
   title: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "600",
-    color: "#FFFFFF",
+  },
+
+  amount: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#fff",
+    marginTop: 4,
   },
 
   subtitle: {
-    fontSize: 14,
+    fontSize: 13,
     color: "rgba(255,255,255,0.6)",
+    marginTop: 4,
+  },
+
+  date: {
+    fontSize: 12,
+    color: "rgba(255,255,255,0.4)",
     marginTop: 4,
   },
 
@@ -147,12 +187,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 14,
     paddingVertical: 6,
-    paddingHorizontal: 4,
-
-    shadowColor: "#000",
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 6,
   },
 
   itemText: {

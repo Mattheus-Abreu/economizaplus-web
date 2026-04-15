@@ -1,7 +1,6 @@
 import theme from "@/app/themes/theme";
 import Button from "@/components/Button";
 import Screen from "@/components/Screen";
-import { CircularProgress } from "@/components/circular-progress";
 import Input from "@/components/inputs/Input";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
@@ -19,54 +18,67 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useSharedValue } from "react-native-reanimated";
 import { useTransactions } from "@/contexts/transactionContext";
 import { useGoals } from "@/contexts/goalContext";
 import { useCategory } from "@/contexts/categoryContext";
 import { useWallets } from "@/contexts/walletContext";
+import { useCard } from "@/contexts/cardContext";
 
-type isInstallmentType = "Sim" | "Não"
+type TransactionType = "INCOME" | "EXPENSE" | "TRANSFER";
+type PaymentMethod = "CASH" | "CREDIT_CARD" | "DEBIT_CARD" | "PIX" | "BANK_TRANSFER";
+type InstallmentType = "SIM" | "NAO";
 
 function CreateTransaction() {
   const router = useRouter();
-  const { addTransaction , updateTransaction } = useTransactions();
+  const { addTransaction, updateTransaction } = useTransactions();
+  const { goals } = useGoals();
+  const { categories } = useCategory();
+  const { wallets } = useWallets();
+  const { cards } = useCard();
 
   const params = useLocalSearchParams<{
     id?: string;
-    type?: TransactionType;
-    paymentMethod?: PaymentMethod;
+    type?: string;
+    paymentMethod?: string;
     walletId?: string;
-    card?: CardType;
-    interestRate?: string;
+    cardId?: string;
+    destinationWalletId?: string;
     amount?: string;
     description?: string;
     transactionDate?: string;
-    goalId?: string;
+    goal_id?: string;
     categoryId?: string;
-    isInstallment?: isInstallmentType;
-    installmentNumber?: string;
-    installmentTotal?: string;
+    isInstallment?: string;
+    totalInstallments?: string;
   }>();
 
   const isEditing = !!params.id;
 
-  const [type, setType] = useState(params.type ?? "");
-  const [paymentMethod, setPaymentMethod] = useState(params.paymentMethod ?? "");
+  const [type, setType] = useState<TransactionType | "">(
+    (params.type as TransactionType) ?? ""
+  );
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | "">(
+    (params.paymentMethod as PaymentMethod) ?? ""
+  );
   const [walletId, setWalletId] = useState(params.walletId ?? "");
-  const [card, setCard] = useState(params.card ?? "");
+  const [cardId, setCardId] = useState(params.cardId ?? "");
+  const [destinationWalletId, setDestinationWalletId] = useState(
+    params.destinationWalletId ?? ""
+  );
   const [amount, setAmount] = useState(params.amount ?? "");
   const [description, setDescription] = useState(params.description ?? "");
-  const [transactionDate, setTransactionDate] = useState(params.transactionDate ?? "");
-  const [goalId, setGoalId] = useState(params.goalId ?? "");
+  const [transactionDate, setTransactionDate] = useState(
+    params.transactionDate ?? ""
+  );
+  const [goal_id, setGoal_id] = useState(params.goal_id ?? "");
   const [categoryId, setCategoryId] = useState(params.categoryId ?? "");
-  const [isInstallment, setIsInstallment] = useState(params.isInstallment ?? "");
-  const [installmentNumber, setInstallmentNumber] = useState(params.installmentNumber ?? "");
-  const [installmentTotal, setInstallmentTotal] = useState(params.installmentTotal ?? "");
+  const [isInstallment, setIsInstallment] = useState<InstallmentType | "">(
+    (params.isInstallment as InstallmentType) ?? ""
+  );
+  const [totalInstallments, setTotalInstallments] = useState(
+    params.totalInstallments ?? ""
+  );
   const [showDatePicker, setShowDatePicker] = useState(false);
-
-  const progress = useSharedValue(0);
-
-  type TransactionType = "INCOME" | "EXPENSE" | "TRANSFER";
 
   const transactionsTypes: { id: TransactionType; name: string }[] = [
     { id: "INCOME", name: "Entrada" },
@@ -74,33 +86,23 @@ function CreateTransaction() {
     { id: "TRANSFER", name: "Transferência" },
   ];
 
-  type PaymentMethod = "CASH" | "CREDIT_CARD" | "DEBIT_CARD" | "PIX" | "BANK_TRANSFER";
-
   const paymentMethods: { id: PaymentMethod; name: string }[] = [
     { id: "CASH", name: "Dinheiro" },
     { id: "CREDIT_CARD", name: "Cartão de Crédito" },
     { id: "DEBIT_CARD", name: "Cartão de Débito" },
     { id: "PIX", name: "Pix" },
+    { id: "BANK_TRANSFER", name: "Transferência Bancária" },
   ];
 
-  type InstallmentType = "Sim" | "Nao";
-
-  const installments: { id: InstallmentType; name: string }[] = [
-    { id: "Sim", name: "Sim" },
-    { id: "Nao", name: "Não" },
+  const installmentOptions: { id: InstallmentType; name: string }[] = [
+    { id: "SIM", name: "Sim" },
+    { id: "NAO", name: "Não" },
   ];
 
-  type CardType = "CREDIT" | "DEBIT";
-
-  const cardTypes: { id: CardType; name: string }[] = [
-    { id: "CREDIT", name: "Crédito" },
-    { id: "DEBIT", name: "Debito" },
-  ];
-
-  const { goals } = useGoals();
-  const { categories } = useCategory();
-  const { wallets } = useWallets();
-
+  const isCard = paymentMethod === "CREDIT_CARD" || paymentMethod === "DEBIT_CARD";
+  const isCreditCard = paymentMethod === "CREDIT_CARD";
+  const isTransfer = type === "TRANSFER";
+  const isParcelado = isInstallment === "SIM";
 
   function formatAmount(value: string): string {
     const num = parseFloat(value);
@@ -113,49 +115,77 @@ function CreateTransaction() {
 
   function formatDisplayDate(iso: string): string {
     const date = new Date(iso);
-    if (isNaN(date.getTime())) return "";
+    if (isNaN(date.getTime())) return "Selecione uma data";
     return date.toLocaleDateString("pt-BR");
   }
 
   function calculateInstallmentValue() {
-  const principal = Number(amount);
-  const numInstallments = Number(installmentNumber);
+    const principal = Number(amount);
+    const num = Number(totalInstallments);
+    if (!principal || !num || num <= 0) return 0;
+    return principal / num;
+  }
 
-  if (!principal || !numInstallments || numInstallments <= 0) return 0;
+  function getTransactionTypeName(t: TransactionType | "") {
+    return transactionsTypes.find((x) => x.id === t)?.name ?? "Tipo da transação";
+  }
 
-  return principal / numInstallments;
-}
+  function handleChangeType(t: TransactionType) {
+    setType(t);
+    setDestinationWalletId("");
+    setPaymentMethod("");
+    setIsInstallment("");
+    setTotalInstallments("");
+    setCardId("");
+  }
 
-function calculateTotal() {
-  return Number(amount) || 0;
-}
+  function handleChangePaymentMethod(p: PaymentMethod) {
+    setPaymentMethod(p);
+    setIsInstallment("");
+    setTotalInstallments("");
+    setCardId("");
+  }
 
   async function handleSubmit() {
-    const installmentBool = isInstallment === "Sim";
+    if (!type || !amount || !transactionDate || !walletId) {
+      return Alert.alert(
+        "Atenção",
+        "Preencha tipo, valor, data e carteira!"
+      );
+    }
+
+    if (isTransfer && !destinationWalletId) {
+      return Alert.alert("Atenção", "Selecione a carteira de destino!");
+    }
+
+    if (isCreditCard && !cardId) {
+      return Alert.alert("Atenção", "Selecione o cartão de crédito!");
+    }
 
     try {
       if (isEditing) {
         await updateTransaction(params.id!, {
           type,
-          targetAmount: Number(amount),
-          currentAmount: Number(amount),
+          amount: Number(amount),
           transactionDate,
         });
         Alert.alert("Sucesso", "Transação atualizada com sucesso!");
       } else {
         await addTransaction({
           type,
-          paymentMethod,
+          paymentMethod: paymentMethod || undefined,
+          walletId,
+          cardId: cardId || undefined,
+          destinationWalletId: destinationWalletId || undefined,
           amount: Number(amount),
-          description,
+          description: description || undefined,
           transactionDate,
-          goalId,
-          categoryId,
-          isInstallment: installmentBool,
-          installmentNumber: Number(installmentNumber),
-          installmentTotal: Number(installmentTotal),
+          goal_id: goal_id || undefined,
+          categoryId: categoryId || undefined,
+          isInstallment: isParcelado,
+          totalInstallments: isParcelado ? Number(totalInstallments) : undefined,
         });
-        Alert.alert("Sucesso", "transação criada com sucesso!");
+        Alert.alert("Sucesso", "Transação criada com sucesso!");
       }
       router.back();
     } catch (error: any) {
@@ -164,49 +194,17 @@ function calculateTotal() {
     }
   }
 
-  const CATEGORIES = [
-    {
-      id: "1",
-      name: "Luz",
-    },
-    {
-      id: "2",
-      name: "Água",
-    },
-    {
-      id: "3",
-      name: "Internet",
-    },
-    {
-      id: "4",
-      name: "Compras",
-    },
-    {
-      id: "5",
-      name: "Transporte",
-    },
-    {
-      id: "6",
-      name: "Comida",
-    },
-    {
-      id: "7",
-      name: "Saúde",
-    },
-  ];
-
   return (
     <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.select({ ios: "padding", android: "padding" })}
-        >
+      style={{ flex: 1 }}
+      behavior={Platform.select({ ios: "padding", android: "padding" })}
+    >
       <Screen style={{ padding: 0 }}>
         <ScrollView
           contentContainerStyle={{ flexGrow: 1 }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          
           <View style={styles.header}>
             <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
               <FontAwesome
@@ -216,52 +214,45 @@ function calculateTotal() {
               />
             </TouchableOpacity>
           </View>
-          
+
           <View style={styles.hero}>
             <Text style={styles.heroLabel}>
               {isEditing ? "Editar transação" : "Nova transação"}
             </Text>
             <Text style={styles.heroTitle}>
               {isEditing
-                ? "Redefina seu\nsobjetivo"
-                : "Qual é o seu\npróximo objetivo?"}
+                ? "Redefina sua\ntransação"
+                : "O que você\nquer registrar?"}
             </Text>
             <Text style={styles.heroSub}>
               {isEditing
                 ? "Atualize os dados da sua transação"
-                : "Defina uma transação"}
+                : "Registre uma entrada, saída ou transferência"}
             </Text>
           </View>
 
-          
           <View style={styles.form}>
 
-            
             <View style={styles.field}>
               <Text style={styles.fieldLabel}>Tipo de transação</Text>
-                <View style={styles.typeContainer}>
-                  {transactionsTypes.map((t) => (
-                    <TouchableOpacity
-                      key={t.id}
-                      onPress={() => setType(t.id)}
-                      style={[
-                        styles.typeButton,
-                        type === t.id && styles.typeButtonActive,
-                      ]}
-                    >
-                      <Text
-                        style={{
-                          color:
-                            type === t.id ? "#fff" : theme.colors.text,
-                        }}
-                      >
-                        {t.name}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+              <View style={styles.typeContainer}>
+                {transactionsTypes.map((t) => (
+                  <TouchableOpacity
+                    key={t.id}
+                    onPress={() => handleChangeType(t.id)}
+                    style={[
+                      styles.typeButton,
+                      type === t.id && styles.typeButtonActive,
+                    ]}
+                  >
+                    <Text style={{ color: type === t.id ? "#fff" : theme.colors.text }}>
+                      {t.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
-                
+
             <View style={styles.field}>
               <Text style={styles.fieldLabel}>Valor</Text>
               <View style={[styles.fieldInput, amount.length > 0 && styles.fieldInputActive]}>
@@ -281,197 +272,253 @@ function calculateTotal() {
                 />
               </View>
             </View>
-            
-            <View style={styles.field}>
-              <Text style={styles.fieldLabel}>Escolha uma carteira</Text>
-                <View style={styles.typeContainer}>
-                  {wallets.length === 0 ? (
-                    <Text style={styles.emptyField}>Nenhuma carteira cadastrada</Text>
-                  ) : (
-                    wallets.map((w) => (
-                      <TouchableOpacity
-                        key={w.id}
-                        onPress={() => setWalletId(w.id)}
-                        style={[
-                          styles.typeButton,
-                          walletId === w.id && styles.typeButtonActive,
-                        ]}
-                      >
-                        <Text
-                          style={{
-                            color: walletId === w.id ? "#fff" : theme.colors.text,
-                          }}
-                        >
-                          {w.name}
-                        </Text>
-                      </TouchableOpacity>
-                    ))
-                  )}
-                </View>
-            </View>
 
             <View style={styles.field}>
-              <Text style={styles.fieldLabel}>Método de pagamento</Text>
+              <Text style={styles.fieldLabel}>
+                {isTransfer ? "Carteira de origem" : "Carteira"}
+              </Text>
+              <View style={styles.typeContainer}>
+                {wallets.length === 0 ? (
+                  <Text style={styles.emptyField}>Nenhuma carteira cadastrada</Text>
+                ) : (
+                  wallets.map((w) => (
+                    <TouchableOpacity
+                      key={w.id}
+                      onPress={() => setWalletId(w.id)}
+                      style={[
+                        styles.typeButton,
+                        walletId === w.id && styles.typeButtonActive,
+                      ]}
+                    >
+                      <Text style={{ color: walletId === w.id ? "#fff" : theme.colors.text }}>
+                        {w.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))
+                )}
+              </View>
+            </View>
+
+            {isTransfer && (
+              <View style={styles.field}>
+                <Text style={styles.fieldLabel}>Carteira de destino</Text>
+                <View style={styles.typeContainer}>
+                  {wallets.filter((w) => w.id !== walletId).length === 0 ? (
+                    <Text style={styles.emptyField}>Nenhuma outra carteira disponível</Text>
+                  ) : (
+                    wallets
+                      .filter((w) => w.id !== walletId)
+                      .map((w) => (
+                        <TouchableOpacity
+                          key={w.id}
+                          onPress={() =>
+                            setDestinationWalletId(
+                              destinationWalletId === w.id ? "" : w.id
+                            )
+                          }
+                          style={[
+                            styles.typeButton,
+                            destinationWalletId === w.id && styles.typeButtonActive,
+                          ]}
+                        >
+                          <Text style={{ color: destinationWalletId === w.id ? "#fff" : theme.colors.text }}>
+                            {w.name}
+                          </Text>
+                        </TouchableOpacity>
+                      ))
+                  )}
+                </View>
+              </View>
+            )}
+
+            {!isTransfer && (
+              <View style={styles.field}>
+                <Text style={styles.fieldLabel}>Método de pagamento</Text>
                 <View style={styles.typeContainer}>
                   {paymentMethods.map((p) => (
                     <TouchableOpacity
                       key={p.id}
-                      onPress={() => setPaymentMethod(p.id)}
+                      onPress={() => handleChangePaymentMethod(p.id)}
                       style={[
                         styles.typeButton,
                         paymentMethod === p.id && styles.typeButtonActive,
                       ]}
                     >
-                      <Text
-                        style={{
-                          color:
-                            paymentMethod === p.id ? "#fff" : theme.colors.text,
-                        }}
-                      >
+                      <Text style={{ color: paymentMethod === p.id ? "#fff" : theme.colors.text }}>
                         {p.name}
                       </Text>
                     </TouchableOpacity>
                   ))}
-              </View>
-            </View>
-            {(paymentMethod === "CREDIT_CARD" || paymentMethod === "DEBIT_CARD") && (
-              <View style={styles.field}>
-                <Text style={styles.fieldLabel}>Pagou parcelado?</Text>
-                  <View style={styles.typeContainer}>
-                    {installments.map((i) => (
-                      <TouchableOpacity
-                        key={i.id}
-                        onPress={() => setIsInstallment(i.id)}
-                        style={[
-                          styles.typeButton,
-                          isInstallment === i.id && styles.typeButtonActive,
-                        ]}
-                      >
-                        <Text
-                          style={{
-                            color:
-                              isInstallment === i.id ? "#fff" : theme.colors.text,
-                          }}
-                        >
-                          {i.name}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
                 </View>
               </View>
             )}
 
-            {isInstallment === "Sim" && (
-                <View style={styles.field}>
-                  <Text style={styles.fieldLabel}>Número de parcelas</Text>
-                  <View style={[styles.fieldInput, installmentNumber.length > 0 && styles.fieldInputActive]}>
-                    <Ionicons
-                      name="card-sharp"
-                      size={18}
-                      color={installmentNumber.length > 0 ? theme.colors.primary : "#94A3B8"}
-                    />
-                    <Input
-                      style={styles.inlineInput}
-                      placeholder="Ex.: 12 vezes"
-                      placeholderTextColor={theme.colors.textSecondary}
-                      keyboardType="numeric"
-                      value={installmentNumber}
-                      onChangeText={setInstallmentNumber}
-                    />
-                  </View>
+            {isCard && (
+              <View style={styles.field}>
+                <Text style={styles.fieldLabel}>
+                  {isCreditCard ? "Cartão de crédito" : "Cartão de débito"}
+                </Text>
+                <View style={styles.typeContainer}>
+                  {cards.filter((c) =>
+                    isCreditCard ? c.type === "CREDIT" : c.type === "DEBIT"
+                  ).length === 0 ? (
+                    <Text style={styles.emptyField}>
+                      Nenhum cartão {isCreditCard ? "de crédito" : "de débito"} cadastrado
+                    </Text>
+                  ) : (
+                    cards
+                      .filter((c) =>
+                        isCreditCard ? c.type === "CREDIT" : c.type === "DEBIT"
+                      )
+                      .map((c) => (
+                        <TouchableOpacity
+                          key={c.id}
+                          onPress={() => setCardId(cardId === c.id ? "" : c.id)}
+                          style={[
+                            styles.typeButton,
+                            cardId === c.id && styles.typeButtonActive,
+                          ]}
+                        >
+                          <Text style={{ color: cardId === c.id ? "#fff" : theme.colors.text }}>
+                            {c.name} •••• {c.last4Digits}
+                          </Text>
+                        </TouchableOpacity>
+                      ))
+                  )}
                 </View>
-              )}
+              </View>
+            )}
 
-              {isInstallment === "Sim" && (
-                <View style={styles.field}>
-                  <Text style={styles.fieldLabel}>Valor das parcelas</Text>
-                  <View style={[styles.fieldInput, styles.fieldInputActive]}>
-                    <Ionicons
-                      name="cash-outline"
-                      size={18}
-                      color={theme.colors.primary}
-                    />
-                    <Text style={{ color: theme.colors.textSecondary, fontSize: 16 }}>
-                    {installmentNumber
-                      ? `${installmentNumber}x de R$ ${formatAmount(String(calculateInstallmentValue()))}`
-                      : ""}
-                  </Text>
-                  </View>
+            {isCard && (
+              <View style={styles.field}>
+                <Text style={styles.fieldLabel}>Pagou parcelado?</Text>
+                <View style={styles.typeContainer}>
+                  {installmentOptions.map((i) => (
+                    <TouchableOpacity
+                      key={i.id}
+                      onPress={() => setIsInstallment(i.id)}
+                      style={[
+                        styles.typeButton,
+                        isInstallment === i.id && styles.typeButtonActive,
+                      ]}
+                    >
+                      <Text style={{ color: isInstallment === i.id ? "#fff" : theme.colors.text }}>
+                        {i.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
                 </View>
-              )}
-            
+              </View>
+            )}
+
+            {isParcelado && (
+              <View style={styles.field}>
+                <Text style={styles.fieldLabel}>Número de parcelas</Text>
+                <View style={[styles.fieldInput, totalInstallments.length > 0 && styles.fieldInputActive]}>
+                  <Ionicons
+                    name="card-sharp"
+                    size={18}
+                    color={totalInstallments.length > 0 ? theme.colors.primary : "#94A3B8"}
+                  />
+                  <Input
+                    style={styles.inlineInput}
+                    placeholder="Ex.: 12"
+                    placeholderTextColor={theme.colors.textSecondary}
+                    keyboardType="numeric"
+                    value={totalInstallments}
+                    onChangeText={setTotalInstallments}
+                  />
+                </View>
+              </View>
+            )}
+
+            {isParcelado && totalInstallments.length > 0 && (
+              <View style={styles.field}>
+                <Text style={styles.fieldLabel}>Valor das parcelas</Text>
+                <View style={[styles.fieldInput, styles.fieldInputActive]}>
+                  <Ionicons name="cash-outline" size={18} color={theme.colors.primary} />
+                  <Text style={{ color: theme.colors.text, fontSize: 15, flex: 1 }}>
+                    {`${totalInstallments}x de R$ ${formatAmount(
+                      String(calculateInstallmentValue())
+                    )}`}
+                  </Text>
+                </View>
+              </View>
+            )}
+
             <View style={styles.field}>
               <Text style={styles.fieldLabel}>Quando foi feita?</Text>
               <BaseButton onPress={() => setShowDatePicker(true)}>
-                <View style={[styles.fieldInput, styles.fieldInputActive]}>
+                <View
+                  style={[
+                    styles.fieldInput,
+                    transactionDate ? styles.fieldInputActive : null,
+                  ]}
+                >
                   <Ionicons
                     name="calendar-outline"
                     size={18}
-                    color={theme.colors.primary}
+                    color={transactionDate ? theme.colors.primary : "#94A3B8"}
                   />
-                  <Text style={styles.dateText}>{formatDisplayDate(transactionDate)}</Text>
+                  <Text style={styles.dateText}>
+                    {formatDisplayDate(transactionDate)}
+                  </Text>
                 </View>
               </BaseButton>
             </View>
 
             <View style={styles.field}>
-              <Text style={styles.fieldLabel}>Escolha uma meta</Text>
-                <View style={styles.typeContainer}>
-                  {goals.length === 0 ? (
-                    <Text style={styles.emptyField}>Nenhuma meta cadastrada</Text>
-                  ) : (
-                    goals.map((g) => (
-                      <TouchableOpacity
-                        key={g.id}
-                        onPress={() => setGoalId(g.id)}
-                        style={[
-                          styles.typeButton,
-                          goalId === g.id && styles.typeButtonActive,
-                        ]}
-                      >
-                        <Text
-                          style={{
-                            color: goalId === g.id ? "#fff" : theme.colors.text,
-                          }}
-                        >
-                          {g.name}
-                        </Text>
-                      </TouchableOpacity>
-                    ))
-                  )}
-                </View>
-            </View>
-            
-            <View style={styles.field}>
-              <Text style={styles.fieldLabel}>Escolha uma categoria</Text>
-                <View style={styles.typeContainer}>
-                  {CATEGORIES.length === 0 ? (
-                    <Text style={styles.emptyField}>Nenhuma categoria cadastrada</Text>
-                  ) : (
-                    CATEGORIES.map((c) => (
-                      <TouchableOpacity
-                        key={c.name}
-                        onPress={() => setCategoryId (c.name)}
-                        style={[
-                          styles.typeButton,
-                          categoryId === c.name && styles.typeButtonActive,
-                        ]}
-                      >
-                        <Text
-                          style={{
-                            color: categoryId === c.name ? "#fff" : theme.colors.text,
-                          }}
-                        >
-                          {c.name}
-                        </Text>
-                      </TouchableOpacity>
-                    ))
-                  )}
-                </View>
+              <Text style={styles.fieldLabel}>Meta (opcional)</Text>
+              <View style={styles.typeContainer}>
+                {goals.length === 0 ? (
+                  <Text style={styles.emptyField}>Nenhuma meta cadastrada</Text>
+                ) : (
+                  goals.map((g) => (
+                    <TouchableOpacity
+                      key={g.id}
+                      onPress={() => setGoal_id(goal_id === g.id ? "" : g.id)}
+                      style={[
+                        styles.typeButton,
+                        goal_id === g.id && styles.typeButtonActive,
+                      ]}
+                    >
+                      <Text style={{ color: goal_id === g.id ? "#fff" : theme.colors.text }}>
+                        {g.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))
+                )}
+              </View>
             </View>
 
             <View style={styles.field}>
-              <Text style={styles.fieldLabel}>Adicione uma descrição</Text>
+              <Text style={styles.fieldLabel}>Categoria (opcional)</Text>
+              <View style={styles.typeContainer}>
+                {categories.length === 0 ? (
+                  <Text style={styles.emptyField}>Nenhuma categoria cadastrada</Text>
+                ) : (
+                  categories.map((c) => (
+                    <TouchableOpacity
+                      key={c.id}
+                      onPress={() =>
+                        setCategoryId(categoryId === c.id ? "" : c.id)
+                      }
+                      style={[
+                        styles.typeButton,
+                        categoryId === c.id && styles.typeButtonActive,
+                      ]}
+                    >
+                      <Text style={{ color: categoryId === c.id ? "#fff" : theme.colors.text }}>
+                        {c.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))
+                )}
+              </View>
+            </View>
+
+            <View style={styles.field}>
+              <Text style={styles.fieldLabel}>Descrição (opcional)</Text>
               <View style={[styles.fieldInput, description.length > 0 && styles.fieldInputActive]}>
                 <Ionicons
                   name="pencil"
@@ -502,43 +549,58 @@ function calculateTotal() {
             onCancel={() => setShowDatePicker(false)}
           />
 
-        
           <View style={styles.dividerRow}>
             <View style={styles.divider} />
             <Text style={styles.dividerLabel}>Prévia</Text>
             <View style={styles.divider} />
           </View>
 
-        
           <View style={styles.previewWrapper}>
             <LinearGradient
-              colors={["#7C3AED", "#A78BFA"]}
+              colors={
+                type === "INCOME"
+                  ? ["#22C55E", "#4ADE80"]
+                  : type === "EXPENSE"
+                  ? ["#F43F5E", "#FB7185"]
+                  : ["#7C3AED", "#A78BFA"]
+              }
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.previewCard}
             >
               <View style={styles.previewLeft}>
                 <Text style={styles.previewName} numberOfLines={1}>
-                  {type || "Tipo da transação"}
+                  {getTransactionTypeName(type)}
                 </Text>
                 <Text style={styles.previewAmount}>
-                  Transação de: R$ {formatAmount(amount) || "–"} ·{" "}
-                  {new Date(transactionDate).toLocaleDateString("pt-BR", {
-                    month: "short",
-                    year: "numeric",
-                  })}
+                  R$ {formatAmount(amount) || "–"} ·{" "}
+                  {transactionDate
+                    ? new Date(transactionDate).toLocaleDateString("pt-BR", {
+                        month: "short",
+                        year: "numeric",
+                      })
+                    : "sem data"}
                 </Text>
+                {isParcelado && totalInstallments && (
+                  <Text style={styles.previewAmount}>
+                    {totalInstallments}x de R${" "}
+                    {formatAmount(String(calculateInstallmentValue()))}
+                  </Text>
+                )}
+                {isTransfer && destinationWalletId && (
+                  <Text style={styles.previewAmount}>
+                    → {wallets.find((w) => w.id === destinationWalletId)?.name}
+                  </Text>
+                )}
               </View>
             </LinearGradient>
           </View>
 
-        
           <View style={styles.cta}>
             <Button
               label={isEditing ? "Salvar alterações" : "Criar transação"}
               onPress={handleSubmit}
-            >
-            </Button>
+            />
           </View>
         </ScrollView>
       </Screen>
@@ -631,9 +693,10 @@ const styles = StyleSheet.create({
   },
   typeButtonActive: {
     backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
   },
-  emptyField:{
-    color: theme.colors.text,
+  emptyField: {
+    color: theme.colors.textSecondary,
     padding: 10,
     borderRadius: 10,
     borderWidth: 1.5,
@@ -661,17 +724,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     color: theme.colors.text,
-  },
-  daysBadge: {
-    backgroundColor: "rgba(124,58,237,0.15)",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  daysBadgeText: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: theme.colors.primary,
   },
   dividerRow: {
     flexDirection: "row",
@@ -705,7 +757,7 @@ const styles = StyleSheet.create({
   },
   previewLeft: {
     flex: 1,
-    marginRight: 16,
+    gap: 4,
   },
   previewName: {
     fontSize: 16,
@@ -715,7 +767,6 @@ const styles = StyleSheet.create({
   previewAmount: {
     fontSize: 12,
     color: "rgba(255,255,255,0.7)",
-    marginTop: 4,
   },
   cta: {
     paddingHorizontal: 24,

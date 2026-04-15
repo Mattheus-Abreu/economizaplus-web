@@ -8,6 +8,7 @@ type Action = {
   icon: keyof typeof Ionicons.glyphMap;
   color: string;
   route: string;
+  type?: "INCOME" | "EXPENSE";
 };
 
 const ACTIONS: Action[] = [
@@ -16,12 +17,14 @@ const ACTIONS: Action[] = [
     icon: "arrow-down-circle-outline",
     color: "#22C55E",
     route: "/(protected)/transaction/transactionsPage",
+    type: "INCOME",
   },
   {
     label: "Saída",
     icon: "arrow-up-circle-outline",
     color: "#FB7185",
     route: "/(protected)/transaction/transactionsPage",
+    type: "EXPENSE",
   },
   {
     label: "Carteiras",
@@ -43,7 +46,7 @@ function QuickActions() {
             styles.action,
             pressed && styles.actionPressed,
           ]}
-          onPress={() => router.push(action.route as any)}
+          onPress={() => router.push({ pathname: action.route as any, params: { type: action.type } })}
         >
           <View style={[styles.iconWrap]}>
             <Ionicons name={action.icon} size={22} color={action.color} />
