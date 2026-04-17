@@ -8,6 +8,7 @@ import  theme  from "@/app/themes/theme";
 import { useRouter } from "expo-router";
 import { FontAwesome } from "@expo/vector-icons";
 import { TouchableOpacity } from "react-native";
+import { isBancoNome } from "@/utils/banco";
 
 type CardItem = {
   id: string;
@@ -158,6 +159,10 @@ export default function App() {
     return dataBackgroundColors[title.toLocaleLowerCase() as keyof typeof dataBackgroundColors]?.fundo || '#ec0192';
   };
 
+  function getBancoNomeSafe(title: string) {
+    return isBancoNome(title) ? title : "nubank";
+  }
+
   const renderTransactions = () => {
     return currentCard.transactions.map((transaction, index) => (
       <View key={index} style={styles.transactionRow}>
@@ -191,7 +196,7 @@ export default function App() {
               borderRadius: 12,
             }}
           >
-            <TouchableOpacity onPress={() => router.push("/addCard/newCard")}>
+            <TouchableOpacity onPress={() => router.push("/")}>
               <FontAwesome name="plus" size={15} color="white" />
             </TouchableOpacity>
           </View>
@@ -211,7 +216,7 @@ export default function App() {
           
             <View style={styles.cardTop}>
               <View style={styles.cardIcon}>
-                <BancoIcon nome={item.title.toLocaleLowerCase().trim()} formato="sem" tamanho={60} />
+                <BancoIcon nome={getBancoNomeSafe(item.title)} formato="sem" tamanho={60} />
               </View>
 
               <View style={styles.cardBottom}>
@@ -226,7 +231,6 @@ export default function App() {
           </View>
         )}
       />
-
       
       <View style={styles.transactionsContainer}>
         <View style={styles.transactionsHeader}>

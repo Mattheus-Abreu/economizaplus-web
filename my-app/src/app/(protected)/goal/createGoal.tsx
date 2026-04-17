@@ -43,13 +43,10 @@ function createGoal() {
   const [walletId, setWalletId] = useState(params.walletId ?? "");
   const [targetAmount, setTargetAmount] = useState(params.targetAmount ?? "");
   const [currentAmount, setCurrentAmount] = useState(params.currentAmount ?? "");
-  const [walletId, setWalletId] = useState(params.walletId ?? "");
   const [deadline, setDeadline] = useState(
     params.deadline ?? new Date().toISOString()
   );
   const [showDatePicker, setShowDatePicker] = useState(false);
-
-  const {wallets} = useWallets();
 
   const progress = useSharedValue(0);
 
@@ -113,6 +110,8 @@ function createGoal() {
         await addGoal({
           name,
           targetAmount: Number(targetAmount),
+          description,
+          walletId,
           currentAmount: Number(currentAmount),
           deadline,
         });
