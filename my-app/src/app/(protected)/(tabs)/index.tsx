@@ -18,7 +18,6 @@ import {
 import { BlurCarousel } from "../../../components/carousel";
 import Icons from "../../../components/Icons";
 import { useBalance } from "@/hooks/useBalance";
-import CardHome from "@/components/CardHome";
 
 const QUICK_ACTIONS_HEIGHT = 90;
 

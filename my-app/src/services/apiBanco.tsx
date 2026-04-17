@@ -1,10 +1,8 @@
-import { useEffect, useMemo } from "react";
-import { View } from "react-native";
-import { SvgXml } from "react-native-svg";
-import { svgBanco } from "../../node_modules/@edusites/bancos-brasil/src/core.js";
+import { BancoNome, svgBanco } from "@edusites/bancos-brasil";
+import { SvgFromXml } from "react-native-svg";
 
 type BancoIconProps = {
-  nome: string;
+  nome: BancoNome;
   formato?: "quadrado" | "circulo" | "sem";
   cor?: string;
   fundo?: string;
@@ -18,17 +16,11 @@ export default function BancoIcon({
   fundo,
   tamanho = 60,
 }: BancoIconProps) {
-  const svg = useMemo(() => {
-    if (!nome) return "";
-    return svgBanco({ nome, formato, cor, fundo, tamanho }) ?? "";
-  }, [nome, formato, cor, fundo, tamanho]);
+  const svg = svgBanco({ nome, formato, cor, fundo, tamanho });
 
   if (!svg) return null;
 
   return (
-    <View>
-      <SvgXml xml={svg} width={tamanho} height={tamanho} />
-    </View>
+    <SvgFromXml xml={svg} width={tamanho} height={tamanho} />
   );
 }
-

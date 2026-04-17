@@ -106,8 +106,24 @@ function createSavings() {
     }
 
     const numAmount = parseFloat(amount);
+
     if (isNaN(numAmount) || numAmount <= 0) {
       Alert.alert("Atenção", "Informe um valor válido para o depósito.");
+      return;
+    }
+
+    const selectedWallet = wallets.find(w => w.id === walletId);
+
+    if (!selectedWallet) {
+      Alert.alert("Erro", "Carteira não encontrada.");
+      return;
+    }
+
+    if (numAmount > selectedWallet.balance) {
+      Alert.alert(
+        "Saldo insuficiente",
+        "Você não possui saldo suficiente na carteira para esse depósito."
+      );
       return;
     }
 
