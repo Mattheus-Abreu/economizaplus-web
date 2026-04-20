@@ -4,13 +4,14 @@
     "strict": true,
     "jsx": "react-jsx",
     "paths": {
-      "@/*": [
-        "./src/*"
-      ]
+      "@/*": ["./src/*"]
     }
   },
   "include": [
+    "**/*.ts",
+    "**/*.tsx",
     "src",
+    "svg.d.ts",
     "expo-asset.d.ts",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"

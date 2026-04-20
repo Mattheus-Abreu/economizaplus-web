@@ -18,13 +18,22 @@ import { useEffect } from "react";
 import { AnimatedProgressBar } from "@/components/progressBar";
 import Button from "@/components/Button";
 import { useSaving } from "@/contexts/savingContext";
-import { useWallets } from "@/contexts/walletContext"
+import { useWallets } from "@/contexts/walletContext";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { AnimatedHeaderScrollView } from "@/components/animated-header";
+import { useFonts } from "expo-font";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 function goalDetail() {
   const router = useRouter();
   const { goals, deleteGoal } = useGoals();
   const { loadSavings, getSavingsByGoal } = useSaving();
   const { wallets } = useWallets();
+  const [fontLoaded] = useFonts({
+      InterRegular: require("@/assets/fonts/Inter-Regular.otf"),
+      InterMedium: require("@/assets/fonts/Inter-Medium.otf"),
+      InterBold: require("@/assets/fonts/Inter-Bold.otf"),
+    });
 
   const params = useLocalSearchParams<{
     id: string;
@@ -45,9 +54,7 @@ function goalDetail() {
     if (!goal) return;
 
     const percent =
-      safeTarget > 0
-        ? Math.min((safeCurrent / safeTarget) * 100, 100)
-        : 0;
+      safeTarget > 0 ? Math.min((safeCurrent / safeTarget) * 100, 100) : 0;
 
     progress.value = withTiming(percent, {
       duration: 800,
@@ -63,11 +70,16 @@ function goalDetail() {
 
   if (!goal) {
     return (
-      <Screen style={{ padding: 24, justifyContent: "center", alignItems: "center" }}>
+      <Screen
+        style={{ padding: 24, justifyContent: "center", alignItems: "center" }}
+      >
         <Text style={{ color: theme.colors.textSecondary }}>
           Meta não encontrada
         </Text>
-        <TouchableOpacity onPress={() => router.back()} style={{ marginTop: 16 }}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={{ marginTop: 16 }}
+        >
           <Text style={{ color: theme.colors.primary }}>Voltar</Text>
         </TouchableOpacity>
       </Screen>
@@ -111,37 +123,79 @@ function goalDetail() {
   }
 
   function handleDeposit() {
-    router.push({
-      pathname: "/(protected)/savings/createSavings",
-      params: {
-        goalId: goal!.id,
-        goalName: goal!.name,
-      },
-    });
+    if (progressPercent >= 100) {
+      Alert.alert(
+        "Meta já atingida",
+        "Você já atingiu ou ultrapassou a meta estabelecida. Deseja fazer um depósito mesmo assim?",
+        [
+          { text: "Cancelar", style: "cancel" },
+          {
+            text: "Continuar",
+            onPress: () => {
+              router.push({
+                pathname: "/(protected)/savings/createSavings",
+              });
+            },
+          },
+        ],
+      );
+    } else {
+      router.push({
+        pathname: "/(protected)/savings/createSavings",
+        params: {
+          goalId: goal!.id,
+          goalName: goal!.name,
+        },
+      });
+    }
   }
 
   return (
     <Screen style={{ padding: 0 }}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
-        
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 40 }}
+      >
         <LinearGradient
-          colors={gradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+          colors={[gradient[1], gradient[0]]}
+          start={{ x: 1, y: 0 }}
+          end={{ x: 0, y: 0 }}
           style={styles.headerGradient}
         >
+          <LinearGradient
+            colors={['transparent', 'transparent', '#10042000', theme.colors.background]}
+            locations={[0, 0.7, 0.75, 1]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={StyleSheet.absoluteFillObject}
+          />
           <View style={styles.headerRow}>
-            <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-              <FontAwesome name="arrow-left" size={16} color="rgba(255,255,255,0.8)" />
+            <TouchableOpacity
+              style={styles.backBtn}
+              onPress={() => router.back()}
+            >
+              <FontAwesome
+                name="arrow-left"
+                size={16}
+                color="rgba(255,255,255,0.8)"
+              />
             </TouchableOpacity>
 
             <View style={styles.headerActions}>
               <TouchableOpacity style={styles.iconBtn} onPress={handleEdit}>
-                <Ionicons name="pencil-outline" size={18} color="rgba(255,255,255,0.8)" />
+                <Ionicons
+                  name="pencil-outline"
+                  size={18}
+                  color="rgba(255,255,255,0.8)"
+                />
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.iconBtn} onPress={handleDelete}>
-                <Ionicons name="trash-outline" size={18} color="rgba(255,255,255,0.8)" />
+                <Ionicons
+                  name="trash-outline"
+                  size={18}
+                  color="rgba(255,255,255,0.8)"
+                />
               </TouchableOpacity>
             </View>
           </View>
@@ -164,21 +218,28 @@ function goalDetail() {
           <View style={styles.summaryCard}>
             <Text style={styles.summaryLabel}>Guardado</Text>
             <Text style={styles.summaryValue}>
-              R$ {safeCurrent.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+              R${" "}
+              {safeCurrent.toLocaleString("pt-BR", {
+                minimumFractionDigits: 2,
+              })}
             </Text>
           </View>
 
           <View style={[styles.summaryCard, styles.summaryCardMiddle]}>
             <Text style={styles.summaryLabel}>Meta</Text>
             <Text style={styles.summaryValue}>
-              R$ {safeTarget.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+              R${" "}
+              {safeTarget.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
             </Text>
           </View>
 
           <View style={styles.summaryCard}>
             <Text style={styles.summaryLabel}>Faltam</Text>
-            <Text style={[styles.summaryValue, { color: theme.colors.primary }]}>
-              R$ {remaining.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+            <Text
+              style={[styles.summaryValue, { color: theme.colors.primary }]}
+            >
+              R${" "}
+              {remaining.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
             </Text>
           </View>
         </View>
@@ -199,7 +260,7 @@ function goalDetail() {
             animationDuration={1000}
           />
         </View>
-
+        
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Depósitos</Text>
 
@@ -222,9 +283,13 @@ function goalDetail() {
                     borderColor: "rgba(255,255,255,0.08)",
                   }}
                 >
-                  <Text style={{color: theme.colors.textSecondary}}>{wallets.filter((w) => w.id === saving.walletId)?.[0]?.name || "Carteira não encontrada"}</Text>
+                  <Text style={{ color: theme.colors.textSecondary }}>
+                    {wallets.filter((w) => w.id === saving.walletId)?.[0]
+                      ?.name || "Carteira não encontrada"}
+                  </Text>
                   <Text style={{ color: theme.colors.secondary }}>
-                    + R$ {safeAmount.toLocaleString("pt-BR", {
+                    + R${" "}
+                    {safeAmount.toLocaleString("pt-BR", {
                       minimumFractionDigits: 2,
                     })}
                   </Text>
@@ -233,20 +298,54 @@ function goalDetail() {
             })
           )}
         </View>
+        
+        {progressPercent >= 100 && (
+          <View
+            style={{
+              marginHorizontal: 24,
+              marginTop: 16,
+              backgroundColor: "rgba(34,197,94,0.1)",
+              borderWidth: 0.5,
+              borderColor: "rgba(34,197,94,0.3)",
+              borderRadius: 14,
+              padding: 16,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 12,
+            }}
+          >
+            <Ionicons name="checkmark-circle" size={24} color={theme.colors.secondary} />
+            <View style={{ flex: 1 }}>
+              <Text
+                style={{ color: theme.colors.secondary, fontWeight: "600", fontSize: 14 }}
+              >
+                Meta concluída!
+              </Text>
+              <Text
+                style={{
+                  color: "rgba(34,197,94,0.7)",
+                  fontSize: 12,
+                  marginTop: 2,
+                }}
+              >
+                Você atingiu 100% do seu objetivo. Parabéns!
+              </Text>
+            </View>
+          </View>
+        )}
 
         <View style={styles.cta}>
           <Button label="Fazer depósito" onPress={handleDeposit} />
         </View>
-
-      </ScrollView>
+        </ScrollView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   headerGradient: {
-    paddingTop: 56,
-    paddingBottom: 32,
+    paddingTop: 70,
+    paddingBottom: 80,
     paddingHorizontal: 24,
   },
   headerRow: {
@@ -308,7 +407,7 @@ const styles = StyleSheet.create({
   summaryRow: {
     flexDirection: "row",
     marginHorizontal: 24,
-    marginTop: -20,
+    marginTop: -50,
     backgroundColor: theme.colors.surface,
     borderRadius: 16,
     overflow: "hidden",
@@ -317,7 +416,8 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     flex: 1,
-    padding: 16,
+    paddingTop: 16,
+    paddingBottom: 16,
     alignItems: "center",
     gap: 4,
   },
@@ -333,7 +433,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   summaryValue: {
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: "700",
     color: theme.colors.text,
   },

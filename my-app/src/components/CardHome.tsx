@@ -65,7 +65,10 @@ const CardHome = ({ item, fontLoaded, gradientIndex = 0 }: Props) => {
         onPress={() =>
           router.push({
             pathname: "/(protected)/goal/goalDetail",
-            params: { id: item.id },
+            params: { 
+              id: item.id,
+              gradientIndex: gradientIndex.toString(),
+             },
           })
         }
         style={({ pressed }) => [

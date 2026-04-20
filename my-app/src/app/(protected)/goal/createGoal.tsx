@@ -42,29 +42,31 @@ function createGoal() {
   const [description, setDescription] = useState(params.description ?? "");
   const [walletId, setWalletId] = useState(params.walletId ?? "");
   const [targetAmount, setTargetAmount] = useState(params.targetAmount ?? "");
-  const [currentAmount, setCurrentAmount] = useState(params.currentAmount ?? "");
+  const [currentAmount, setCurrentAmount] = useState(
+    params.currentAmount ?? "",
+  );
   const [deadline, setDeadline] = useState(
-    params.deadline ?? new Date().toISOString()
+    params.deadline ?? new Date().toISOString(),
   );
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const progress = useSharedValue(0);
 
   useEffect(() => {
-  const current = parseFloat(currentAmount);
-  const target = parseFloat(targetAmount);
+    const current = parseFloat(currentAmount);
+    const target = parseFloat(targetAmount);
 
-  if (!current || !target || target <= 0) {
-    progress.value = withTiming(0, { duration: 600 });
-    return;
-  }
+    if (!current || !target || target <= 0) {
+      progress.value = withTiming(0, { duration: 600 });
+      return;
+    }
 
-  const percent = Math.min((current / target) * 100, 100);
-  progress.value = withTiming(percent, {
-    duration: 800,
-    easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-  });
-}, [currentAmount, targetAmount]);
+    const percent = Math.min((current / target) * 100, 100);
+    progress.value = withTiming(percent, {
+      duration: 800,
+      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+    });
+  }, [currentAmount, targetAmount]);
 
   function formatDisplayDate(iso: string): string {
     const date = new Date(iso);
@@ -76,7 +78,7 @@ function createGoal() {
     const date = new Date(iso);
     const today = new Date();
     const diff = Math.ceil(
-      (date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+      (date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
     );
     if (diff < 0) return "Expirado";
     if (diff === 0) return "Hoje";
@@ -130,9 +132,12 @@ function createGoal() {
         contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-      > 
+      >
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => router.back()}
+          >
             <FontAwesome
               name="arrow-left"
               size={16}
@@ -160,7 +165,12 @@ function createGoal() {
         <View style={styles.form}>
           <View style={styles.field}>
             <Text style={styles.fieldLabel}>Nome da meta</Text>
-            <View style={[styles.fieldInput, name.length > 0 && styles.fieldInputActive]}>
+            <View
+              style={[
+                styles.fieldInput,
+                name.length > 0 && styles.fieldInputActive,
+              ]}
+            >
               <Ionicons
                 name="pencil-outline"
                 size={18}
@@ -178,11 +188,18 @@ function createGoal() {
 
           <View style={styles.field}>
             <Text style={styles.fieldLabel}>Descrição</Text>
-            <View style={[styles.fieldInput, description.length > 0 && styles.fieldInputActive]}>
+            <View
+              style={[
+                styles.fieldInput,
+                description.length > 0 && styles.fieldInputActive,
+              ]}
+            >
               <Ionicons
                 name="pencil-outline"
                 size={18}
-                color={description.length > 0 ? theme.colors.primary : "#94A3B8"}
+                color={
+                  description.length > 0 ? theme.colors.primary : "#94A3B8"
+                }
               />
               <Input
                 style={styles.inlineInput}
@@ -195,40 +212,49 @@ function createGoal() {
           </View>
 
           <View style={styles.field}>
-              <Text style={styles.fieldLabel}>Escolha uma carteira</Text>
-                <View style={styles.typeContainer}>
-                  {wallets.length === 0 ? (
-                    <Text style={styles.emptyField}>Nenhuma carteira cadastrada</Text>
-                  ) : (
-                    wallets.map((w) => (
-                      <TouchableOpacity
-                        key={w.id}
-                        onPress={() => setWalletId(w.id)}
-                        style={[
-                          styles.typeButton,
-                          walletId === w.id && styles.typeButtonActive,
-                        ]}
-                      >
-                        <Text
-                          style={{
-                            color: walletId === w.id ? "#fff" : theme.colors.text,
-                          }}
-                        >
-                          {w.name}
-                        </Text>
-                      </TouchableOpacity>
-                    ))
-                  )}
-                </View>
+            <Text style={styles.fieldLabel}>Escolha uma carteira</Text>
+            <View style={styles.typeContainer}>
+              {wallets.length === 0 ? (
+                <Text style={styles.emptyField}>
+                  Nenhuma carteira cadastrada
+                </Text>
+              ) : (
+                wallets.map((w) => (
+                  <TouchableOpacity
+                    key={w.id}
+                    onPress={() => setWalletId(w.id)}
+                    style={[
+                      styles.typeButton,
+                      walletId === w.id && styles.typeButtonActive,
+                    ]}
+                  >
+                    <Text
+                      style={{
+                        color: walletId === w.id ? "#fff" : theme.colors.text,
+                      }}
+                    >
+                      {w.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))
+              )}
             </View>
+          </View>
 
           <View style={styles.field}>
             <Text style={styles.fieldLabel}>Valor alvo</Text>
-            <View style={[styles.fieldInput, targetAmount.length > 0 && styles.fieldInputActive]}>
+            <View
+              style={[
+                styles.fieldInput,
+                targetAmount.length > 0 && styles.fieldInputActive,
+              ]}
+            >
               <Ionicons
                 name="cash-outline"
                 size={18}
-                color={targetAmount.length > 0 ? theme.colors.primary : "#94A3B8"}
+                color={
+                  targetAmount.length > 0 ? theme.colors.primary : "#94A3B8"
+                }
               />
               <Text style={styles.currencyPrefix}>R$</Text>
               <Input
@@ -239,8 +265,7 @@ function createGoal() {
                 onChangeText={setTargetAmount}
                 keyboardType="numeric"
               />
-          </View>
-
+            </View>
           </View>
 
           <View style={styles.field}>
@@ -252,9 +277,13 @@ function createGoal() {
                   size={18}
                   color={theme.colors.primary}
                 />
-                <Text style={styles.dateText}>{formatDisplayDate(deadline)}</Text>
+                <Text style={styles.dateText}>
+                  {formatDisplayDate(deadline)}
+                </Text>
                 <View style={styles.daysBadge}>
-                  <Text style={styles.daysBadgeText}>{getDaysRemaining(deadline)}</Text>
+                  <Text style={styles.daysBadgeText}>
+                    {getDaysRemaining(deadline)}
+                  </Text>
                 </View>
               </View>
             </BaseButton>
@@ -273,14 +302,12 @@ function createGoal() {
           onCancel={() => setShowDatePicker(false)}
         />
 
-       
         <View style={styles.dividerRow}>
           <View style={styles.divider} />
           <Text style={styles.dividerLabel}>Prévia</Text>
           <View style={styles.divider} />
         </View>
 
-       
         <View style={styles.previewWrapper}>
           <LinearGradient
             colors={["#7C3AED", "#A78BFA"]}
@@ -311,13 +338,11 @@ function createGoal() {
           </LinearGradient>
         </View>
 
-       
         <View style={styles.cta}>
           <Button
             label={isEditing ? "Salvar alterações" : "Criar meta"}
             onPress={handleSubmit}
-          >
-          </Button>
+          ></Button>
         </View>
       </ScrollView>
     </Screen>
