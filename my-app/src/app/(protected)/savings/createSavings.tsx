@@ -11,7 +11,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
 import { BaseButton } from "react-native-gesture-handler";
 import {
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -21,12 +20,15 @@ import {
 import { Easing, useSharedValue, withTiming } from "react-native-reanimated";
 import { useWallets } from "@/contexts/walletContext";
 import { useSaving } from "@/contexts/savingContext";
+import { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
+import AppModal from "@/components/modal/modal";
 
 function createSavings() {
   const router = useRouter();
   const { addSaving } = useSaving();
   const { wallets } = useWallets();
   const { goals } = useGoals();
+  const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
 
   const params = useLocalSearchParams<{
     id?: string;
@@ -101,29 +103,46 @@ function createSavings() {
 
   async function handleSubmit() {
     if (!walletId || !goalId || !amount) {
-      Alert.alert("Atenção", "Selecione a carteira, a meta e informe o valor.");
+      setModal({
+        visible:true,
+        variant: "error",
+        title: "Dados incompletos",
+        description: "Preencha todos os campos para continuar!"
+      })
       return;
     }
 
     const numAmount = parseFloat(amount);
 
     if (isNaN(numAmount) || numAmount <= 0) {
-      Alert.alert("Atenção", "Informe um valor válido para o depósito.");
+      setModal({
+        visible:true,
+        variant: "error",
+        title: "Valor inválido",
+        description: "Informe um valor válido para o depósito."
+      });
       return;
     }
 
     const selectedWallet = wallets.find(w => w.id === walletId);
 
     if (!selectedWallet) {
-      Alert.alert("Erro", "Carteira não encontrada.");
+      setModal({
+        visible:true,
+        variant: "error",
+        title: "Carteira não encontrada",
+        description: "Selecione uma carteira válida para continuar."
+      });
       return;
     }
 
     if (numAmount > selectedWallet.balance) {
-      Alert.alert(
-        "Saldo insuficiente",
-        "Você não possui saldo suficiente na carteira para esse depósito."
-      );
+      setModal({
+        visible:true,
+        variant: "error",
+        title: "Saldo insuficiente",
+        description: "Você não possui saldo suficiente na carteira para esse depósito."
+      });
       return;
     }
 
@@ -135,18 +154,29 @@ function createSavings() {
         createdAt,
       });
       if (isCompleted) {
-        Alert.alert(
-          "🎉 Meta concluída!",
-          `Parabéns! Você atingiu 100% da sua meta "${goalName}". Continue assim!`,
-          [{ text: "Ótimo!", onPress: () => router.back() }]
-        );
+        setModal({
+          visible: true,
+          variant: "success",
+          title: "Meta alcançada!",
+          description: `Parabéns! Você alcançou a meta "${goalName}" com este depósito.`
+        })
       } else {
-        Alert.alert("Sucesso", "Depósito realizado com sucesso!");
+        setModal({
+          visible: true,
+          variant: "success",
+          title: "Depósito realizado",
+          description: "Seu depósito foi realizado com sucesso."
+        })
         router.back();
       }
     } catch (error: any) {
       console.log(error);
-      Alert.alert("Erro", error.message || "Erro ao realizar depósito!");
+      setModal({
+        visible: true,
+        variant: "error",
+        title: "Erro",
+        description: error.message || "Ocorreu um erro ao realizar o depósito."
+      })
     }
   }
 
@@ -331,6 +361,14 @@ function createSavings() {
           />
         </View>
       </ScrollView>
+      <AppModal
+          visible={modal.visible}
+          onClose={() => setModal(MODAL_HIDDEN)}
+          variant={modal.variant}
+          title={modal.title}
+          description={modal.description}
+          buttons={modal.buttons}
+        />
     </Screen>
   );
 }

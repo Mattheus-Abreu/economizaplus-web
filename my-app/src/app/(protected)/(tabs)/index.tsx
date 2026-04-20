@@ -10,7 +10,7 @@ import { FontAwesome } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
 import { Link, Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import {
     GestureHandlerRootView,
     ScrollView,
@@ -18,6 +18,9 @@ import {
 import { BlurCarousel } from "../../../components/carousel";
 import Icons from "../../../components/Icons";
 import { useBalance } from "@/hooks/useBalance";
+import { useState } from "react";
+import { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
+import AppModal from "@/components/modal/modal";
 
 const QUICK_ACTIONS_HEIGHT = 90;
 
@@ -26,6 +29,7 @@ function Home() {
   const { goals } = useGoals();
   const { formattedBalance } = useBalance();
   const router = useRouter();
+  const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
 
   const [fontLoaded] = useFonts({
     InterRegular: require("@/assets/fonts/Inter-Regular.otf"),
@@ -34,10 +38,27 @@ function Home() {
   });
 
   function handleLogout() {
-    Alert.alert("Sair", "Tem certeza que deseja sair?", [
-      { text: "Cancelar", style: "cancel" },
-      { text: "Sair", onPress: signOut },
-    ]);
+    setModal({
+      visible: true,
+      variant: "warning",
+      title: "Sair",
+      description: "Tem certeza que deseja sair da sua conta?",
+      buttons: [
+        {
+          label: "Cancelar",
+          onPress: () => setModal(MODAL_HIDDEN),
+          variant: "secondary",
+        },
+        {
+          label: "Sair",
+          onPress: () => {
+            signOut();
+            setModal(MODAL_HIDDEN);
+          },
+          variant: "danger",
+        },
+      ],
+    })
   }
 
   const CATEGORIES = [
@@ -150,6 +171,14 @@ function Home() {
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       </Stack>
+      <AppModal
+          visible={modal.visible}
+          onClose={() => setModal(MODAL_HIDDEN)}
+          variant={modal.variant}
+          title={modal.title}
+          description={modal.description}
+          buttons={modal.buttons}
+        />
     </Screen>
   );
 }

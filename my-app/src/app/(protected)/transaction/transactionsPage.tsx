@@ -14,7 +14,6 @@ import { useTransactions } from "@/contexts/transactionContext";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import React from "react";
 import {
   Platform,
   StyleSheet,

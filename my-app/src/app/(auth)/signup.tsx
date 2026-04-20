@@ -18,6 +18,7 @@ import {
 } from "react-native";
 import signupStyle from "../../styles/signupStyle";
 import theme from "../themes/theme";
+import AppModal, { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
 
 function signup() {
   const [name, setName] = useState("");
@@ -25,6 +26,7 @@ function signup() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const { signIn } = useAuth();
+  const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
 
   async function handleSignup() {
     if (
@@ -33,13 +35,20 @@ function signup() {
       !password.trim() ||
       !confirmPassword.trim()
     ) {
-      return Alert.alert(
-        "Cadastrar",
-        "Preencha todos os campos para cadastrar!",
-      );
+      return setModal({
+        visible: true,
+        variant: "warning",
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha todos os campos para continuar."
+      })
     }
     if (password !== confirmPassword) {
-      return Alert.alert("Cadastrar", "As senhas devem ser iguais!");
+      return setModal({
+        visible: true,
+        variant: "warning",
+        title: "Senhas diferentes",
+        description: "As senhas devem ser iguais!"
+      });
     }
 
     try {
@@ -51,7 +60,12 @@ function signup() {
       signIn(response.data.token);
     } catch (error: any) {
       console.log(error.response?.data);
-      Alert.alert("Erro", error.response?.data.message || "Erro ao cadastrar!");
+      setModal({
+        visible: true,
+        variant: "warning",
+        title: "Erro ao cadastrar",
+        description: error.response?.data.message || "Erro ao cadastrar!"
+      });
     }
   }
   return (
@@ -186,6 +200,14 @@ function signup() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      <AppModal
+          visible={modal.visible}
+          onClose={() => setModal(MODAL_HIDDEN)}
+          variant={modal.variant}
+          title={modal.title}
+          description={modal.description}
+          buttons={modal.buttons}
+        />
     </Screen>
   );
 }

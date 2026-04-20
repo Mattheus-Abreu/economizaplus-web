@@ -14,26 +14,19 @@ import {
   View,
 } from "react-native";
 import { useSharedValue, withTiming, Easing } from "react-native-reanimated";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { AnimatedProgressBar } from "@/components/progressBar";
 import Button from "@/components/Button";
 import { useSaving } from "@/contexts/savingContext";
 import { useWallets } from "@/contexts/walletContext";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { AnimatedHeaderScrollView } from "@/components/animated-header";
-import { useFonts } from "expo-font";
-import { SafeAreaProvider } from "react-native-safe-area-context";
+import AppModal, { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
 
 function goalDetail() {
   const router = useRouter();
   const { goals, deleteGoal } = useGoals();
   const { loadSavings, getSavingsByGoal } = useSaving();
   const { wallets } = useWallets();
-  const [fontLoaded] = useFonts({
-      InterRegular: require("@/assets/fonts/Inter-Regular.otf"),
-      InterMedium: require("@/assets/fonts/Inter-Medium.otf"),
-      InterBold: require("@/assets/fonts/Inter-Bold.otf"),
-    });
+  const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
 
   const params = useLocalSearchParams<{
     id: string;
@@ -109,36 +102,38 @@ function goalDetail() {
   }
 
   function handleDelete() {
-    Alert.alert("Deletar meta", "Tem certeza que deseja excluir essa meta?", [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Excluir",
-        style: "destructive",
-        onPress: async () => {
+    setModal({
+      visible: true,
+      variant: "confirm",
+      title: "Excluir meta",
+      description: "Tem certeza que deseja excluir esta meta? Esta ação não pode ser desfeita.",
+      buttons: [
+        { label: "Cancelar", variant: "secondary", onPress: () => setModal(MODAL_HIDDEN) },
+        {label: "Excluir", variant: "danger", onPress: async () => {
           await deleteGoal(goal!.id);
+          setModal(MODAL_HIDDEN);
           router.back();
-        },
-      },
-    ]);
+        }}
+        
+        ]
+    })
   }
 
   function handleDeposit() {
     if (progressPercent >= 100) {
-      Alert.alert(
-        "Meta já atingida",
-        "Você já atingiu ou ultrapassou a meta estabelecida. Deseja fazer um depósito mesmo assim?",
-        [
-          { text: "Cancelar", style: "cancel" },
-          {
-            text: "Continuar",
-            onPress: () => {
-              router.push({
-                pathname: "/(protected)/savings/createSavings",
-              });
-            },
-          },
-        ],
-      );
+      setModal({
+        visible: true,
+        variant: "warning",
+        title: "Meta já atingida",
+        description: "Você já atingiu 100% do seu objetivo. Parabéns! Não é necessário fazer mais depósitos.",
+        buttons: [
+          {label: "Cancelar", variant: "secondary", onPress: () => setModal(MODAL_HIDDEN)},
+          {label: "Continuar", variant: "primary", onPress: () => {
+            setModal(MODAL_HIDDEN);
+            router.push({pathname: "/(protected)/savings/createSavings"})
+          }}
+        ]
+      })
     } else {
       router.push({
         pathname: "/(protected)/savings/createSavings",
@@ -338,6 +333,14 @@ function goalDetail() {
           <Button label="Fazer depósito" onPress={handleDeposit} />
         </View>
         </ScrollView>
+        <AppModal
+          visible={modal.visible}
+          onClose={() => setModal(MODAL_HIDDEN)}
+          variant={modal.variant}
+          title={modal.title}
+          description={modal.description}
+          buttons={modal.buttons}
+        />
     </Screen>
   );
 }

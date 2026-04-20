@@ -11,7 +11,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
 import { BaseButton } from "react-native-gesture-handler";
 import {
-  Alert,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -20,11 +21,14 @@ import {
 } from "react-native";
 import { Easing, useSharedValue, withTiming } from "react-native-reanimated";
 import { useWallets } from "@/contexts/walletContext";
+import { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
+import AppModal from "@/components/modal/modal";
 
 function createGoal() {
   const router = useRouter();
   const { addGoal, updateGoal } = useGoals();
   const { wallets } = useWallets();
+  const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
 
   const params = useLocalSearchParams<{
     id?: string;
@@ -96,7 +100,12 @@ function createGoal() {
 
   async function handleSubmit() {
     if (!name.trim() || !targetAmount || !deadline) {
-      return Alert.alert("Atenção", "Preencha todos os campos!");
+      return setModal({
+        visible: true,
+        variant: "error",
+        title: "Dados incompletos",
+        description: "Por favor, preencha o nome, valor alvo e prazo da meta.",
+      });
     }
 
     try {
@@ -107,7 +116,12 @@ function createGoal() {
           currentAmount: Number(currentAmount),
           deadline,
         });
-        Alert.alert("Sucesso", "Meta atualizada com sucesso!");
+        setModal({
+          visible: true,
+          variant: "success",
+          title: "Meta atualizada",
+          description: "As informações da meta foram atualizadas com sucesso.",
+        });
       } else {
         await addGoal({
           name,
@@ -117,234 +131,257 @@ function createGoal() {
           currentAmount: Number(currentAmount),
           deadline,
         });
-        Alert.alert("Sucesso", "Meta criada com sucesso!");
+        setModal({
+          visible: true,
+          variant: "success",
+          title: "Meta criada",
+          description: "Sua nova meta foi criada com sucesso.",
+        });
       }
       router.back();
     } catch (error: any) {
       console.log(error);
-      Alert.alert("Erro", error.message || "Erro ao salvar meta!");
+      setModal({
+        visible: true,
+        variant: "error",
+        title: "Erro",
+        description: error.message || "Ocorreu um erro ao salvar a meta.",
+      });
     }
   }
 
   return (
     <Screen style={{ padding: 0 }}>
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.select({ ios: "padding", android: "padding" })}
       >
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={() => router.back()}
-          >
-            <FontAwesome
-              name="arrow-left"
-              size={16}
-              color={theme.colors.textSecondary}
-            />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.hero}>
-          <Text style={styles.heroLabel}>
-            {isEditing ? "Editar meta" : "Nova meta"}
-          </Text>
-          <Text style={styles.heroTitle}>
-            {isEditing
-              ? "Redefina seu\nsobjetivo"
-              : "Qual é o seu\npróximo objetivo?"}
-          </Text>
-          <Text style={styles.heroSub}>
-            {isEditing
-              ? "Atualize os dados da sua meta"
-              : "Defina uma meta e acompanhe seu progresso"}
-          </Text>
-        </View>
-
-        <View style={styles.form}>
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Nome da meta</Text>
-            <View
-              style={[
-                styles.fieldInput,
-                name.length > 0 && styles.fieldInputActive,
-              ]}
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.header}>
+            <TouchableOpacity
+              style={styles.backBtn}
+              onPress={() => router.back()}
             >
-              <Ionicons
-                name="pencil-outline"
-                size={18}
-                color={name.length > 0 ? theme.colors.primary : "#94A3B8"}
+              <FontAwesome
+                name="arrow-left"
+                size={16}
+                color={theme.colors.textSecondary}
               />
-              <Input
-                style={styles.inlineInput}
-                placeholder="Ex: Viagem para Europa"
-                placeholderTextColor={theme.colors.textSecondary}
-                value={name}
-                onChangeText={setName}
-              />
-            </View>
+            </TouchableOpacity>
           </View>
 
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Descrição</Text>
-            <View
-              style={[
-                styles.fieldInput,
-                description.length > 0 && styles.fieldInputActive,
-              ]}
-            >
-              <Ionicons
-                name="pencil-outline"
-                size={18}
-                color={
-                  description.length > 0 ? theme.colors.primary : "#94A3B8"
-                }
-              />
-              <Input
-                style={styles.inlineInput}
-                placeholder="Ex: Viajar para Europa no próximo verão"
-                placeholderTextColor={theme.colors.textSecondary}
-                value={description}
-                onChangeText={setDescription}
-              />
-            </View>
+          <View style={styles.hero}>
+            <Text style={styles.heroLabel}>
+              {isEditing ? "Editar meta" : "Nova meta"}
+            </Text>
+            <Text style={styles.heroTitle}>
+              {isEditing
+                ? "Redefina seu\nsobjetivo"
+                : "Qual é o seu\npróximo objetivo?"}
+            </Text>
+            <Text style={styles.heroSub}>
+              {isEditing
+                ? "Atualize os dados da sua meta"
+                : "Defina uma meta e acompanhe seu progresso"}
+            </Text>
           </View>
 
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Escolha uma carteira</Text>
-            <View style={styles.typeContainer}>
-              {wallets.length === 0 ? (
-                <Text style={styles.emptyField}>
-                  Nenhuma carteira cadastrada
-                </Text>
-              ) : (
-                wallets.map((w) => (
-                  <TouchableOpacity
-                    key={w.id}
-                    onPress={() => setWalletId(w.id)}
-                    style={[
-                      styles.typeButton,
-                      walletId === w.id && styles.typeButtonActive,
-                    ]}
-                  >
-                    <Text
-                      style={{
-                        color: walletId === w.id ? "#fff" : theme.colors.text,
-                      }}
-                    >
-                      {w.name}
-                    </Text>
-                  </TouchableOpacity>
-                ))
-              )}
-            </View>
-          </View>
-
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Valor alvo</Text>
-            <View
-              style={[
-                styles.fieldInput,
-                targetAmount.length > 0 && styles.fieldInputActive,
-              ]}
-            >
-              <Ionicons
-                name="cash-outline"
-                size={18}
-                color={
-                  targetAmount.length > 0 ? theme.colors.primary : "#94A3B8"
-                }
-              />
-              <Text style={styles.currencyPrefix}>R$</Text>
-              <Input
-                style={[styles.inlineInput, styles.amountInput]}
-                placeholder="0"
-                placeholderTextColor={theme.colors.textSecondary}
-                value={targetAmount}
-                onChangeText={setTargetAmount}
-                keyboardType="numeric"
-              />
-            </View>
-          </View>
-
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Prazo</Text>
-            <BaseButton onPress={() => setShowDatePicker(true)}>
-              <View style={[styles.fieldInput, styles.fieldInputActive]}>
+          <View style={styles.form}>
+            <View style={styles.field}>
+              <Text style={styles.fieldLabel}>Nome da meta</Text>
+              <View
+                style={[
+                  styles.fieldInput,
+                  name.length > 0 && styles.fieldInputActive,
+                ]}
+              >
                 <Ionicons
-                  name="calendar-outline"
+                  name="pencil-outline"
                   size={18}
-                  color={theme.colors.primary}
+                  color={name.length > 0 ? theme.colors.primary : "#94A3B8"}
                 />
-                <Text style={styles.dateText}>
-                  {formatDisplayDate(deadline)}
-                </Text>
-                <View style={styles.daysBadge}>
-                  <Text style={styles.daysBadgeText}>
-                    {getDaysRemaining(deadline)}
-                  </Text>
-                </View>
+                <Input
+                  style={styles.inlineInput}
+                  placeholder="Ex: Viagem para Europa"
+                  placeholderTextColor={theme.colors.textSecondary}
+                  value={name}
+                  onChangeText={setName}
+                />
               </View>
-            </BaseButton>
-          </View>
-        </View>
-
-        <DateTimePickerModal
-          date={new Date(deadline)}
-          isVisible={showDatePicker}
-          locale="pt-BR"
-          mode="date"
-          onConfirm={(date) => {
-            setDeadline(date.toISOString());
-            setShowDatePicker(false);
-          }}
-          onCancel={() => setShowDatePicker(false)}
-        />
-
-        <View style={styles.dividerRow}>
-          <View style={styles.divider} />
-          <Text style={styles.dividerLabel}>Prévia</Text>
-          <View style={styles.divider} />
-        </View>
-
-        <View style={styles.previewWrapper}>
-          <LinearGradient
-            colors={["#7C3AED", "#A78BFA"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.previewCard}
-          >
-            <View style={styles.previewLeft}>
-              <Text style={styles.previewName} numberOfLines={1}>
-                {name || "Nome da meta"}
-              </Text>
-              <Text style={styles.previewAmount}>
-                Meta: R$ {formatAmount(targetAmount) || "–"} ·{" "}
-                {new Date(deadline).toLocaleDateString("pt-BR", {
-                  month: "short",
-                  year: "numeric",
-                })}
-              </Text>
             </View>
-            <CircularProgress
-              progress={progress}
-              size={52}
-              strokeWidth={4}
-              outerCircleColor="rgba(255,255,255,0.2)"
-              progressCircleColor="#ffffff"
-              backgroundColor="rgba(0,0,0,0.1)"
-            />
-          </LinearGradient>
-        </View>
 
-        <View style={styles.cta}>
-          <Button
-            label={isEditing ? "Salvar alterações" : "Criar meta"}
-            onPress={handleSubmit}
-          ></Button>
-        </View>
-      </ScrollView>
+            <View style={styles.field}>
+              <Text style={styles.fieldLabel}>Descrição</Text>
+              <View
+                style={[
+                  styles.fieldInput,
+                  description.length > 0 && styles.fieldInputActive,
+                ]}
+              >
+                <Ionicons
+                  name="pencil-outline"
+                  size={18}
+                  color={
+                    description.length > 0 ? theme.colors.primary : "#94A3B8"
+                  }
+                />
+                <Input
+                  style={styles.inlineInput}
+                  placeholder="Ex: Viajar para Europa no próximo verão"
+                  placeholderTextColor={theme.colors.textSecondary}
+                  value={description}
+                  onChangeText={setDescription}
+                />
+              </View>
+            </View>
+
+            <View style={styles.field}>
+              <Text style={styles.fieldLabel}>Escolha uma carteira</Text>
+              <View style={styles.typeContainer}>
+                {wallets.length === 0 ? (
+                  <Text style={styles.emptyField}>
+                    Nenhuma carteira cadastrada
+                  </Text>
+                ) : (
+                  wallets.map((w) => (
+                    <TouchableOpacity
+                      key={w.id}
+                      onPress={() => setWalletId(w.id)}
+                      style={[
+                        styles.typeButton,
+                        walletId === w.id && styles.typeButtonActive,
+                      ]}
+                    >
+                      <Text
+                        style={{
+                          color: walletId === w.id ? "#fff" : theme.colors.text,
+                        }}
+                      >
+                        {w.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))
+                )}
+              </View>
+            </View>
+
+            <View style={styles.field}>
+              <Text style={styles.fieldLabel}>Valor alvo</Text>
+              <View
+                style={[
+                  styles.fieldInput,
+                  targetAmount.length > 0 && styles.fieldInputActive,
+                ]}
+              >
+                <Ionicons
+                  name="cash-outline"
+                  size={18}
+                  color={
+                    targetAmount.length > 0 ? theme.colors.primary : "#94A3B8"
+                  }
+                />
+                <Text style={styles.currencyPrefix}>R$</Text>
+                <Input
+                  style={[styles.inlineInput, styles.amountInput]}
+                  placeholder="0"
+                  placeholderTextColor={theme.colors.textSecondary}
+                  value={targetAmount}
+                  onChangeText={setTargetAmount}
+                  keyboardType="numeric"
+                />
+              </View>
+            </View>
+
+            <View style={styles.field}>
+              <Text style={styles.fieldLabel}>Prazo</Text>
+              <BaseButton onPress={() => setShowDatePicker(true)}>
+                <View style={[styles.fieldInput, styles.fieldInputActive]}>
+                  <Ionicons
+                    name="calendar-outline"
+                    size={18}
+                    color={theme.colors.primary}
+                  />
+                  <Text style={styles.dateText}>
+                    {formatDisplayDate(deadline)}
+                  </Text>
+                  <View style={styles.daysBadge}>
+                    <Text style={styles.daysBadgeText}>
+                      {getDaysRemaining(deadline)}
+                    </Text>
+                  </View>
+                </View>
+              </BaseButton>
+            </View>
+          </View>
+
+          <DateTimePickerModal
+            date={new Date(deadline)}
+            isVisible={showDatePicker}
+            locale="pt-BR"
+            mode="date"
+            onConfirm={(date) => {
+              setDeadline(date.toISOString());
+              setShowDatePicker(false);
+            }}
+            onCancel={() => setShowDatePicker(false)}
+          />
+
+          <View style={styles.dividerRow}>
+            <View style={styles.divider} />
+            <Text style={styles.dividerLabel}>Prévia</Text>
+            <View style={styles.divider} />
+          </View>
+
+          <View style={styles.previewWrapper}>
+            <LinearGradient
+              colors={["#7C3AED", "#A78BFA"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.previewCard}
+            >
+              <View style={styles.previewLeft}>
+                <Text style={styles.previewName} numberOfLines={1}>
+                  {name || "Nome da meta"}
+                </Text>
+                <Text style={styles.previewAmount}>
+                  Meta: R$ {formatAmount(targetAmount) || "–"} ·{" "}
+                  {new Date(deadline).toLocaleDateString("pt-BR", {
+                    month: "short",
+                    year: "numeric",
+                  })}
+                </Text>
+              </View>
+              <CircularProgress
+                progress={progress}
+                size={52}
+                strokeWidth={4}
+                outerCircleColor="rgba(255,255,255,0.2)"
+                progressCircleColor="#ffffff"
+                backgroundColor="rgba(0,0,0,0.1)"
+              />
+            </LinearGradient>
+          </View>
+
+          <View style={styles.cta}>
+            <Button
+              label={isEditing ? "Salvar alterações" : "Criar meta"}
+              onPress={handleSubmit}
+            ></Button>
+          </View>
+        </ScrollView>
+        <AppModal
+          visible={modal.visible}
+          onClose={() => setModal(MODAL_HIDDEN)}
+          variant={modal.variant}
+          title={modal.title}
+          description={modal.description}
+          buttons={modal.buttons}
+        />
+      </KeyboardAvoidingView>
     </Screen>
   );
 }

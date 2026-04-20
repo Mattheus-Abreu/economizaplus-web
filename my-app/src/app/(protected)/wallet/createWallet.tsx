@@ -7,6 +7,8 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -15,12 +17,15 @@ import {
 } from "react-native";
 import { useWallets } from "@/contexts/walletContext";
 import { LinearGradient } from "expo-linear-gradient";
+import { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
+import AppModal from "@/components/modal/modal";
 
 type WalletType = "CASH" | "INVESTMENT" | "SAVINGS_ACCOUNT" | "CHECKING_ACCOUNT";
 
 function createWallet() {
   const router = useRouter();
   const { addWallet, updateWallet } = useWallets();
+  const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
 
   const params = useLocalSearchParams();
 
@@ -62,7 +67,12 @@ const walletTypes: { id: WalletType; name: string }[] = [
 
   async function handleSubmit() {
     if (!name.trim() || !type || !balance) {
-      return Alert.alert("Atenção", "Preencha todos os campos!");
+      return setModal({
+        visible: true,
+        variant: "warning",
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha todos os campos para continuar."
+      })
     }
 
     try {
@@ -72,25 +82,44 @@ const walletTypes: { id: WalletType; name: string }[] = [
           type,
           balance: Number(balance),
         });
-        Alert.alert("Sucesso", "carteira atualizada com sucesso!");
+        setModal({
+          visible: true,
+          variant: "success",
+          title: "Sucesso",
+          description: "Cateira atualizada com sucesso!"
+        })
       } else {
         await addWallet({
           name,
           type,
           balance: Number(balance),
         });
-        Alert.alert("Sucesso", "carteira criada com sucesso!");
+        setModal({
+          visible: true,
+          variant: "success",
+          title: "Sucesso",
+          description: "Carteira criada com sucesso!"
+        })
       }
 
       router.back();
     } catch (error: any) {
       console.log(error);
-      Alert.alert("Erro", error.message || "Erro ao salvar carteira!");
+      setModal({
+        visible: true,
+        variant: "error",
+        title: "Erro",
+        description: error.message || `Ocorreu um erro ao ${isEditing ? "atualizar" : "criar"} a carteira.`
+      })
     }
   }
 
   return (
     <Screen style={{ padding: 0 }}>
+      <KeyboardAvoidingView 
+        style={{ flex: 1 }}
+        behavior={Platform.select({ ios: "padding", android: "padding" })}
+          >
       <ScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
@@ -251,6 +280,15 @@ const walletTypes: { id: WalletType; name: string }[] = [
           </View>
         </View>
       </ScrollView>
+      <AppModal
+          visible={modal.visible}
+          onClose={() => setModal(MODAL_HIDDEN)}
+          variant={modal.variant}
+          title={modal.title}
+          description={modal.description}
+          buttons={modal.buttons}
+        />
+        </KeyboardAvoidingView>
     </Screen>
   );
 }

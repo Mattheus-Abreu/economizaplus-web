@@ -1,22 +1,17 @@
 import {
   Empty,
-  EmptyButton,
-  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
 } from "@/components/empty-state";
-import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SymbolView } from "expo-symbols";
 import theme from "@/app/themes/theme";
-import Button from "@/components/Button";
 import Screen from "@/components/Screen";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useTransactions } from "@/contexts/transactionContext";
 import { ScrollView } from "react-native-gesture-handler";
 import Arrow from "@/assets/images/Arrow.svg";
 import { useWallets } from "@/contexts/walletContext";

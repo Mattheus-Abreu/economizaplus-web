@@ -9,7 +9,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
 import { BaseButton } from "react-native-gesture-handler";
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -23,6 +22,8 @@ import { useGoals } from "@/contexts/goalContext";
 import { useCategory } from "@/contexts/categoryContext";
 import { useWallets } from "@/contexts/walletContext";
 import { useCard } from "@/contexts/cardContext";
+import { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
+import AppModal from "@/components/modal/modal";
 
 type TransactionType = "INCOME" | "EXPENSE" | "TRANSFER";
 type PaymentMethod = "CASH" | "CREDIT_CARD" | "DEBIT_CARD" | "PIX" | "BANK_TRANSFER";
@@ -35,6 +36,7 @@ function CreateTransaction() {
   const { categories } = useCategory();
   const { wallets } = useWallets();
   const { cards } = useCard();
+  const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
 
   const params = useLocalSearchParams<{
     id?: string;
@@ -148,18 +150,30 @@ function CreateTransaction() {
 
   async function handleSubmit() {
     if (!type || !amount || !transactionDate || !walletId) {
-      return Alert.alert(
-        "Atenção",
-        "Preencha tipo, valor, data e carteira!"
-      );
+      return setModal({
+        visible: true,
+        variant: "error",
+        title: "Dados incompletos",
+        description: "Preencha tipo, valor, data e carteira!"
+      })
     }
 
     if (isTransfer && !destinationWalletId) {
-      return Alert.alert("Atenção", "Selecione a carteira de destino!");
+      return setModal({
+        visible: true,
+        variant: "error",
+        title: "Dados incompletos",
+        description: "Selecione a carteira de destino!"
+      });
     }
 
     if (isCreditCard && !cardId) {
-      return Alert.alert("Atenção", "Selecione o cartão de crédito!");
+      return setModal({
+        visible: true,
+        variant: "error",
+        title: "Dados incompletos",
+        description: "Selecione o cartão de crédito!"
+      });
     }
 
     try {
@@ -169,7 +183,12 @@ function CreateTransaction() {
           amount: Number(amount),
           transactionDate,
         });
-        Alert.alert("Sucesso", "Transação atualizada com sucesso!");
+        setModal({
+          visible: true,
+          variant: "success",
+          title: "Transação atualizada",
+          description: "As informações da transação foram atualizadas com sucesso."
+        })
       } else {
         await addTransaction({
           type,
@@ -185,12 +204,22 @@ function CreateTransaction() {
           isInstallment: isParcelado,
           totalInstallments: isParcelado ? Number(totalInstallments) : undefined,
         });
-        Alert.alert("Sucesso", "Transação criada com sucesso!");
+        setModal({
+          visible: true,
+          variant: "success",
+          title: "Transação criada",
+          description: "Sua nova transação foi criada com sucesso."
+        })
       }
       router.back();
     } catch (error: any) {
       console.log(error);
-      Alert.alert("Erro", error.message || "Erro ao salvar transação!");
+      setModal({
+        visible: true,
+        variant: "error",
+        title: "Erro",
+        description: error.message || "Ocorreu um erro ao salvar a transação."
+      })
     }
   }
 
@@ -603,6 +632,14 @@ function CreateTransaction() {
             />
           </View>
         </ScrollView>
+        <AppModal
+          visible={modal.visible}
+          onClose={() => setModal(MODAL_HIDDEN)}
+          variant={modal.variant}
+          title={modal.title}
+          description={modal.description}
+          buttons={modal.buttons}
+        />
       </Screen>
     </KeyboardAvoidingView>
   );

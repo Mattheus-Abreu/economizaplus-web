@@ -16,7 +16,6 @@ import React, { useState } from "react";
 import Input from "@/components/inputs/Input";
 import Button from "@/components/Button";
 import { router } from "expo-router";
-import { LinearGradient } from "expo-linear-gradient";
 import theme from "@/app/themes/theme";
 import Icons from "@/components/Icons";
 
