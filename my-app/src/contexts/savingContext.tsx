@@ -13,7 +13,7 @@ type CreateSavingInput = {
 
 type SavingContextData = {
   savings: Saving[];
-  addSaving: (data: CreateSavingInput) => Promise<void>;
+  addSaving: (data: CreateSavingInput) => Promise<{ isCompleted: boolean; goalName: string }>;
   loadSavings: (goalId?: string) => Promise<void>;
   getSavingsByGoal: (goalId: string) => Saving[];
 };
@@ -41,16 +41,20 @@ export function SavingProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function addSaving(data: CreateSavingInput) {
-    await savingService.createSaving({
+    const result = await savingService.createSaving({
       ...data,
       createdAt: new Date(data.createdAt).toISOString(),
     });
+
+    const isCompleted = result.percentageComplete >= 100;
 
     await Promise.all([
       loadGoals(),
       loadSavings(data.goalId),
       loadWallets(),
     ]);
+
+    return { isCompleted, goalName: result.name };
   }
 
   function getSavingsByGoal(goalId: string): Saving[] {

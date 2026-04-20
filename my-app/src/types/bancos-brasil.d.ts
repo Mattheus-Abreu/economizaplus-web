@@ -22,7 +22,6 @@ declare module "@edusites/bancos-brasil" {
     | "xp";
 
   export type BancoFormato = "quadrado" | "circulo" | "sem";
-  
 
   export interface SvgBancoOptions {
     nome: BancoNome;

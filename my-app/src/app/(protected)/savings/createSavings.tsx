@@ -128,14 +128,22 @@ function createSavings() {
     }
 
     try {
-      await addSaving({
+      const { isCompleted, goalName } = await addSaving({
         goalId,
         walletId,
         amount: numAmount,
         createdAt,
       });
-      Alert.alert("Sucesso", "Depósito realizado com sucesso!");
-      router.back();
+      if (isCompleted) {
+        Alert.alert(
+          "🎉 Meta concluída!",
+          `Parabéns! Você atingiu 100% da sua meta "${goalName}". Continue assim!`,
+          [{ text: "Ótimo!", onPress: () => router.back() }]
+        );
+      } else {
+        Alert.alert("Sucesso", "Depósito realizado com sucesso!");
+        router.back();
+      }
     } catch (error: any) {
       console.log(error);
       Alert.alert("Erro", error.message || "Erro ao realizar depósito!");
