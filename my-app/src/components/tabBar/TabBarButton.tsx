@@ -52,7 +52,7 @@ const TabBarButton = ({ color, label, isFocused, onPress, onLongPress, routeName
             style={tabBarStyle.tabbarItem}
             >
             <Animated.View style={animatedIconStyle}>
-                <View style={{ backgroundColor: isFocused ? "rgba(124,58,237,0.15)" : "transparent"}}>
+                <View style={{ backgroundColor: isFocused ? "rgba(124,58,237,0.15)" : "transparent", borderRadius: 10 }}>
                     {icon[routeName]?.({ color: isFocused ? theme.colors.primary : theme.colors.textSecondary })}
                 </View>
             </Animated.View>

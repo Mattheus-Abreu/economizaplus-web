@@ -4,6 +4,9 @@ import { useRouter } from "expo-router";
 import { Alert, StyleSheet, Text, View } from "react-native";
 import Wallet from "@/types/wallet";
 import { useWallets } from "@/contexts/walletContext";
+import { useState } from "react";
+import { MODAL_HIDDEN, ModalConfig } from "./modal/modal";
+import AppModal from "./modal/modal";
 
 type Props = {
   item: Wallet;
@@ -12,6 +15,7 @@ type Props = {
 function CardWallet({ item }: Props) {
   const router = useRouter();
   const { deleteWallet } = useWallets();
+  const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
 
   function formatAmount(value: string): string {
     const num = parseFloat(value);
@@ -50,14 +54,27 @@ function CardWallet({ item }: Props) {
   }
 
   function handleDelete() {
-    Alert.alert("Deletar carteira", "Tem certeza que deseja excluir essa carteira?", [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Excluir",
-        style: "destructive",
-        onPress: () => deleteWallet(item.id),
-      },
-    ]);
+    setModal({
+      visible: true,
+      variant: "warning",
+      title: "Excluir carteira",
+      description: "Tem certeza que deseja excluir essa carteira?",
+      buttons: [
+        {
+          label: "Cancelar",
+          onPress: () => setModal(MODAL_HIDDEN),
+          variant: "secondary",
+        },
+        {
+          label: "Excluir",
+          onPress: async () => {
+            await deleteWallet(item.id);
+            setModal(MODAL_HIDDEN);
+          },
+          variant: "danger",
+        },
+      ],
+    })
   }
 
   return (
@@ -108,7 +125,14 @@ function CardWallet({ item }: Props) {
           {getWalletTypeLabel(item.type)}
         </Text>
       </View>
-
+      <AppModal
+        visible={modal.visible}
+        onClose={() => setModal(MODAL_HIDDEN)}
+        variant={modal.variant}
+        title={modal.title}
+        description={modal.description}
+        buttons={modal.buttons}
+      />
     </View>
   );
 }

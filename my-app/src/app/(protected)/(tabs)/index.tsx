@@ -8,7 +8,7 @@ import useAuth from "@/hooks/useAuth";
 import Goal from "@/types/goal";
 import { FontAwesome } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
-import { Link, Stack, useRouter } from "expo-router";
+import { Link, Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import {
@@ -21,12 +21,14 @@ import { useBalance } from "@/hooks/useBalance";
 import { useState } from "react";
 import { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
 import AppModal from "@/components/modal/modal";
+import { useCategory } from "@/contexts/categoryContext";
 
 const QUICK_ACTIONS_HEIGHT = 90;
 
 function Home() {
   const { signOut } = useAuth();
   const { goals } = useGoals();
+  const { categories } = useCategory();
   const { formattedBalance } = useBalance();
   const router = useRouter();
   const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
@@ -36,6 +38,10 @@ function Home() {
     InterMedium: require("@/assets/fonts/Inter-Medium.otf"),
     InterBold: require("@/assets/fonts/Inter-Bold.otf"),
   });
+
+  const filteredCategories = categories.filter(
+    (category) => category.type === "default"
+  );
 
   function handleLogout() {
     setModal({
@@ -60,17 +66,6 @@ function Home() {
       ],
     })
   }
-
-  const CATEGORIES = [
-    { name: "plus", label: "Add", color: "#f171f1", route: "/(protected)/category/createCategory" },
-    { name: "lightbulb-o", label: "Luz", color: "#FACC15", route: "/(protected)/category/categoryPage" },
-    { name: "tint", label: "Água", color: "#38BDF8", route: "/(protected)/category/categoryPage" },
-    { name: "wifi", label: "Internet", color: "#A78BFA", route: "/(protected)/category/categoryPage" },
-    { name: "shopping-cart", label: "Compras", color: "#34D399", route: "/(protected)/category/categoryPage" },
-    { name: "car", label: "Transporte", color: "#FB7185", route: "/(protected)/category/categoryPage" },
-    { name: "cutlery", label: "Comida", color: "#F97316", route: "/(protected)/category/categoryPage" },
-    { name: "heartbeat", label: "Saúde", color: "#EF4444", route: "/(protected)/category/categoryPage" },
-  ];
 
   return (
     <Screen style={{ padding: 0 }}>
@@ -116,7 +111,7 @@ function Home() {
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Categorias</Text>
               <Link
-                href={"/(protected)/category/categoryPage"}
+                href={"/category/categoryPage"}
                 style={styles.sectionLink}
               >
                 Ver mais
@@ -124,14 +119,23 @@ function Home() {
             </View>
 
             <View style={styles.categoriesGrid}>
-              {CATEGORIES.map((item) => (
-                <TouchableOpacity
-                  key={item.name}
-                  onPress={() => router.push(item.route as any)}
+              <TouchableOpacity
+                  onPress={() => router.push("/category/createCategory" )}
                 >
                   <Icons
-                    name={item.name as any}
-                    label={item.label}
+                    name="plus"
+                    color="#f171f1"
+                    onlyIcon
+                  />
+                </TouchableOpacity>
+              {filteredCategories.map((item) => (
+                <TouchableOpacity
+                  key={item.name}
+                  onPress={() => router.push({ pathname: "/category/categoryDetail", params: { id: item.id } })}
+                >
+                  <Icons
+                    name={item.icon}
+                    label={item.name}
                     color={item.color}
                   />
                 </TouchableOpacity>

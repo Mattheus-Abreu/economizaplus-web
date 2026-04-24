@@ -26,7 +26,7 @@ type AppModalProps = {
   title: string;
   description?: string;
   buttons?: ModalButton[];
-  dismissible?: boolean; // 👈 novo
+  dismissible?: boolean; 
 };
 
 const VARIANTS: Record<
@@ -97,7 +97,6 @@ function AppModal({
 }: AppModalProps) {
   const config = VARIANTS[variant];
 
-  // 👇 botão padrão inteligente
   const resolvedButtons: ModalButton[] =
     buttons && buttons.length > 0
       ? buttons
@@ -116,14 +115,11 @@ function AppModal({
       onRequestClose={onClose}
       statusBarTranslucent
     >
-      {/* Overlay */}
       <Pressable
         style={styles.overlay}
         onPress={dismissible ? onClose : undefined}
       >
-        {/* Card */}
         <Pressable style={styles.card} onPress={(e) => e.stopPropagation()}>
-          {/* Ícone */}
           <View
             style={[
               styles.iconWrap,
@@ -136,15 +132,12 @@ function AppModal({
             <Ionicons name={config.icon} size={36} color={config.color} />
           </View>
 
-          {/* Título */}
           <Text style={styles.title}>{title}</Text>
 
-          {/* Descrição */}
           {description ? (
             <Text style={styles.description}>{description}</Text>
           ) : null}
 
-          {/* Botões */}
           <View
             style={[
               styles.buttonsRow,
@@ -161,7 +154,6 @@ function AppModal({
                   onPress={() => {
                     btn.onPress?.();
 
-                    // 👇 fecha automaticamente exceto se quiser comportamento custom
                     if (btn.variant !== "secondary") {
                       onClose();
                     }

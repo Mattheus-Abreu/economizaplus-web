@@ -14,13 +14,14 @@ import { useTransactions } from "@/contexts/transactionContext";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
+import { useMemo } from "react";
 import {
+  FlatList,
   Platform,
   StyleSheet,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 function TransactionPage() {
@@ -29,77 +30,82 @@ function TransactionPage() {
 
   const { type } = useLocalSearchParams();
 
-  const filteredTransactions = transactions.filter((item) => {
-    if (!type) return true;
-    return item.type === type;
-  });
+  const filteredTransactions = useMemo(() => {
+    return transactions
+      .filter((item) => {
+        if (!type) return true;
+        return item.type === type;
+      })
+      .sort(
+        (a, b) =>
+          new Date(b.transactionDate).getTime() -
+          new Date(a.transactionDate).getTime(),
+      );
+  }, [transactions, type]);
 
   return (
     <Screen style={{ padding: 20 }}>
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={{ flex: 1 }}>
-          <View style={{ flex: 1, gap: 20 }}>
-            <View style={styles.header}>
-              <TouchableOpacity
-                style={styles.backBtn}
-                onPress={() => router.back()}
-              >
-                <FontAwesome
-                  name="arrow-left"
-                  size={16}
-                  color={theme.colors.textSecondary}
-                />
-              </TouchableOpacity>
-            </View>
-
-            {filteredTransactions.length === 0 ? (
-              <SafeAreaView style={styles.container}>
-                <Empty>
-                  <EmptyHeader>
-                    <EmptyMedia
-                      variant="icon"
-                      style={{ backgroundColor: theme.colors.surface }}
-                    >
-                      {Platform.OS === "ios" ? (
-                        <SymbolView
-                          name="arrow.up.arrow.down"
-                          size={60}
-                          tintColor="#fff"
-                        />
-                      ) : (
-                        <Ionicons name="swap-vertical" size={60} color="#fff" />
-                      )}
-                    </EmptyMedia>
-
-                    <EmptyTitle>Nenhuma transação</EmptyTitle>
-
-                    <View style={styles.emptyContent}>
-                      <EmptyDescription>
-                        Que tal começar criando uma transação
-                      </EmptyDescription>
-
-                      <Arrow
-                        width={100}
-                        height={60}
-                        style={{ transform: [{ rotate: "20deg" }] }}
-                      />
-                    </View>
-                  </EmptyHeader>
-                </Empty>
-              </SafeAreaView>
-            ) : (
-              <View style={{ gap: 15 }}>
-                {filteredTransactions.map((item) => (
-                  <CardTransaction key={item.id} item={item} />
-                ))}
-              </View>
-            )}
+      <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, gap: 20 }}>
+          <View style={styles.header}>
+            <TouchableOpacity
+              style={styles.backBtn}
+              onPress={() => router.back()}
+            >
+              <FontAwesome
+                name="arrow-left"
+                size={16}
+                color={theme.colors.textSecondary}
+              />
+            </TouchableOpacity>
           </View>
+
+          {filteredTransactions.length === 0 ? (
+            <SafeAreaView style={styles.container}>
+              <Empty>
+                <EmptyHeader>
+                  <EmptyMedia
+                    variant="icon"
+                    style={{ backgroundColor: theme.colors.surface }}
+                  >
+                    {Platform.OS === "ios" ? (
+                      <SymbolView
+                        name="arrow.up.arrow.down"
+                        size={60}
+                        tintColor="#fff"
+                      />
+                    ) : (
+                      <Ionicons name="swap-vertical" size={60} color="#fff" />
+                    )}
+                  </EmptyMedia>
+
+                  <EmptyTitle>Nenhuma transação</EmptyTitle>
+
+                  <View style={styles.emptyContent}>
+                    <EmptyDescription>
+                      Que tal começar criando uma transação
+                    </EmptyDescription>
+
+                    <Arrow
+                      width={100}
+                      height={60}
+                      style={{ transform: [{ rotate: "20deg" }] }}
+                    />
+                  </View>
+                </EmptyHeader>
+              </Empty>
+            </SafeAreaView>
+          ) : (
+            <FlatList
+              data={filteredTransactions}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => <CardTransaction item={item} />}
+              contentContainerStyle={{ gap: 15, paddingBottom: 100 }}
+              showsVerticalScrollIndicator={false}
+            />
+          )}
         </View>
-      </ScrollView>
+      </View>
 
       <FloatingButton
         style={{

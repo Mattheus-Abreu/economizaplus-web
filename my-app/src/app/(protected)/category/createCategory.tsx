@@ -6,200 +6,248 @@ import {
   useWindowDimensions,
   TouchableOpacity,
 } from "react-native";
-import { BaseButton, GestureHandlerRootView } from "react-native-gesture-handler";
+import {
+  BaseButton,
+  GestureHandlerRootView,
+} from "react-native-gesture-handler";
 import { StatusBar } from "expo-status-bar";
 import { Dialog } from "@/components/dialog";
-import ColorPicker from 'react-native-wheel-color-picker';
-import { FontAwesome, Ionicons } from '@expo/vector-icons';
+import ColorPicker from "react-native-wheel-color-picker";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import type { ComponentProps } from "react";
-import React, { useState } from "react";
+import { useState } from "react";
 import Input from "@/components/inputs/Input";
 import Button from "@/components/Button";
-import { router } from "expo-router";
 import theme from "@/app/themes/theme";
 import Icons from "@/components/Icons";
+import { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
+import AppModal from "@/components/modal/modal";
+import Screen from "@/components/Screen";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useCategory } from "@/contexts/categoryContext";
 
 type IconName = ComponentProps<typeof FontAwesome>["name"];
 
-function createCategory<T>() {
+function createCategory() {
   const { width } = useWindowDimensions();
-  const [color, setColor] = useState("#fff");
-  const [icon, setIcon] = useState<IconName>("home");
-  const [name, setName] = useState("");
+  const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
+  const router = useRouter();
+  const { addCategory, updateCategory } = useCategory();
+  const params = useLocalSearchParams<{
+    id?: string;
+    name?: string;
+    icon?: IconName;
+    color?: string;
+  }>();
+  const isEditing = !!params.id;
+
+
+  const [color, setColor] = useState(params.color ?? "#fff");
+  const [icon, setIcon] = useState<IconName>(
+    (params.icon as IconName) ?? "home"
+  );
+  const [name, setName] = useState(params.name ??"");
+  
 
   const icons: IconName[] = [
-  "home",
-  "credit-card",
-  "shopping-bag",
-  "car",
-  "bullseye",
-  "calendar",
-  "user",
-  "cog",
-  "gift",
-  "plane",
-  "pencil",
-];
+    "home",
+    "credit-card",
+    "shopping-bag",
+    "car",
+    "film",
+    "line-chart",
+    "user",
+    "gamepad",
+    "gift",
+    "plane",
+    "pencil",
+  ];
+
+  async function handleSubmit() {
+    if (!name.trim() || !icon || !color) 
+      return setModal({
+        visible: true,
+        variant: "warning",
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha todos os campos para continuar."
+      });
+    try {
+      if(isEditing){
+        await updateCategory(params.id!, {
+          name,
+          icon,
+          color,
+        });
+        setModal({
+          visible: true,
+          variant: "success",
+          title: "Sucesso",
+          description: "Categoria atualizada com sucesso!"
+        });
+      } else {
+        await addCategory({
+          name,
+          icon,
+          color,
+          type: "custom",
+        });
+        setModal({
+          visible: true,
+          variant: "success",
+          title: "Sucesso",
+          description: "Categoria criada com sucesso!"
+        });
+      }
+      router.back();
+    } catch (error: any) {
+      setModal({
+        visible: true,
+        variant: "error",
+        title: "Erro",
+        description: error.message,
+      });
+    }
+
+  }
 
   return (
-    <GestureHandlerRootView style={styles.container}>
-      <StatusBar style="light" />
+    <Screen style={{ padding: 0 }}>
+      <GestureHandlerRootView>
+        <StatusBar style="light" />
 
-      <View style={styles.header}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} >
-            <FontAwesome
-              name="arrow-left"
-              size={16}
-              color={"#94A3B8"}
-            />
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => router.back()}
+          >
+            <FontAwesome name="arrow-left" size={16} color={"#94A3B8"} />
           </TouchableOpacity>
         </View>
 
         <View style={styles.hero}>
           <Text style={styles.heroLabel}>
-            Nova categoria
+            {isEditing ? "Editar categoria" : "Criar categoria"}
           </Text>
           <Text style={styles.heroTitle}>
-            Adicione uma nova categoria
+            {isEditing ? "Edite sua categoria" : "Crie uma nova categoria"}
           </Text>
           <Text style={styles.heroSub}>
-            Se organize melhor para cumprir seu objetivos
+            {isEditing
+              ? "Preencha os campos abaixo para editar sua categoria."
+              : "Preencha os campos abaixo para criar uma nova categoria."}
           </Text>
         </View>
 
-      <View style={styles.form}>
-      <View style={[styles.fieldInput, name.length > 0 && styles.fieldInputActive]}>
-        <Ionicons
-            name="pencil"
-            size={18}
-            color={name.length > 0 ? theme.colors.primary : "#94A3B8"}
-          />
-        <Input
-          style={styles.inlineInput}
-          placeholder="Ex: Lazer"
-          placeholderTextColor={theme.colors.textSecondary}
-          value={name}
-          onChangeText={setName}
-        />
-      </View>
-      <View>
-        <Text style={styles.fieldLabel}>Escolha um ícone</Text>
-      </View>
-      <View style={{ flexDirection: "row", gap: 10 }}>
-        {icons.map((iconName) => (
-          <TouchableOpacity key={iconName} onPress={() => setIcon(iconName)}>
-            <FontAwesome 
-              name={iconName} 
-              size={24} 
-              color={icon === iconName ? color : "gray"} 
+        <View style={styles.form}>
+          <View
+            style={[
+              styles.fieldInput,
+              name.length > 0 && styles.fieldInputActive,
+            ]}
+          >
+            <Ionicons
+              name="pencil"
+              size={18}
+              color={name.length > 0 ? theme.colors.primary : "#94A3B8"}
             />
-          </TouchableOpacity>
-        ))}
-      </View>
-      </View>
+            <Input
+              style={styles.inlineInput}
+              placeholder="Ex: Lazer"
+              placeholderTextColor={theme.colors.textSecondary}
+              value={name}
+              onChangeText={setName}
+            />
+          </View>
+          <View>
+            <Text style={styles.fieldLabel}>Escolha um ícone</Text>
+          </View>
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            {icons.map((iconName) => (
+              <TouchableOpacity
+                key={iconName}
+                onPress={() => setIcon(iconName)}
+              >
+                <FontAwesome
+                  name={iconName}
+                  size={24}
+                  color={icon === iconName ? color : "gray"}
+                />
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
 
-      <Dialog>
-        <Dialog.Trigger>
-          <View style={[styles.field, { padding: 25 }]}>
-            <BaseButton >
-              <View style={[styles.fieldInput, styles.fieldInputActive]}>
-                <Text style={styles.fieldLabel}>Selecione uma cor</Text>
+        <Dialog>
+          <Dialog.Trigger>
+            <View style={[styles.field, { padding: 25 }]}>
+              <BaseButton>
+                <View style={[styles.fieldInput, styles.fieldInputActive]}>
+                  <Text style={styles.fieldLabel}>Selecione uma cor</Text>
+                </View>
+              </BaseButton>
+            </View>
+          </Dialog.Trigger>
+
+          <Dialog.Backdrop blurAmount={25} backgroundColor="rgba(0,0,0,0.7)" />
+
+          <Dialog.Content>
+            <View style={[styles.content, { width: width - 48 }]}>
+              <Text style={[styles.title]}>Selecione uma cor</Text>
+
+              <Text style={[styles.subtitle]}>
+                Adicione cor as suas categorias
+              </Text>
+
+              <View style={styles.colorPicker}>
+                <ColorPicker color={color} onColorChange={setColor} />
               </View>
-            </BaseButton>
-          </View>
-        </Dialog.Trigger>
 
-        <Dialog.Backdrop blurAmount={25} backgroundColor="rgba(0,0,0,0.7)" />
+              <View style={styles.actions}>
+                <Dialog.Close asChild>
+                  <Pressable style={[styles.btn, styles.cancelBtn]}>
+                    <Text style={[styles.cancelText]}>Cancelar</Text>
+                  </Pressable>
+                </Dialog.Close>
 
-        <Dialog.Content>
-          <View style={[styles.content, { width: width - 48 }]}>
-
-            <Text
-              style={[
-                styles.title,
-                
-              ]}
-            >
-              Selecione uma cor
-            </Text>
-
-            <Text
-              style={[
-                styles.subtitle,
-                
-              ]}
-            >
-              Adicione cor as suas categorias
-            </Text>
-
-            <View style={styles.colorPicker}>
-              <ColorPicker
-                color={color}
-                onColorChange={setColor}
-              />
+                <Dialog.Close asChild>
+                  <Pressable style={[styles.btn, styles.deleteBtn]}>
+                    <Text style={[styles.deleteText]}>Confirmar</Text>
+                  </Pressable>
+                </Dialog.Close>
+              </View>
             </View>
+          </Dialog.Content>
+        </Dialog>
 
-            <View style={styles.actions}>
-              <Dialog.Close asChild>
-                <Pressable style={[styles.btn, styles.cancelBtn]}>
-                  <Text
-                    style={[
-                      styles.cancelText,
-                     
-                    ]}
-                  >
-                    Cancelar
-                  </Text>
-                </Pressable>
-              </Dialog.Close>
-
-              <Dialog.Close asChild>
-                <Pressable style={[styles.btn, styles.deleteBtn]}>
-                  <Text
-                    style={[
-                      styles.deleteText,
-                      
-                    ]}
-                  >
-                    Confirmar
-                  </Text>
-                </Pressable>
-              </Dialog.Close>
-            </View>
-          </View>
-        </Dialog.Content>
-      </Dialog>
-
-      <View style={styles.dividerRow}>
+        <View style={styles.dividerRow}>
           <View style={styles.divider} />
           <Text style={styles.dividerLabel}>Prévia</Text>
           <View style={styles.divider} />
         </View>
 
-      
         <View style={styles.previewWrapper}>
           <View style={styles.previewCard}>
-            <Icons
-              name={icon}
-              label={name}
-              color={color}
-            />
+            <Icons name={icon} label={name} color={color} />
           </View>
         </View>
 
-      <View style={{ paddingHorizontal: 20, marginTop: 20 }}>
-        <Button label="Criar categoria"/>
-      </View>
-      
-    </GestureHandlerRootView>
+        <View style={{ paddingHorizontal: 20, marginTop: 20 }}>
+          <Button label={isEditing ? "Salvar alterações" : "Criar categoria"} onPress={handleSubmit} />
+        </View>
+      </GestureHandlerRootView>
+      <AppModal
+        visible={modal.visible}
+        onClose={() => setModal(MODAL_HIDDEN)}
+        variant={modal.variant}
+        title={modal.title}
+        description={modal.description}
+        buttons={modal.buttons}
+      />
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#100420",
-  },
   header: {
     paddingTop: 56,
     paddingHorizontal: 24,
@@ -267,10 +315,10 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#fff",
   },
-  colorPicker:{
+  colorPicker: {
     width: "100%",
     height: 200,
-    marginBottom: 100
+    marginBottom: 100,
   },
   iconCircle: {
     width: 64,
@@ -330,7 +378,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#fff",
   },
-    field: {
+  field: {
     gap: 6,
   },
   fieldLabel: {
