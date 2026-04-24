@@ -39,8 +39,17 @@ export function TransactionProvider({ children }: any) {
   }
 
   async function deleteTransaction(id: string) {
-    await transactionService.deleteTransaction(id);
-    await Promise.all([loadTransactions(), loadWallets()]);
+    setTransactions((prev) => prev.filter((t) => t.id !== id));
+
+    try {
+      await transactionService.deleteTransaction(id);
+
+      await loadWallets();
+    } catch (error) {
+      console.log("Erro ao deletar:", error);
+
+      await loadTransactions();
+    }
   }
 
   useEffect(() => {

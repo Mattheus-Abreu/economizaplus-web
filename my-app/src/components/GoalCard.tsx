@@ -3,11 +3,12 @@ import { useGoals } from "@/contexts/goalContext";
 import Goal from "@/types/goal";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Alert, StyleSheet, Text, View } from "react-native";
 import { AnimatedCircularProgress } from "react-native-circular-progress";
 import { useSharedValue, withTiming } from "react-native-reanimated";
 import { SemiCircularProgress } from "./semi-circular-progress";
+import AppModal, { MODAL_HIDDEN, ModalConfig } from "./modal/modal";
 
 type Props = {
   item: Goal;
@@ -17,6 +18,7 @@ type Props = {
 function GoalCard({ item, gradient }: Props) {
   const router = useRouter();
   const { deleteGoal } = useGoals();
+  const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
 
   function formatAmount(value: string): string {
     const num = parseFloat(value);
@@ -62,14 +64,27 @@ useEffect(() => {
   }
 
   function handleDelete() {
-    Alert.alert("Deletar meta", "Tem certeza que deseja excluir essa meta?", [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Excluir",
-        style: "destructive",
-        onPress: () => deleteGoal(item.id),
-      },
-    ]);
+    setModal({
+      visible: true,
+      variant: "warning",
+      title: "Excluir meta",
+      description: "Tem certeza que deseja excluir essa meta?",
+      buttons: [
+        {
+          label: "Cancelar",
+          onPress: () => setModal(MODAL_HIDDEN),
+          variant: "secondary",
+        },
+        {
+          label: "Excluir",
+          onPress: async () => {
+            await deleteGoal(item.id);
+            setModal(MODAL_HIDDEN);
+          },
+          variant: "danger",
+        },
+      ],
+    })
   }
 
   return (
@@ -131,6 +146,14 @@ useEffect(() => {
           value={new Date(item.deadline).toLocaleDateString("pt-BR")}
         />
       </View>
+      <AppModal
+        visible={modal.visible}
+        onClose={() => setModal(MODAL_HIDDEN)}
+        variant={modal.variant}
+        title={modal.title}
+        description={modal.description}
+        buttons={modal.buttons}
+      />
     </View>
   );
 }

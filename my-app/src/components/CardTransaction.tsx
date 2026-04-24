@@ -3,7 +3,10 @@ import { useTransactions } from "@/contexts/transactionContext";
 import Transaction from "@/types/transaction";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useState } from "react";
 import { Alert, StyleSheet, Text, View } from "react-native";
+import { MODAL_HIDDEN, ModalConfig } from "./modal/modal";
+import AppModal from "./modal/modal";
 
 type Props = {
   item: Transaction;
@@ -12,6 +15,7 @@ type Props = {
 function CardTransaction({ item }: Props) {
   const router = useRouter();
   const { deleteTransaction } = useTransactions();
+  const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
 
   function formatAmount(value: number): string {
     if (!value) return "–";
@@ -47,6 +51,26 @@ function CardTransaction({ item }: Props) {
     }
   }
 
+  function formatDate(dateString: string) {
+    const date = new Date(dateString);
+    const today = new Date();
+
+    const normalize = (d: Date) =>
+      new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+    const diff =
+      (normalize(today).getTime() - normalize(date).getTime()) /
+      (1000 * 60 * 60 * 24);
+
+    if (diff === 0) return "Hoje";
+    if (diff === 1) return "Ontem";
+
+    return date.toLocaleDateString("pt-BR", {
+      day: "numeric",
+      month: "short",
+    });
+  }
+
   function handleEdit() {
     router.push({
       pathname: "/(protected)/transaction/createTransaction",
@@ -67,18 +91,27 @@ function CardTransaction({ item }: Props) {
   }
 
   function handleDelete() {
-    Alert.alert(
-      "Deletar transação",
-      "Tem certeza que deseja excluir essa transação?",
-      [
-        { text: "Cancelar", style: "cancel" },
+    setModal({
+      visible: true,
+      variant: "warning",
+      title: "Excluir transação",
+      description: "Tem certeza que deseja excluir?",
+      buttons: [
         {
-          text: "Excluir",
-          style: "destructive",
-          onPress: () => deleteTransaction(item.id),
+          label: "Cancelar",
+          onPress: () => setModal(MODAL_HIDDEN),
+          variant: "secondary",
         },
-      ]
-    );
+        {
+          label: "Excluir",
+          onPress: async () => {
+            await deleteTransaction(item.id);
+            setModal(MODAL_HIDDEN);
+          },
+          variant: "danger",
+        },
+      ],
+    })
   }
 
   return (
@@ -105,7 +138,11 @@ function CardTransaction({ item }: Props) {
           )}
 
           <Text style={styles.date}>
-            {new Date(item.transactionDate).toLocaleDateString("pt-BR")}
+            {formatDate(item.transactionDate)},{" "}
+            {new Date(item.transactionDate).toLocaleTimeString("pt-BR", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
           </Text>
         </View>
 
@@ -129,6 +166,14 @@ function CardTransaction({ item }: Props) {
           </Dropdown.Content>
         </Dropdown>
       </View>
+      <AppModal
+        visible={modal.visible}
+        onClose={() => setModal(MODAL_HIDDEN)}
+        variant={modal.variant}
+        title={modal.title}
+        description={modal.description}
+        buttons={modal.buttons}
+      />
     </View>
   );
 }

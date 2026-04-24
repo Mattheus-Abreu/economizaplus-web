@@ -12,8 +12,8 @@ type Transaction = {
     amount: number,
     description: string,
     transactionDate: string,
-    goalId?: number,
-    categoryId?: number,
+    goalId?: string,
+    categoryId?: string,
     isInstallment?: boolean,
     installmentNumber?: number,
     installmentTotal?: number

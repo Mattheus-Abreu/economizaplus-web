@@ -1,15 +1,10 @@
-import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { SymbolView } from "expo-symbols";
 import theme from "@/app/themes/theme";
-import Button from "@/components/Button";
 import Screen from "@/components/Screen";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useTransactions } from "@/contexts/transactionContext";
 import { ScrollView } from "react-native-gesture-handler";
-import Arrow from "@/assets/images/Arrow.svg";
 import { useCategory } from "@/contexts/categoryContext";
 import FloatingButton from "@/components/FloatingButton";
 
@@ -17,53 +12,6 @@ function walletPage() {
   const router = useRouter();
   const { categories } = useCategory();
   const { transactions } = useTransactions();
-
-  type Route = "/category/createCategory" | "/category/categoryPage";
-
-  const CATEGORIES = [
-    {
-      id: "luz",
-      icon: "lightbulb-o",
-      label: "Luz",
-      color: "#FACC15",
-    },
-    {
-      id: "agua",
-      icon: "tint",
-      label: "Água",
-      color: "#38BDF8",
-    },
-    {
-      id: "internet",
-      icon: "wifi",
-      label: "Internet",
-      color: "#A78BFA",
-    },
-    {
-      id: "compras",
-      icon: "shopping-cart",
-      label: "Compras",
-      color: "#34D399",
-    },
-    {
-      id: "transporte",
-      icon: "car",
-      label: "Transporte",
-      color: "#FB7185",
-    },
-    {
-      id: "comida",
-      icon: "cutlery",
-      label: "Comida",
-      color: "#F97316",
-    },
-    {
-      id: "saude",
-      icon: "heartbeat",
-      label: "Saúde",
-      color: "#EF4444",
-    },
-  ];
   
   return (
     <Screen style={{ padding: 20 }}>
@@ -97,23 +45,23 @@ function walletPage() {
           </View>
 
           <View style={styles.grid}>
-            {CATEGORIES.map((item) => {
+            {categories.map((item) => {
               const count = transactions.filter(
                 (t) => String(t.categoryId) === item.id
               ).length;
 
               return (
-                <TouchableOpacity key={item.id} style={styles.card}>
+                <TouchableOpacity key={item.id} style={styles.card} onPress={() => router.push({ pathname: "/category/categoryDetail", params: { id: item.id }})}>
                   
                   <View style={[styles.iconContainer, { backgroundColor: item.color + "30" }]}>
                     <FontAwesome
-                      name={item.icon as any}
+                      name={item.icon}
                       size={24}
                       color={item.color}
                     />
                   </View>
 
-                  <Text style={styles.title}>{item.label}</Text>
+                  <Text style={styles.title}>{item.name}</Text>
 
                   <Text style={styles.subtitle}>
                     {count} {count === 1 ? "transação" : "transações"}

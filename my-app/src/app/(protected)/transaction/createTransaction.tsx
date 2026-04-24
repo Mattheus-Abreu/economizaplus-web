@@ -176,6 +176,15 @@ function CreateTransaction() {
       });
     }
 
+    if (!categoryId) {
+      return setModal({
+        visible: true,
+        variant: "error",
+        title: "Categoria obrigatória",
+        description: "Selecione uma categoria!",
+      });
+    }
+
     try {
       if (isEditing) {
         await updateTransaction(params.id!, {
@@ -200,7 +209,7 @@ function CreateTransaction() {
           description: description || undefined,
           transactionDate,
           goal_id: goal_id || undefined,
-          categoryId: categoryId || undefined,
+          categoryId: categoryId,
           isInstallment: isParcelado,
           totalInstallments: isParcelado ? Number(totalInstallments) : undefined,
         });

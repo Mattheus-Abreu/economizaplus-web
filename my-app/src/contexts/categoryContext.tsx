@@ -2,10 +2,11 @@ import Category from "@/types/category";
 import { createContext, use, useContext, useEffect, useState } from "react";
 import { AuthContext } from "./authContext";
 import * as categoryService from "@/services/categoryService";
+import { DEFAULT_CATEGORIES } from "@/constants/defaultCategories";
 
 type CategoryContextType = {
     categories: Category[];
-    addCategory: (category: Category) => Promise<void>;
+    addCategory: (category: Omit<Category, "id">) => Promise<void>;
     deleteCategory: (id: string) => Promise<void>;
     updateCategory: (id: string, data: any) => Promise<void>;
     loadCategories: () => Promise<void>;
@@ -16,31 +17,33 @@ type CategoryContextType = {
 const CategoryContext = createContext({} as CategoryContextType);
 
 export function CategoryProvider({ children }: any) {
-  const [category, setCategory] = useState<Category[]>([]);
+  const [userCategories, setUserCategories] = useState<Category[]>([]);
   const {token, isReady} = useContext(AuthContext);
+  const allCategories = [...DEFAULT_CATEGORIES, ...userCategories]
 
   async function loadCategories() {
     const data = await categoryService.loadCategorires();
 
-    setCategory(data);
+    const userOnly = data.filter((c: Category) => c.type !== "default");
+    setUserCategories(userOnly);
   }
 
-  async function createCategory(category: Category) {
-    const newCategory = await categoryService.createCategory(category);
-    
-    setCategory((prev) => [...prev, newCategory]);
+  async function addCategory(category: Omit<Category, "id">) {
+    const newCategory = await categoryService.addCategory(category);
+
+    setUserCategories((prev) => [...prev, newCategory]);
   }
 
   async function updateCategory(id: string, data: any){
     const updateCategory = await categoryService.updateCategory(id, data);
 
-    setCategory((prev) => prev.map((category) => (category.id === id ? updateCategory : category)));
+    setUserCategories((prev) => prev.map((userCategories) => (userCategories.id === id ? updateCategory : userCategories)));
   }
 
   async function deleteCategory(id: string) {
     await categoryService.deleteCategory(id);
 
-    setCategory((prev) => prev.filter((category) => category.id !== id));
+    setUserCategories((prev) => prev.filter((userCategories) => userCategories.id !== id));
   }
 
   async function getCategoryById(id: string) {
@@ -62,8 +65,8 @@ useEffect(() => {
 return(
   <CategoryContext.Provider
     value={{
-      categories: category,
-      addCategory: createCategory,
+      categories: allCategories,
+      addCategory: addCategory,
       deleteCategory: deleteCategory,
       updateCategory: updateCategory,
       loadCategories: loadCategories,
