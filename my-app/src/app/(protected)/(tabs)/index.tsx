@@ -18,10 +18,11 @@ import {
 import { BlurCarousel } from "../../../components/carousel";
 import Icons from "../../../components/Icons";
 import { useBalance } from "@/hooks/useBalance";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
 import AppModal from "@/components/modal/modal";
 import { useCategory } from "@/contexts/categoryContext";
+import { ShimmerGroup, Shimmer } from "@/components/shimmer/Shimmer";
 
 const QUICK_ACTIONS_HEIGHT = 90;
 
@@ -39,9 +40,21 @@ function Home() {
     InterBold: require("@/assets/fonts/Inter-Bold.otf"),
   });
 
-  const filteredCategories = categories.filter(
+  const filteredCategories = (categories ?? []).filter(
     (category) => category.type === "default"
   );
+
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    if (goals !== undefined && categories !== undefined) {
+      setIsLoading(false);
+      return;
+    }
+
+    const timeout = setTimeout(() => setIsLoading(false), 3000);
+    return () => clearTimeout(timeout);
+  }, [goals, categories]);
 
   function handleLogout() {
     setModal({
@@ -78,6 +91,12 @@ function Home() {
           showsVerticalScrollIndicator={false}
         >
 
+          <ShimmerGroup
+            isLoading={isLoading}
+            preset="dark"
+            duration={1000}
+            direction="leftToRight"
+            >
           <View style={styles.header}>
             <Logo size="md" />
 
@@ -93,14 +112,19 @@ function Home() {
           <View style={styles.balanceArea}>
             <Text style={styles.balanceLabel}>Saldo atual</Text>
 
-            <Text
-              style={[
-                styles.balanceValue,
-                fontLoaded && { fontFamily: "InterBold" },
-              ]}
-            >
-              {formattedBalance ?? "R$ 0,00"}
-            </Text>
+            {isLoading ? (
+              <Shimmer style={styles.balanceSkeleton} />
+            ) : (
+              <Text
+                style={[
+                  styles.balanceValue,
+                  fontLoaded && { fontFamily: "InterBold" },
+                ]}
+              >
+                {formattedBalance ?? "R$ 0,00"}
+              </Text>
+            )}
+
           </View>
 
           <View style={styles.surface}>
@@ -128,18 +152,22 @@ function Home() {
                     onlyIcon
                   />
                 </TouchableOpacity>
-              {filteredCategories.map((item) => (
-                <TouchableOpacity
-                  key={item.name}
-                  onPress={() => router.push({ pathname: "/category/categoryDetail", params: { id: item.id } })}
-                >
-                  <Icons
-                    name={item.icon}
-                    label={item.name}
-                    color={item.color}
-                  />
-                </TouchableOpacity>
-              ))}
+                {isLoading 
+                ? Array.from({ length: 7 }).map((_, index) => (
+                  <Shimmer key={index} style={styles.categorySkeleton} />
+                ))
+                : filteredCategories.map((item) => (
+                  <TouchableOpacity
+                    key={item.name}
+                    onPress={() => router.push({ pathname: "/category/categoryDetail", params: { id: item.id } })}
+                  >
+                    <Icons
+                      name={item.icon}
+                      label={item.name}
+                      color={item.color}
+                    />
+                  </TouchableOpacity>
+                ))}
             </View>
 
             <View style={styles.sectionHeader}>
@@ -152,23 +180,27 @@ function Home() {
               </Link>
             </View>
 
-            {goals?.length === 0 ? (
-              <Text style={styles.emptyText}>
-                Nenhuma meta criada ainda
-              </Text>
-            ) : (
-              <BlurCarousel
-                data={goals ?? []}
-                renderItem={({ item, index }: { item: Goal; index: number }) => (
-                  <CardHome
-                    item={item}
-                    fontLoaded={fontLoaded}
-                    gradientIndex={index}
-                  />
-                )}
-              />
-            )}
+            
+              {isLoading ? (
+                <Shimmer style={styles.goalsSkeleton} />
+              ) : goals?.length === 0 ? (
+                <Text style={styles.emptyText}>
+                  Nenhuma meta criada ainda
+                </Text>
+              ) : (
+                <BlurCarousel
+                  data={goals ?? []}
+                  renderItem={({ item, index }: { item: Goal; index: number }) => (
+                    <CardHome
+                      item={item}
+                      fontLoaded={fontLoaded}
+                      gradientIndex={index}
+                    />
+                  )}
+                />
+              )}
           </View>
+          </ShimmerGroup>
         </ScrollView>
       </GestureHandlerRootView>
 
@@ -206,6 +238,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  balanceSkeleton: {
+    width: 250,
+    height: 48,
+    borderRadius: 12,
+  },
+  goalsSkeleton: {
+    width: "100%",
+    height: 180,
+    borderRadius: 16,
+},
+  categorySkeleton: {
+    width: 80,
+    height: 80,
+    borderRadius: 12,
+  },
   balanceArea: {
     alignItems: "center",
     paddingTop: 40,
@@ -219,6 +266,7 @@ const styles = StyleSheet.create({
   balanceValue: {
     fontSize: 40,
     fontWeight: "700",
+    textAlign: "center",
     color: theme.colors.text,
     letterSpacing: -1,
   },

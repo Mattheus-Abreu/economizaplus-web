@@ -1,13 +1,15 @@
 import theme from "@/app/themes/theme";
 import CategoryInsights from "@/components/CategoryInsights";
+import Dropdown from "@/components/dropdown";
 import FloatingButton from "@/components/FloatingButton";
+import AppModal, { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
 import Screen from "@/components/Screen";
 import TransactionList from "@/components/TransactionList";
 import { useCategory } from "@/contexts/categoryContext";
 import { useTransactions } from "@/contexts/transactionContext";
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   FlatList,
   StyleSheet,
@@ -19,11 +21,13 @@ import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
 
 function categoryDetail() {
   const { categories } = useCategory();
+  const { deleteCategory } = useCategory();
   const { transactions } = useTransactions();
+  const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
   const params = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
 
-  const category = categories.find((c) => c.id === params.id);
+  const category = (categories ?? []).find((c) => c.id === params.id);
 
   const categoryTransactions = useMemo(() => {
     return transactions
@@ -42,6 +46,71 @@ function categoryDetail() {
   const totalTransactions = categoryTransactions.length;
 
   const average = totalTransactions > 0 ? totalExpense / totalTransactions : 0;
+
+  function handleEdit() {
+    if (category?.type === "default"){
+      return setModal({
+        visible: true,
+        variant: "error",
+        title: "Erro",
+        description: "Essa categoria não pode ser editada.",
+        buttons: [
+          {
+            label: "Fechar",
+            onPress: () => setModal(MODAL_HIDDEN),
+            variant: "secondary",
+          },
+        ],
+      })
+    }
+    router.push({
+      pathname: "/(protected)/category/createCategory",
+      params: {
+        id: category?.id,
+        name: category?.name,
+        color: category?.color,
+      },
+    });
+  }
+
+  function handleDelete() {
+    if (category?.type === "default"){
+      return setModal({
+        visible: true,
+        variant: "error",
+        title: "Erro",
+        description: "Essa categoria não pode ser excluida.",
+        buttons: [
+          {
+            label: "Fechar",
+            onPress: () => setModal(MODAL_HIDDEN),
+            variant: "secondary",
+          },
+        ],
+      })
+    }
+    setModal({
+      visible: true,
+      variant: "warning",
+      title: "Excluir categoria",
+      description: "Tem certeza que deseja excluir essa categoria? Essa ação nao pode ser desfeita.",
+      buttons: [
+        {
+          label: "Cancelar",
+          onPress: () => setModal(MODAL_HIDDEN),
+          variant: "secondary",
+        },
+        {
+          label: "Excluir",
+          onPress: async () => {
+            await deleteCategory(category?.id!);
+            setModal(MODAL_HIDDEN);
+          },
+          variant: "danger",
+        },
+      ],
+  });
+}
 
   return (
     <Screen style={{ padding: 0 }}>
@@ -68,6 +137,27 @@ function categoryDetail() {
                 color={theme.colors.textSecondary}
               />
             </TouchableOpacity>
+
+        <Dropdown>
+          <Dropdown.Trigger style={styles.trigger}>
+            <Ionicons name="ellipsis-vertical" size={20} color="#fff" />
+          </Dropdown.Trigger>
+
+          <Dropdown.Content style={styles.menu}>
+            <Dropdown.Item onPress={handleEdit}>
+              <Text style={styles.itemText}>Editar</Text>
+              <Ionicons name="pencil" size={16} color="#111" />
+            </Dropdown.Item>
+
+            <Dropdown.Item onPress={handleDelete}>
+              <Text style={[styles.itemText, styles.destructive]}>
+                Deletar
+              </Text>
+              <Ionicons name="trash-outline" size={16} color="#dc2626" />
+            </Dropdown.Item>
+          </Dropdown.Content>
+        </Dropdown>
+
           </View>
 
           <View style={styles.heroContent}>
@@ -139,6 +229,14 @@ function categoryDetail() {
         }}
         onPress={() => router.push("/transaction/createTransaction")}
       />
+      <AppModal
+        visible={modal.visible}
+        onClose={() => setModal(MODAL_HIDDEN)}
+        variant={modal.variant}
+        title={modal.title}
+        description={modal.description}
+        buttons={modal.buttons}
+      />
     </Screen>
   );
 }
@@ -146,6 +244,9 @@ function categoryDetail() {
 const styles = StyleSheet.create({
   header: {
     paddingTop: 56,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 24,
   },
 
@@ -260,7 +361,32 @@ const styles = StyleSheet.create({
   noTransactionsText: {
     fontSize: 15,
     color: theme.colors.textSecondary,
-  }
+  },
+
+  trigger: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  menu: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
+    paddingVertical: 6,
+  },
+
+  itemText: {
+    fontSize: 15,
+    color: "#111",
+    fontWeight: "500",
+  },
+
+  destructive: {
+    color: "#FF4D4D",
+  },
 });
 
 export default categoryDetail;
