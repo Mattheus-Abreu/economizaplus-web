@@ -5,7 +5,7 @@ import * as categoryService from "@/services/categoryService";
 import { DEFAULT_CATEGORIES } from "@/constants/defaultCategories";
 
 type CategoryContextType = {
-    categories: Category[];
+    categories: Category[] | undefined;
     addCategory: (category: Omit<Category, "id">) => Promise<void>;
     deleteCategory: (id: string) => Promise<void>;
     updateCategory: (id: string, data: any) => Promise<void>;
@@ -17,9 +17,9 @@ type CategoryContextType = {
 const CategoryContext = createContext({} as CategoryContextType);
 
 export function CategoryProvider({ children }: any) {
-  const [userCategories, setUserCategories] = useState<Category[]>([]);
+  const [userCategories, setUserCategories] = useState<Category[] | undefined>(undefined);
   const {token, isReady} = useContext(AuthContext);
-  const allCategories = [...DEFAULT_CATEGORIES, ...userCategories]
+  const allCategories = userCategories ? [...DEFAULT_CATEGORIES, ...userCategories] : undefined;
 
   async function loadCategories() {
     const data = await categoryService.loadCategorires();
@@ -31,19 +31,19 @@ export function CategoryProvider({ children }: any) {
   async function addCategory(category: Omit<Category, "id">) {
     const newCategory = await categoryService.addCategory(category);
 
-    setUserCategories((prev) => [...prev, newCategory]);
+    setUserCategories((prev) => [...(prev ?? []), newCategory]);
   }
 
   async function updateCategory(id: string, data: any){
     const updateCategory = await categoryService.updateCategory(id, data);
 
-    setUserCategories((prev) => prev.map((userCategories) => (userCategories.id === id ? updateCategory : userCategories)));
+    setUserCategories((prev) => (prev ?? []).map((userCategories) => (userCategories.id === id ? updateCategory : userCategories)));
   }
 
   async function deleteCategory(id: string) {
     await categoryService.deleteCategory(id);
 
-    setUserCategories((prev) => prev.filter((userCategories) => userCategories.id !== id));
+    setUserCategories((prev) => (prev ?? []).filter((userCategories) => userCategories.id !== id));
   }
 
   async function getCategoryById(id: string) {

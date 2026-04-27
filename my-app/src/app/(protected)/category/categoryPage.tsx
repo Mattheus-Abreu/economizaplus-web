@@ -7,11 +7,23 @@ import { useTransactions } from "@/contexts/transactionContext";
 import { ScrollView } from "react-native-gesture-handler";
 import { useCategory } from "@/contexts/categoryContext";
 import FloatingButton from "@/components/FloatingButton";
+import { useEffect, useState } from "react";
+import { Shimmer, ShimmerGroup } from "@/components/shimmer/Shimmer";
 
 function walletPage() {
   const router = useRouter();
   const { categories } = useCategory();
   const { transactions } = useTransactions();
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    if (categories !== undefined){
+      setIsLoading(false);
+      return;
+    }
+    const timeout = setTimeout(() => setIsLoading(false), 3000);
+    return () => clearTimeout(timeout);
+  },[categories]);
   
   return (
     <Screen style={{ padding: 20 }}>
@@ -19,6 +31,12 @@ function walletPage() {
         contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
       >
+        <ShimmerGroup
+          isLoading={isLoading}
+          preset="dark"
+          duration={1000}
+          direction="leftToRight"
+          >
         <View style={{ flex: 1 }}>
           <View style={{ flex: 1, gap: 20 }}>
             <View style={styles.header}>
@@ -45,8 +63,13 @@ function walletPage() {
           </View>
 
           <View style={styles.grid}>
-            {categories.map((item) => {
-              const count = transactions.filter(
+            {isLoading ? (
+              Array.from({ length: 6 }).map((_, index) => (
+                <Shimmer style={styles.categorySkeleton}/>
+              ))
+            ) : (
+            (categories ?? []).map((item) => {
+              const count = (transactions ?? []).filter(
                 (t) => String(t.categoryId) === item.id
               ).length;
 
@@ -69,11 +92,14 @@ function walletPage() {
                   
                 </TouchableOpacity>
               );
-            })}
+            })
+          )}
+            
           </View>
 
           
         </View>
+        </ShimmerGroup>
       </ScrollView>
       <FloatingButton 
         style={{ position: "absolute", bottom: 20, right: 20, padding: 25}}
@@ -106,7 +132,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   hero: {
-  
     paddingTop: 24,
     paddingBottom: 28,
   },
@@ -173,5 +198,12 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: "rgba(255,255,255,0.6)",
     marginTop: 4,
+  },
+
+  categorySkeleton: {
+    width: "47%",   
+    height: 130,       
+    borderRadius: 20,  
+    marginBottom: 16,
   },
 });

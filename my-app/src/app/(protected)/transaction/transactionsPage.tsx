@@ -10,15 +10,17 @@ import {
 } from "@/components/empty-state";
 import FloatingButton from "@/components/FloatingButton";
 import Screen from "@/components/Screen";
+import { Shimmer } from "@/components/shimmer/Shimmer";
 import { useTransactions } from "@/contexts/transactionContext";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   FlatList,
   Platform,
   StyleSheet,
+  Text,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -31,7 +33,7 @@ function TransactionPage() {
   const { type } = useLocalSearchParams();
 
   const filteredTransactions = useMemo(() => {
-    return transactions
+    return (transactions ?? [])
       .filter((item) => {
         if (!type) return true;
         return item.type === type;
@@ -42,6 +44,17 @@ function TransactionPage() {
           new Date(a.transactionDate).getTime(),
       );
   }, [transactions, type]);
+
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    if (transactions !== undefined) {
+      setIsLoading(false);
+      return;
+    }
+    const timeout = setTimeout(() => setIsLoading(false), 3000);
+    return () => clearTimeout(timeout);
+  },[transactions]);
 
   return (
     <Screen style={{ padding: 20 }}>
@@ -60,7 +73,18 @@ function TransactionPage() {
             </TouchableOpacity>
           </View>
 
-          {filteredTransactions.length === 0 ? (
+          <View style={styles.hero}>
+            <Text style={styles.heroLabel}>Minhas transações</Text>
+            <Text style={styles.heroTitle}>Veja todas as suas transações</Text>
+            <Text style={styles.heroSub}>Ou crie novas</Text>
+          </View>
+
+          {isLoading ? (
+            Array.from({ length: 6 }).map((_, index) => (
+              <Shimmer key={index} style={styles.transactionSkeleton}/>
+            ))
+          ) : (
+          filteredTransactions.length === 0 ? (
             <SafeAreaView style={styles.container}>
               <Empty>
                 <EmptyHeader>
@@ -103,7 +127,7 @@ function TransactionPage() {
               contentContainerStyle={{ gap: 15, paddingBottom: 100 }}
               showsVerticalScrollIndicator={false}
             />
-          )}
+          ))}
         </View>
       </View>
 
@@ -145,11 +169,44 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
+  hero: {
+    paddingTop: 5,
+  },
+
+  heroLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: theme.colors.primary,
+    letterSpacing: 1.4,
+    textTransform: "uppercase",
+    marginBottom: 8,
+  },
+
+  heroTitle: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: theme.colors.text,
+    lineHeight: 34,
+  },
+
+  heroSub: {
+    fontSize: 13,
+    color: theme.colors.textSecondary,
+    marginTop: 8,
+    lineHeight: 18,
+  },
+
   emptyContent: {
     position: "absolute",
     bottom: -320,
     left: 0,
     gap: 15,
     alignItems: "center",
+  },
+
+  transactionSkeleton: {
+    width: "100%",
+    height: 80,
+    borderRadius: 12,
   },
 });

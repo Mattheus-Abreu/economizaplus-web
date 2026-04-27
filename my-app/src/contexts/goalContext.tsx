@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { AuthContext } from "./authContext";
 
 type GoalContextType = {
-  goals: Goal[];
+  goals: Goal[] | undefined;
   loadGoals: () => Promise<void>;
   addGoal: (data: any) => Promise<void>;
   updateGoal: (id: string, data: any) => Promise<void>;
@@ -15,7 +15,7 @@ type GoalContextType = {
 const GoalContext = createContext({} as GoalContextType);
 
 export function GoalProvider({ children }: any) {
-  const [goals, setGoals] = useState<Goal[]>([]);
+  const [goals, setGoals] = useState<Goal[] | undefined>(undefined);
   const { token, isReady } = useContext(AuthContext);
 
   async function loadGoals() {
@@ -25,17 +25,17 @@ export function GoalProvider({ children }: any) {
 
   async function addGoal(data: any) {
     const newGoal = await goalService.createGoal(data);
-    setGoals((prev) => [...prev, newGoal]);
+    setGoals((prev) => [...prev ?? [], newGoal]);
   }
 
   async function updateGoalById(id: string, data: any) {
     const updated = await goalService.updateGoal(id, data);
-    setGoals((prev) => prev.map((goal) => (goal.id === id ? updated : goal)));
+    setGoals((prev) => (prev ?? []).map((goal) => (goal.id === id ? updated : goal)));
   }
 
   async function deleteGoalById(id: string) {
     await goalService.deleteGoal(id);
-    setGoals((prev) => prev.filter((goal) => goal.id !== id));
+    setGoals((prev) => (prev ?? []).filter((goal) => goal.id !== id));
   }
 
   async function getGoalById(id: string) {
