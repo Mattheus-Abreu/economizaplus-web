@@ -1,6 +1,8 @@
 import theme from "@/app/themes/theme";
 import Arrow from "@/assets/images/Arrow.svg";
 import CardTransaction from "@/components/CardTransaction";
+import { ChipGroup } from "@/components/chip-group/Chip";
+import { SCREEN_WIDTH } from "@/components/const";
 import {
   Empty,
   EmptyDescription,
@@ -10,7 +12,9 @@ import {
 } from "@/components/empty-state";
 import FloatingButton from "@/components/FloatingButton";
 import Screen from "@/components/Screen";
+import { SearchBar } from "@/components/search-bar/SearchBar";
 import { Shimmer } from "@/components/shimmer/Shimmer";
+import { useCategory } from "@/contexts/categoryContext";
 import { useTransactions } from "@/contexts/transactionContext";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -29,21 +33,54 @@ import { SafeAreaView } from "react-native-safe-area-context";
 function TransactionPage() {
   const router = useRouter();
   const { transactions } = useTransactions();
+  const { categories } = useCategory();
 
   const { type } = useLocalSearchParams();
+  const activeType = type ?? "all";
+  const [search, setSearch] = useState<string>("");
 
+  const chips = [
+    { key: "all", label: "Todas", icon: () => <Ionicons name="list" size={18} color="white" />, activeColor: theme.colors.primary },
+    { key: "INCOME", label: "Entradas", icon: () => <Ionicons name="arrow-up" size={18} color="white" />, activeColor: theme.colors.secondary },
+    { key: "EXPENSE", label: "Saídas", icon: () => <Ionicons name="arrow-down" size={18} color="white" />, activeColor: "#F44336" },
+    { key: "TRANSFER", label: "Transferência", icon: () => <Ionicons name="swap-vertical" size={18} color="white" />, activeColor: "#FF9800" },
+  ];
+
+  const normalizeText = (text: string) =>
+    text
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+  
   const filteredTransactions = useMemo(() => {
     return (transactions ?? [])
       .filter((item) => {
-        if (!type) return true;
-        return item.type === type;
+        if (activeType === "all") return true;
+        return item.type === activeType;
+      })
+      .filter((item) => {
+        if (!search) return true;
+
+        const categoryName =
+          categories?.find((cat) => cat.id === item.categoryId)?.name || "";
+
+        const searchableText = `
+          ${item.description ?? ""}
+          ${item.amount}
+          ${categoryName}
+        `;
+
+        const normalizedItem = normalizeText(searchableText);
+        const normalizedSearch = normalizeText(search);
+
+        return normalizedItem.includes(normalizedSearch);
       })
       .sort(
         (a, b) =>
           new Date(b.transactionDate).getTime() -
-          new Date(a.transactionDate).getTime(),
+          new Date(a.transactionDate).getTime()
       );
-  }, [transactions, type]);
+  }, [transactions, activeType, search, categories]);
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -57,9 +94,8 @@ function TransactionPage() {
   },[transactions]);
 
   return (
-    <Screen style={{ padding: 20 }}>
-      <View style={{ flex: 1 }}>
-        <View style={{ flex: 1, gap: 20 }}>
+    <Screen>
+        <View style={styles.container}>
           <View style={styles.header}>
             <TouchableOpacity
               style={styles.backBtn}
@@ -71,12 +107,34 @@ function TransactionPage() {
                 color={theme.colors.textSecondary}
               />
             </TouchableOpacity>
+
+            <SearchBar
+              containerWidth={undefined}
+              tint={theme.colors.textSecondary}
+              placeholder="Pesquisar"
+              onSearch={(text) => setSearch(text)}
+              onClear={() => setSearch("")}
+              onSearchDone={() => setSearch("")}
+              style={{flex: 1}}
+            />
           </View>
 
           <View style={styles.hero}>
             <Text style={styles.heroLabel}>Minhas transações</Text>
-            <Text style={styles.heroTitle}>Veja todas as suas transações</Text>
-            <Text style={styles.heroSub}>Ou crie novas</Text>
+            <Text style={styles.heroTitle}>Histórico</Text>
+            <Text style={styles.heroSub}>Veja e filtre suas transações</Text>
+          </View>
+
+          <View style={styles.chipWrapper}>
+            <ChipGroup
+              chips={chips}
+              selectedIndex={chips.findIndex((item) => item.key === activeType)}
+              onChange={(index) => {
+                const selectedKey = chips[index].key;
+
+                router.setParams({ type: selectedKey === "all" ? undefined : selectedKey });
+              }}
+            />
           </View>
 
           {isLoading ? (
@@ -103,18 +161,20 @@ function TransactionPage() {
                     )}
                   </EmptyMedia>
 
-                  <EmptyTitle>Nenhuma transação</EmptyTitle>
+                  <EmptyTitle>{search ? `Nenhuma resultado para "${search}"` : `Nenhuma transação ${activeType === "all" ? `(${activeType})` : "" }`}</EmptyTitle>
 
                   <View style={styles.emptyContent}>
                     <EmptyDescription>
-                      Que tal começar criando uma transação
+                      {search ? "Nenhuma transação encontrada" : "Que tal começar criando uma transação"}
                     </EmptyDescription>
 
-                    <Arrow
+                    {!search && (
+                      <Arrow
                       width={100}
                       height={60}
                       style={{ transform: [{ rotate: "20deg" }] }}
                     />
+                  )}
                   </View>
                 </EmptyHeader>
               </Empty>
@@ -124,22 +184,17 @@ function TransactionPage() {
               data={filteredTransactions}
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => <CardTransaction item={item} />}
-              contentContainerStyle={{ gap: 15, paddingBottom: 100 }}
+              contentContainerStyle={{ gap: 12, paddingTop: 8, paddingBottom: 100 }}
               showsVerticalScrollIndicator={false}
             />
           ))}
         </View>
-      </View>
 
       <FloatingButton
-        style={{
-          position: "absolute",
-          bottom: 20,
-          right: 20,
-          padding: 25,
-        }}
+        style={styles.fab}
         onPress={() => router.push("/transaction/createTransaction")}
       />
+
     </Screen>
   );
 }
@@ -149,13 +204,15 @@ export default TransactionPage;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 56,
-    alignItems: "center",
+    gap: 16,
   },
 
   header: {
     paddingTop: 56,
-    paddingBottom: 4,
+    paddingBottom: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
   },
 
   backBtn: {
@@ -208,5 +265,16 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 80,
     borderRadius: 12,
+  },
+
+  chipWrapper: {
+    marginTop: 8,
+  },
+  fab: {
+    position: "absolute",
+    bottom: 30,
+    right: 20,
+    padding: 25,
+
   },
 });

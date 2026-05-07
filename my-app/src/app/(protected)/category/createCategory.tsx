@@ -56,7 +56,7 @@ function createCategory() {
     "car",
     "film",
     "line-chart",
-    "user",
+    "dollar",
     "gamepad",
     "gift",
     "plane",

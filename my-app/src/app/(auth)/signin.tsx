@@ -9,7 +9,6 @@ import * as Google from "expo-auth-session/providers/google";
 import { Link } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    Alert,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -18,11 +17,14 @@ import {
 } from "react-native";
 import signinStyle from "../../styles/signinStyle";
 import theme from "../themes/theme";
+import { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
+import AppModal from "@/components/modal/modal";
 
 function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { signIn } = useAuth();
+  const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
 
   const redirectUri = "https://auth.expo.io/@rdavila_mesquita/my-app";
 
@@ -43,7 +45,12 @@ function SignInPage() {
 
       const idToken = response.authentication?.idToken;
       if (!idToken) {
-        Alert.alert("Erro", "Não foi possível obter o token do Google");
+        setModal({
+          visible: true,
+          variant: "warning",
+          title: "Erro",
+          description: "Erro ao autenticar com Google",
+        });
         return;
       }
 
@@ -51,10 +58,12 @@ function SignInPage() {
         const res = await api.post("/api/login/google", { idToken });
         signIn(res.data.token);
       } catch (error: any) {
-        Alert.alert(
-          "Erro",
-          error.response?.data?.error || "Erro ao autenticar com Google",
-        );
+        setModal({
+          visible: true,
+          variant: "warning",
+          title: "Erro",
+          description: "Erro ao autenticar com Google",
+        })
       }
     }
 
@@ -63,7 +72,12 @@ function SignInPage() {
 
   async function handleSignIn() {
     if (!email.trim() || !password.trim()) {
-      return Alert.alert("Entrar", "Preencha e-mail e senha para entrar!");
+      return setModal({
+        visible: true,
+        variant: "warning",
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha todos os campos para continuar",
+      })
     }
     try {
       const response = await api.post("/api/login", {
@@ -73,18 +87,22 @@ function SignInPage() {
       signIn(response.data.token);
     } catch (error: any) {
       console.log(error.response?.data);
-      Alert.alert(
-        "Erro",
-        error.response?.data.message || "erro ao fazer login!",
-      );
+      setModal({
+        visible: true,
+        variant: "warning",
+        title: "Erro",
+        description: error.response?.data.message,
+      })
     }
   }
   async function handleForgotPassword() {
     if (!email.trim()) {
-      return Alert.alert(
-        "Esqueci minha senha",
-        "Informe seu e-mail para recuperar a senha!",
-      );
+      return setModal({
+        visible: true,
+        variant: "warning",
+        title: "Esqueci minha senha",
+        description: "Por favor, informe seu email para recuperar sua senha",
+      })
     }
   }
 
@@ -187,6 +205,14 @@ function SignInPage() {
             </Link>
           </Text>
         </ScrollView>
+        <AppModal
+        visible={modal.visible}
+        onClose={() => setModal(MODAL_HIDDEN)}
+        variant={modal.variant}
+        title={modal.title}
+        description={modal.description}
+        buttons={modal.buttons}
+        />
       </Screen>
     </KeyboardAvoidingView>
   );
