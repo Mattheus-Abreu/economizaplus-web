@@ -115,6 +115,9 @@ function Home() {
             {isLoading ? (
               <Shimmer style={styles.balanceSkeleton} />
             ) : (
+              <TouchableOpacity
+                onPress={() => router.push("/transaction/transactionPage")}
+              >
               <Text
                 style={[
                   styles.balanceValue,
@@ -123,6 +126,7 @@ function Home() {
               >
                 {formattedBalance ?? "R$ 0,00"}
               </Text>
+              </TouchableOpacity>
             )}
 
           </View>

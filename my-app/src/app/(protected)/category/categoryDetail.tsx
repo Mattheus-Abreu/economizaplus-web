@@ -1,5 +1,5 @@
 import theme from "@/app/themes/theme";
-import CategoryInsights from "@/components/CategoryInsights";
+import CardInsights from "@/components/CardInsights";
 import Dropdown from "@/components/dropdown";
 import FloatingButton from "@/components/FloatingButton";
 import AppModal, { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
@@ -30,7 +30,7 @@ function categoryDetail() {
   const category = (categories ?? []).find((c) => c.id === params.id);
 
   const categoryTransactions = useMemo(() => {
-    return transactions
+    return (transactions ?? [])
       .filter((t) => String(t.categoryId) === String(category?.id))
       .sort(
         (a, b) =>
@@ -182,18 +182,18 @@ function categoryDetail() {
       </View>
 
       <View style={styles.cardContainer}>
-        <CategoryInsights
+        <CardInsights
           title="Total gasto"
           subtitle={totalExpense.toLocaleString("pt-BR", {
             style: "currency",
             currency: "BRL",
           })}
         />
-        <CategoryInsights
+        <CardInsights
           title="Transações"
           subtitle={totalTransactions.toString()}
         />
-        <CategoryInsights
+        <CardInsights
           title="Média"
           subtitle={average.toLocaleString("pt-BR", {
             style: "currency",

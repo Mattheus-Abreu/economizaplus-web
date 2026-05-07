@@ -4,7 +4,7 @@ import Goal from "@/types/goal";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, StyleSheet, Text, View } from "react-native";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { AnimatedCircularProgress } from "react-native-circular-progress";
 import { useSharedValue, withTiming } from "react-native-reanimated";
 import { SemiCircularProgress } from "./semi-circular-progress";
@@ -13,9 +13,10 @@ import AppModal, { MODAL_HIDDEN, ModalConfig } from "./modal/modal";
 type Props = {
   item: Goal;
   gradient?: [string, string];
+  gradientIndex?: number;
 };
 
-function GoalCard({ item, gradient }: Props) {
+function GoalCard({ item, gradient, gradientIndex }: Props) {
   const router = useRouter();
   const { deleteGoal } = useGoals();
   const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
@@ -89,6 +90,14 @@ useEffect(() => {
 
   return (
     <View style={styles.card}>
+      <TouchableOpacity 
+      key={item.id}
+      onPress={() =>
+        router.push({
+          pathname: "/goal/goalDetail",
+          params: { id: item.id, gradientIndex: (gradientIndex ?? 0).toString() },
+        })
+      }>
       
       <View style={styles.topBar}>
         <Text style={styles.title}>{item.name}</Text>
@@ -154,6 +163,7 @@ useEffect(() => {
         description={modal.description}
         buttons={modal.buttons}
       />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -194,6 +204,7 @@ useEffect(() => {
   },
 
   infoRow: {
+    marginTop: 20,
     flexDirection: "row",
     justifyContent: "space-between",
   },
@@ -237,6 +248,7 @@ useEffect(() => {
   destructive: {
     color: "#FF4D4D",
   },
+
 });
 
 export default GoalCard;

@@ -242,12 +242,12 @@ function createGoal() {
             <View style={styles.field}>
               <Text style={styles.fieldLabel}>Escolha uma carteira</Text>
               <View style={styles.typeContainer}>
-                {wallets.length === 0 ? (
+                {(wallets ?? []).length === 0 ? (
                   <Text style={styles.emptyField}>
                     Nenhuma carteira cadastrada
                   </Text>
                 ) : (
-                  wallets.map((w) => (
+                  (wallets ?? []).map((w) => (
                     <TouchableOpacity
                       key={w.id}
                       onPress={() => setWalletId(w.id)}

@@ -11,12 +11,13 @@ import {
 import FloatingButton from "@/components/FloatingButton";
 import GoalCard from "@/components/GoalCard";
 import Screen from "@/components/Screen";
+import { SearchBar } from "@/components/search-bar/SearchBar";
 import { Shimmer, ShimmerGroup } from "@/components/shimmer/Shimmer";
 import { useGoals } from "@/contexts/goalContext";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Platform,
   StyleSheet,
@@ -24,13 +25,31 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
+import { FlatList } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 function goalPage() {
   const router = useRouter();
   const { goals } = useGoals();
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [search, setSearch] = useState<string>("");
+
+  const normalizeText = (text: string) =>
+  text
+    .normalize("NFD") 
+    .replace(/[\u0300-\u036f]/g, "") 
+    .toLowerCase();
+
+  const filteredGoals = useMemo(() => {
+    return (goals ?? []).filter((item) => {
+      if(!search) return true;
+      
+      const normalizedItem = normalizeText(item.name);
+      const normalizedSearch = normalizeText(search);
+
+      return normalizedItem.includes(normalizedSearch);
+    })
+  }, [search, goals]);
 
   useEffect(() => {
     if (goals !== undefined) {
@@ -42,19 +61,14 @@ function goalPage() {
   }, [goals]);
 
   return (
-    <Screen style={{ padding: 20 }}>
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
-        showsVerticalScrollIndicator={false}
-      >
+    <Screen>
         <ShimmerGroup
           isLoading={isLoading}
           preset="dark"
           duration={1000}
           direction="leftToRight"
         >
-          <View style={{ flex: 1 }}>
-            <View style={{ flex: 1, gap: 20 }}>
+            <View style={styles.container}>
               <View style={styles.header}>
                 <TouchableOpacity
                   style={styles.backBtn}
@@ -66,6 +80,16 @@ function goalPage() {
                     color={theme.colors.textSecondary}
                   />
                 </TouchableOpacity>
+
+                <SearchBar
+                  containerWidth={undefined}
+                  tint={theme.colors.textSecondary}
+                  placeholder="Pesquisar"
+                  onSearch={(text) => setSearch(text)}
+                  onClear={() => setSearch("")}
+                  onSearchDone={() => setSearch("")}
+                  style={{flex: 1}}
+                />
               </View>
 
               <View style={styles.hero}>
@@ -80,7 +104,7 @@ function goalPage() {
                 Array.from({ length: 3 }).map((_, index) => (
                   <Shimmer key={index} style={styles.goalSkeleton} />
                 ))
-              ) : (goals ?? []).length === 0 ? (
+              ) : filteredGoals.length === 0 ? (
                 <SafeAreaView style={styles.container}>
                   <Empty>
                     <EmptyHeader>
@@ -102,7 +126,7 @@ function goalPage() {
                           />
                         )}
                       </EmptyMedia>
-                      <EmptyTitle>Nenhuma meta</EmptyTitle>
+                      <EmptyTitle>{search ? `Nenhuma meta encontrada para "${search}"` : "Nenhuma meta cadastrada"}</EmptyTitle>
                       <View
                         style={{
                           position: "absolute",
@@ -113,46 +137,38 @@ function goalPage() {
                         }}
                       >
                         <EmptyDescription>
-                          Que tal começar criando uma meta
+                          {search ? `Nenhuma meta encontrada para "${search}"` : "Que tal começar criando uma meta"}
                         </EmptyDescription>
-                        <Arrow
+                        {!search && (
+                          <Arrow
                           width={100}
                           height={60}
                           style={{ transform: [{ rotate: "20deg" }] }}
                         />
+                        )}
                       </View>
                     </EmptyHeader>
                   </Empty>
                 </SafeAreaView>
               ) : (
-                (goals ?? []).map((item, index) => (
-                  <TouchableOpacity
-                    key={item.id}
-                    onPress={() =>
-                      router.push({
-                        pathname: "/goal/goalDetail",
-                        params: { id: item.id, gradientIndex: index },
-                      })
-                    }
-                  >
+                <FlatList
+                  data={filteredGoals}
+                  renderItem={({ item, index }) => (
                     <GoalCard
                       item={item}
                       gradient={GRADIENTS[index % GRADIENTS.length]}
+                      gradientIndex={index}
                     />
-                  </TouchableOpacity>
-                ))
+                  )}
+                  keyExtractor={(item) => item.id}
+                  contentContainerStyle={{ gap: 12, paddingTop: 8, paddingBottom: 100 }}
+                  showsVerticalScrollIndicator={false}
+                />
               )}
             </View>
-          </View>
         </ShimmerGroup>
-      </ScrollView>
       <FloatingButton
-        style={{
-          position: "absolute",
-          bottom: 20,
-          right: 20,
-          padding: 25,
-        }}
+        style={styles.fab}
         onPress={() => router.push("/goal/createGoal")}
       />
     </Screen>
@@ -162,12 +178,14 @@ function goalPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    paddingTop: 56,
+    gap: 16
   },
   header: {
     paddingTop: 56,
-    paddingBottom: 4,
+    paddingBottom: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
   },
   hero: {
     paddingTop: 5,
@@ -207,6 +225,13 @@ const styles = StyleSheet.create({
     height: 120,
     borderRadius: 20,
     marginBottom: 16,
+  },
+  fab: {
+    position: "absolute",
+    bottom: 30,
+    right: 20,
+    padding: 25,
+
   },
 });
 
