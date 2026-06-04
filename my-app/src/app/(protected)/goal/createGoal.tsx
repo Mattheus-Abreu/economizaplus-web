@@ -46,9 +46,7 @@ function createGoal() {
   const [description, setDescription] = useState(params.description ?? "");
   const [walletId, setWalletId] = useState(params.walletId ?? "");
   const [targetAmount, setTargetAmount] = useState(params.targetAmount ?? "");
-  const [currentAmount, setCurrentAmount] = useState(
-    params.currentAmount ?? "",
-  );
+  const [currentAmount, setCurrentAmount] = useState(params.currentAmount ?? "");
   const [deadline, setDeadline] = useState(
     params.deadline ?? new Date().toISOString(),
   );
@@ -99,12 +97,12 @@ function createGoal() {
   }
 
   async function handleSubmit() {
-    if (!name.trim() || !targetAmount || !deadline) {
+    if (!name.trim() || !targetAmount || !deadline || (!isEditing && !walletId)) {
       return setModal({
         visible: true,
         variant: "error",
         title: "Dados incompletos",
-        description: "Por favor, preencha o nome, valor alvo e prazo da meta.",
+        description: "Por favor, preencha o nome, valor alvo, prazo e selecione uma carteira.",
       });
     }
 
