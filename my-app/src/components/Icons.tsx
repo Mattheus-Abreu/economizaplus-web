@@ -1,4 +1,4 @@
-import theme from '@/app/themes/theme';
+import { useAppTheme } from '@/hooks/useAppTheme';
 import { FontAwesome } from '@expo/vector-icons';
 import { Text, View } from 'react-native';
 
@@ -10,6 +10,7 @@ type Props = {
 };
 
 const Icons = ({ name, label, color, onlyIcon }: Props) => {
+  const theme = useAppTheme();
   return (
     <View
       style={{
@@ -19,7 +20,7 @@ const Icons = ({ name, label, color, onlyIcon }: Props) => {
         height: 80,
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: theme.colors.glass,
+        backgroundColor: theme.colors.textSecondary + "10",
         borderRadius: 25,
       }}
     >

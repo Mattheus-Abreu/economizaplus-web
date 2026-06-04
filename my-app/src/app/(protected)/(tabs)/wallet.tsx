@@ -1,3 +1,6 @@
+import Arrow from "@/assets/images/Arrow.svg";
+import CardInsights from "@/components/CardInsights";
+import CardWallet from "@/components/CardWallet";
 import {
   Empty,
   EmptyDescription,
@@ -5,6 +8,17 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/empty-state";
+import FloatingButton from "@/components/FloatingButton";
+import Screen from "@/components/Screen";
+import { SearchBar } from "@/components/search-bar/SearchBar";
+import { Shimmer } from "@/components/shimmer/Shimmer";
+import { useWallets } from "@/contexts/walletContext";
+import { useAppTheme } from "@/hooks/useAppTheme";
+import { useBalance } from "@/hooks/useBalance";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { SymbolView } from "expo-symbols";
+import { useEffect, useMemo, useState } from "react";
 import {
   FlatList,
   Platform,
@@ -14,27 +28,14 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { SymbolView } from "expo-symbols";
-import theme from "@/app/themes/theme";
-import Screen from "@/components/Screen";
-import { FontAwesome, Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import { ScrollView } from "react-native-gesture-handler";
-import Arrow from "@/assets/images/Arrow.svg";
-import { useWallets } from "@/contexts/walletContext";
-import CardWallet from "@/components/CardWallet";
-import FloatingButton from "@/components/FloatingButton";
-import { useEffect, useMemo, useState } from "react";
-import { SearchBar } from "@/components/search-bar/SearchBar";
-import { Shimmer, ShimmerGroup } from "@/components/shimmer/Shimmer";
-import CardInsights from "@/components/CardInsights";
-import { useBalance } from "@/hooks/useBalance";
 
 function walletPage() {
   const router = useRouter();
   const { wallets } = useWallets();
   const [search, setSearch] = useState<string>("");
   const { formattedBalance } = useBalance();
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
 
   const normalizeText = (text: string) =>
     text
@@ -128,10 +129,10 @@ function walletPage() {
                     <SymbolView
                       name="wallet.bifold"
                       size={60}
-                      tintColor="#fff"
+                      tintColor={theme.colors.text}
                     />
                   ) : (
-                    <Ionicons name="wallet-outline" size={60} color="#fff" />
+                    <Ionicons name="wallet-outline" size={60} color={theme.colors.text} />
                   )}
                 </EmptyMedia>
                 <EmptyTitle>
@@ -191,7 +192,8 @@ function walletPage() {
 
 export default walletPage;
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+  StyleSheet.create({
   container: {
     flex: 1,
     gap: 20,
@@ -234,9 +236,9 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.06)",
+    backgroundColor: theme.colors.glass + "5",
     borderWidth: 0.5,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderColor: theme.colors.glass,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -267,7 +269,7 @@ const styles = StyleSheet.create({
 
   fab: {
     position: "absolute",
-    bottom: 30,
+    bottom: 100,
     right: 20,
     padding: 25,
   },

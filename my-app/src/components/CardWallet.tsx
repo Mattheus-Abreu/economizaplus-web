@@ -1,12 +1,12 @@
 import Dropdown from "@/components/dropdown";
+import { useWallets } from "@/contexts/walletContext";
+import { useAppTheme } from "@/hooks/useAppTheme";
+import Wallet from "@/types/wallet";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { Alert, StyleSheet, Text, View } from "react-native";
-import Wallet from "@/types/wallet";
-import { useWallets } from "@/contexts/walletContext";
 import { useState } from "react";
-import { MODAL_HIDDEN, ModalConfig } from "./modal/modal";
-import AppModal from "./modal/modal";
+import { StyleSheet, Text, View } from "react-native";
+import AppModal, { MODAL_HIDDEN, ModalConfig } from "./modal/modal";
 
 type Props = {
   item: Wallet;
@@ -16,6 +16,8 @@ function CardWallet({ item }: Props) {
   const router = useRouter();
   const { deleteWallet } = useWallets();
   const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
 
   function formatAmount(value: string): string {
     const num = parseFloat(value);
@@ -82,7 +84,7 @@ function CardWallet({ item }: Props) {
       
       <View style={styles.header}>
         <View style={styles.left}>
-          <Ionicons name="wallet-outline" size={20} color="#fff" />
+          <Ionicons name="wallet-outline" size={20} color={theme.colors.textSecondary} />
 
           <View>
             <Text style={styles.title}>{item.name}</Text>
@@ -94,20 +96,20 @@ function CardWallet({ item }: Props) {
 
         <Dropdown>
           <Dropdown.Trigger style={styles.trigger}>
-            <Ionicons name="ellipsis-horizontal" size={20} color="#fff" />
+            <Ionicons name="ellipsis-horizontal" size={20} color={theme.colors.text} />
           </Dropdown.Trigger>
 
           <Dropdown.Content style={styles.menu}>
             <Dropdown.Item onPress={handleEdit}>
               <Text style={styles.itemText}>Editar</Text>
-              <Ionicons name="pencil" size={16} color="#111" />
+              <Ionicons name="pencil" size={16} color={theme.colors.foreground} />
             </Dropdown.Item>
 
             <Dropdown.Item onPress={handleDelete}>
               <Text style={[styles.itemText, styles.destructive]}>
                 Deletar
               </Text>
-              <Ionicons name="trash-outline" size={16} color="#dc2626" />
+              <Ionicons name="trash-outline" size={16} color={theme.colors.destructive} />
             </Dropdown.Item>
           </Dropdown.Content>
         </Dropdown>
@@ -137,17 +139,18 @@ function CardWallet({ item }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+StyleSheet.create({
   card: {
     borderRadius: 24,
     padding: 20,
-    backgroundColor: "#1A0F2E",
+    backgroundColor: theme.colors.surface,
     gap: 16,
 
-    shadowColor: "#000",
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 6,
+    shadowColor: theme.colors.foreground,
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 1,
   },
 
   header: {
@@ -165,12 +168,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#fff",
+    color: theme.colors.text,
   },
 
   subtitle: {
     fontSize: 12,
-    color: "rgba(255,255,255,0.6)",
+    color: theme.colors.textSecondary,
     marginTop: 2,
   },
 
@@ -180,19 +183,19 @@ const styles = StyleSheet.create({
 
   balanceLabel: {
     fontSize: 12,
-    color: "rgba(255,255,255,0.5)",
+    color: theme.colors.textSecondary,
   },
 
   balanceValue: {
     fontSize: 26,
     fontWeight: "700",
-    color: "#fff",
+    color: theme.colors.text,
     marginTop: 4,
   },
 
   badge: {
     alignSelf: "flex-start",
-    backgroundColor: "rgba(255,255,255,0.1)",
+    backgroundColor: theme.colors.glass,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
@@ -200,7 +203,7 @@ const styles = StyleSheet.create({
   },
 
   badgeText: {
-    color: "#fff",
+    color: theme.colors.text,
     fontSize: 11,
     fontWeight: "600",
   },
@@ -209,24 +212,24 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.08)",
+    backgroundColor: theme.colors.glass,
     justifyContent: "center",
     alignItems: "center",
   },
 
   menu: {
-    backgroundColor: "#fff",
+    backgroundColor: theme.colors.surface,
     borderRadius: 14,
     padding: 6,
   },
 
   itemText: {
     fontSize: 15,
-    color: "#111",
+    color: theme.colors.text,
   },
 
   destructive: {
-    color: "#FF4D4D",
+    color: theme.colors.destructive,
   },
 });
 

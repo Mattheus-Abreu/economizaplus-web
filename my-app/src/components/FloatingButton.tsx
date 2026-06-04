@@ -1,7 +1,6 @@
-import React from "react";
+import { useAppTheme } from "@/hooks/useAppTheme";
+import { FontAwesome } from "@expo/vector-icons";
 import { StyleSheet, TouchableOpacity, ViewStyle } from "react-native";
-import { FontAwesome, Ionicons } from "@expo/vector-icons";
-import theme from "@/app/themes/theme";
 
 type Props = {
   onPress: () => void;
@@ -16,6 +15,8 @@ export default function FloatingButton({
   size = 80,
   style,
 }: Props) {
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
   return (
     <TouchableOpacity
       activeOpacity={0.8}
@@ -35,7 +36,8 @@ export default function FloatingButton({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+StyleSheet.create({
   button: {
     position: "absolute",
     bottom: 24,

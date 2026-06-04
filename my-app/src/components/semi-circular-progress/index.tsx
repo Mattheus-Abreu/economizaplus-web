@@ -1,7 +1,7 @@
 import React from "react";
-import { View, StyleSheet, Text } from "react-native";
+import { StyleSheet, View } from "react-native";
 import Animated, { SharedValue, useAnimatedProps } from "react-native-reanimated";
-import { Circle, Svg, Defs, LinearGradient, Stop, type CircleProps } from "react-native-svg";
+import { Circle, Defs, LinearGradient, Stop, Svg, type CircleProps } from "react-native-svg";
 
 const AnimatedCircle = Animated.createAnimatedComponent<CircleProps>(Circle);
 
@@ -22,7 +22,7 @@ export const SemiCircularProgress: React.FC<Props> = ({
   size = 180,
   strokeWidth = 20,
   progressColor = "#6C5CE7",
-  trackColor = "rgba(255,255,255,0.1)",
+  trackColor = "rgba(255, 255, 255, 0.32)",
   useGradient = false,
   gradientColors,
   backgroundColor = "transparent",

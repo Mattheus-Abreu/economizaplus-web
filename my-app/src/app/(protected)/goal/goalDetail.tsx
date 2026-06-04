@@ -1,32 +1,32 @@
-import theme from "@/app/themes/theme";
-import Screen from "@/components/Screen";
+import Button from "@/components/Button";
 import { GRADIENTS } from "@/components/CardHome";
+import AppModal, { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
+import { AnimatedProgressBar } from "@/components/progressBar";
+import SavingList from "@/components/SavingList";
+import Screen from "@/components/Screen";
 import { useGoals } from "@/contexts/goalContext";
+import { useSaving } from "@/contexts/savingContext";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import {
-  Alert,
   FlatList,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
-import { useSharedValue, withTiming, Easing } from "react-native-reanimated";
-import { useEffect, useState } from "react";
-import { AnimatedProgressBar } from "@/components/progressBar";
-import Button from "@/components/Button";
-import { useSaving } from "@/contexts/savingContext";
-import AppModal, { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
-import SavingList from "@/components/SavingList";
+import { Easing, useSharedValue, withTiming } from "react-native-reanimated";
 
 function goalDetail() {
   const router = useRouter();
   const { goals, deleteGoal } = useGoals();
   const { loadSavings, getSavingsByGoal } = useSaving();
   const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
 
   const params = useLocalSearchParams<{
     id: string;
@@ -176,18 +176,6 @@ function goalDetail() {
               end={{ x: 0, y: 0 }}
               style={styles.headerGradient}
             >
-              <LinearGradient
-                colors={[
-                  "transparent",
-                  "transparent",
-                  "#10042000",
-                  theme.colors.background,
-                ]}
-                locations={[0, 0.7, 0.75, 1]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 1 }}
-                style={StyleSheet.absoluteFillObject}
-              />
               <View style={styles.headerRow}>
                 <TouchableOpacity
                   style={styles.backBtn}
@@ -236,6 +224,7 @@ function goalDetail() {
               </View>
             </LinearGradient>
 
+            <View style={styles.summaryWrapper}>
             <View style={styles.summaryRow}>
               <View style={styles.summaryCard}>
                 <Text style={styles.summaryLabel}>Guardado</Text>
@@ -269,7 +258,7 @@ function goalDetail() {
                 </Text>
               </View>
             </View>
-
+            </View>
             <View style={styles.barSection}>
               <View style={styles.barHeader}>
                 <Text style={styles.barLabel}>Progresso</Text>
@@ -362,7 +351,8 @@ function goalDetail() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+StyleSheet.create({
   headerGradient: {
     paddingTop: 70,
     paddingBottom: 80,
@@ -422,17 +412,30 @@ const styles = StyleSheet.create({
   },
   progressLabel: {
     fontSize: 13,
-    color: "rgba(255,255,255,0.7)",
+    color: theme.colors.textSecondary,
   },
+  summaryWrapper: {
+    marginHorizontal: 24,
+    marginTop: -30,
+
+    shadowColor: theme.colors.foreground,
+    shadowOpacity: 0.2,
+    shadowRadius: 15,
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+
+    elevation: 10,
+  },
+
   summaryRow: {
     flexDirection: "row",
-    marginHorizontal: 24,
-    marginTop: -50,
     backgroundColor: theme.colors.surface,
     borderRadius: 16,
     overflow: "hidden",
-    borderWidth: 0.5,
-    borderColor: "rgba(255,255,255,0.08)",
+    borderWidth: 1,
+    borderColor: theme.colors.glass,
   },
   summaryCard: {
     flex: 1,

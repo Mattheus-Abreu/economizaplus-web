@@ -1,4 +1,7 @@
+import { darkTheme, lightTheme } from "@/components/theme-switch/conf";
+import { ThemeMode, ThemeProvider } from "@/components/theme-switch/context";
 import { AuthContext, AuthProvider } from "@/contexts/authContext";
+
 import { Stack } from "expo-router";
 import { useContext } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -20,16 +23,20 @@ function AppContent() {
   );
 }
 
-function RootLayout() {
+export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <PaperProvider>
-        <AuthProvider>
-          <AppContent />
-        </AuthProvider>
-      </PaperProvider>
+      <ThemeProvider
+        defaultTheme={ThemeMode.Dark}
+        customDarkColors={darkTheme}
+        customLightColors={lightTheme}
+      >
+        <PaperProvider>
+          <AuthProvider>
+            <AppContent />
+          </AuthProvider>
+        </PaperProvider>
+      </ThemeProvider>
     </GestureHandlerRootView>
   );
 }
-
-export default RootLayout;

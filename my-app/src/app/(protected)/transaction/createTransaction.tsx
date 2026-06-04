@@ -1,13 +1,17 @@
-import theme from "@/app/themes/theme";
 import Button from "@/components/Button";
 import Screen from "@/components/Screen";
 import Input from "@/components/inputs/Input";
+import AppModal, { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
+import { useCard } from "@/contexts/cardContext";
+import { useCategory } from "@/contexts/categoryContext";
+import { useGoals } from "@/contexts/goalContext";
+import { useTransactions } from "@/contexts/transactionContext";
+import { useWallets } from "@/contexts/walletContext";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
-import DateTimePickerModal from "react-native-modal-datetime-picker";
-import { useLocalSearchParams, useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { BaseButton } from "react-native-gesture-handler";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -17,13 +21,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useTransactions } from "@/contexts/transactionContext";
-import { useGoals } from "@/contexts/goalContext";
-import { useCategory } from "@/contexts/categoryContext";
-import { useWallets } from "@/contexts/walletContext";
-import { useCard } from "@/contexts/cardContext";
-import { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
-import AppModal from "@/components/modal/modal";
+import { BaseButton } from "react-native-gesture-handler";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 
 type TransactionType = "INCOME" | "EXPENSE" | "TRANSFER";
 type PaymentMethod = "CASH" | "CREDIT_CARD" | "DEBIT_CARD" | "PIX" | "BANK_TRANSFER";
@@ -37,6 +36,8 @@ function CreateTransaction() {
   const { wallets } = useWallets();
   const { cards } = useCard();
   const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
 
   const params = useLocalSearchParams<{
     id?: string;
@@ -316,10 +317,10 @@ function CreateTransaction() {
                 {isTransfer ? "Carteira de origem" : "Carteira"}
               </Text>
               <View style={styles.typeContainer}>
-                {wallets.length === 0 ? (
+                {wallets?.length === 0 ? (
                   <Text style={styles.emptyField}>Nenhuma carteira cadastrada</Text>
                 ) : (
-                  wallets.map((w) => (
+                  wallets?.map((w) => (
                     <TouchableOpacity
                       key={w.id}
                       onPress={() => setWalletId(w.id)}
@@ -341,11 +342,11 @@ function CreateTransaction() {
               <View style={styles.field}>
                 <Text style={styles.fieldLabel}>Carteira de destino</Text>
                 <View style={styles.typeContainer}>
-                  {wallets.filter((w) => w.id !== walletId).length === 0 ? (
+                  {wallets?.filter((w) => w.id !== walletId).length === 0 ? (
                     <Text style={styles.emptyField}>Nenhuma outra carteira disponível</Text>
                   ) : (
                     wallets
-                      .filter((w) => w.id !== walletId)
+                      ?.filter((w) => w.id !== walletId)
                       .map((w) => (
                         <TouchableOpacity
                           key={w.id}
@@ -508,10 +509,10 @@ function CreateTransaction() {
             <View style={styles.field}>
               <Text style={styles.fieldLabel}>Meta (opcional)</Text>
               <View style={styles.typeContainer}>
-                {goals.length === 0 ? (
+                {goals?.length === 0 ? (
                   <Text style={styles.emptyField}>Nenhuma meta cadastrada</Text>
                 ) : (
-                  goals.map((g) => (
+                  goals?.map((g) => (
                     <TouchableOpacity
                       key={g.id}
                       onPress={() => setGoal_id(goal_id === g.id ? "" : g.id)}
@@ -532,10 +533,10 @@ function CreateTransaction() {
             <View style={styles.field}>
               <Text style={styles.fieldLabel}>Categoria (opcional)</Text>
               <View style={styles.typeContainer}>
-                {categories.length === 0 ? (
+                {categories?.length === 0 ? (
                   <Text style={styles.emptyField}>Nenhuma categoria cadastrada</Text>
                 ) : (
-                  categories.map((c) => (
+                  categories?.map((c) => (
                     <TouchableOpacity
                       key={c.id}
                       onPress={() =>
@@ -627,7 +628,7 @@ function CreateTransaction() {
                 )}
                 {isTransfer && destinationWalletId && (
                   <Text style={styles.previewAmount}>
-                    → {wallets.find((w) => w.id === destinationWalletId)?.name}
+                    → {wallets?.find((w) => w.id === destinationWalletId)?.name}
                   </Text>
                 )}
               </View>
@@ -654,7 +655,8 @@ function CreateTransaction() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+StyleSheet.create({
   header: {
     paddingTop: 56,
     paddingHorizontal: 24,

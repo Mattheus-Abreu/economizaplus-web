@@ -1,7 +1,7 @@
-import theme from "@/app/themes/theme";
 import { useWallets } from "@/contexts/walletContext";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import Saving from "@/types/savings";
-import { Text, View, StyleSheet } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 type Props = {
   item: Saving;
@@ -9,6 +9,8 @@ type Props = {
 
 function SavingList({ item }: Props) {
   const { wallets } = useWallets();
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
 
   const safeAmount = Number(item.amount ?? 0);
 
@@ -35,7 +37,8 @@ function SavingList({ item }: Props) {
 
 export default SavingList;
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+StyleSheet.create({
   wrapper:{
     paddingHorizontal: 24,
   },

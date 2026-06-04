@@ -1,4 +1,5 @@
 import { useTransactions } from "@/contexts/transactionContext"
+import { useAppTheme } from "@/hooks/useAppTheme"
 import Category from "@/types/category"
 import { FontAwesome } from "@expo/vector-icons"
 import { useRouter } from "expo-router"
@@ -13,6 +14,8 @@ function CardCategory({ item }: Props) {
     const { transactions } = useTransactions();
     const router = useRouter();
     const count = (transactions ?? []).filter((t) => t.categoryId === item.id).length;
+    const theme = useAppTheme();
+    const styles = createStyles(theme);
   return (
     <TouchableOpacity key={item.id} style={styles.card} onPress={() => router.push({ pathname: "/category/categoryDetail", params: { id: item.id }})}>
                   
@@ -34,7 +37,8 @@ function CardCategory({ item }: Props) {
   )
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
+ StyleSheet.create({
   card: {
     flex: 1,
     borderRadius: 20,
@@ -42,14 +46,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 16,
 
-    backgroundColor: "rgba(255,255,255,0.04)",
+    backgroundColor: theme.colors.glass,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
-
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 4,
+    borderColor: theme.colors.glass,
   },
 
   iconContainer: {
@@ -64,12 +63,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#fff",
+    color: theme.colors.text,
   },
 
   subtitle: {
     fontSize: 11,
-    color: "rgba(255,255,255,0.6)",
+    color: theme.colors.textSecondary,
     marginTop: 4,
   },
 })

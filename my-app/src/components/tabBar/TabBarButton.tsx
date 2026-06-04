@@ -1,10 +1,9 @@
-import { Pressable, Text, View } from 'react-native'
-import tabBarStyle from '@/styles/tabBarStyle'
-import theme from '@/app/themes/theme'
-import Animated, { interpolate, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated'
-import { JSX, ReactNode, useEffect } from 'react'
-import { GestureResponderEvent } from "react-native";
-import { FontAwesome } from '@expo/vector-icons'
+import { useAppTheme } from '@/hooks/useAppTheme';
+import { createTabBarStyle } from "@/styles/tabBarStyle";
+import { FontAwesome, FontAwesome6 } from '@expo/vector-icons';
+import { JSX, ReactNode, useEffect } from 'react';
+import { GestureResponderEvent, Pressable, View } from 'react-native';
+import Animated, { interpolate, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
 
 type Props = {
@@ -19,9 +18,11 @@ const TabBarButton = ({ color, label, isFocused, onPress, onLongPress, routeName
     const icon: Record<string, (props: {color: string}) => JSX.Element> = {
         "index": (props) => <FontAwesome name="home" size={24} {...props} />,
         "cards": (props) => <FontAwesome name="credit-card" size={24} {...props} />,
-        "grafics": (props) => <FontAwesome name="bar-chart" size={24} {...props} />,
+        "wallet": (props) => <FontAwesome6 name="wallet" size={24} {...props} />,
         "profile": (props) => <FontAwesome name="user" size={24} {...props} />,
     }
+    const theme = useAppTheme();
+    const styles = createTabBarStyle(theme);
     const scale = useSharedValue(0);
     useEffect(() => {
         scale.value = withSpring(typeof isFocused === 'boolean' ? (isFocused ? 1 : 0) : isFocused, { duration: 200 });
@@ -49,10 +50,10 @@ const TabBarButton = ({ color, label, isFocused, onPress, onLongPress, routeName
         <Pressable
             onPress={onPress}
             onLongPress={onLongPress}
-            style={tabBarStyle.tabbarItem}
+            style={createTabBarStyle(theme).tabbarItem}
             >
             <Animated.View style={animatedIconStyle}>
-                <View style={{ backgroundColor: isFocused ? "rgba(124,58,237,0.15)" : "transparent", borderRadius: 10 }}>
+                <View style={{ backgroundColor: isFocused ? "rgba(150, 96, 243, 0.05)" : "transparent", borderRadius: 10 }}>
                     {icon[routeName]?.({ color: isFocused ? theme.colors.primary : theme.colors.textSecondary })}
                 </View>
             </Animated.View>

@@ -1,4 +1,3 @@
-import theme from "@/app/themes/theme";
 import CardInsights from "@/components/CardInsights";
 import Dropdown from "@/components/dropdown";
 import FloatingButton from "@/components/FloatingButton";
@@ -7,6 +6,7 @@ import Screen from "@/components/Screen";
 import TransactionList from "@/components/TransactionList";
 import { useCategory } from "@/contexts/categoryContext";
 import { useTransactions } from "@/contexts/transactionContext";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
@@ -26,6 +26,8 @@ function categoryDetail() {
   const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
   const params = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
 
   const category = (categories ?? []).find((c) => c.id === params.id);
 
@@ -140,7 +142,7 @@ function categoryDetail() {
 
         <Dropdown>
           <Dropdown.Trigger style={styles.trigger}>
-            <Ionicons name="ellipsis-vertical" size={20} color="#fff" />
+            <Ionicons name="ellipsis-vertical" size={20} color={theme.colors.text} />
           </Dropdown.Trigger>
 
           <Dropdown.Content style={styles.menu}>
@@ -241,7 +243,8 @@ function categoryDetail() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+StyleSheet.create({
   header: {
     paddingTop: 56,
     flexDirection: "row",
@@ -254,9 +257,9 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.06)",
+    backgroundColor: theme.colors.glass + "5",
     borderWidth: 0.5,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderColor: theme.colors.glass,
     alignItems: "center",
     justifyContent: "center",
   },

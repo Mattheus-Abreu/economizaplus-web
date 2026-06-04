@@ -1,4 +1,4 @@
-import theme from "@/app/themes/theme";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -16,6 +16,8 @@ function CardInsights({
   variant = "default",
 }: Props) {
   const variantStyle = getVariantStyle(variant);
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
 
   return (
     <View style={[styles.container, variantStyle.container]}>
@@ -33,6 +35,7 @@ function CardInsights({
 }
 
 const getVariantStyle = (variant: Props["variant"]) => {
+  const theme = useAppTheme();
   switch (variant) {
     case "success":
       return {
@@ -52,7 +55,8 @@ const getVariantStyle = (variant: Props["variant"]) => {
   }
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+StyleSheet.create({
   container: {
     flex: 1,
     minHeight: 100,

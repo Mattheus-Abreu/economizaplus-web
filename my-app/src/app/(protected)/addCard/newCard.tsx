@@ -1,18 +1,17 @@
-import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from "react-native";
-import { StatusBar } from "expo-status-bar";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { FontAwesome, Ionicons } from "@expo/vector-icons";
-import { TouchableOpacity } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import theme from "@/app/themes/theme";
-import { useState } from "react";
 import Input from "@/components/inputs/Input";
+import { useAppTheme } from "@/hooks/useAppTheme";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { useState } from "react";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export default function newCard() {
     const router = useRouter();
+    const theme = useAppTheme();
+    const styles = createStyles(theme);
 
     const dataCard = useLocalSearchParams<{
       id?: string;
@@ -117,15 +116,7 @@ export default function newCard() {
       }finally{
         setIsLoading(false);
       }
-
-
-
     }
-
-
-
-
-
   return (
     <GestureHandlerRootView style={styles.container}>
       <StatusBar style="light" />
@@ -300,7 +291,8 @@ export default function newCard() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+StyleSheet.create({
   container: {
     flex: 1,    
     backgroundColor: "#100420",
