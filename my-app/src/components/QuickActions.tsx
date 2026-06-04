@@ -14,14 +14,14 @@ type Action = {
 const ACTIONS: Action[] = [
   {
     label: "Entrada",
-    icon: "arrow-down-circle-outline",
+    icon: "arrow-up",
     color: "#22C55E",
     route: "/(protected)/transaction/transactionsPage",
     type: "INCOME",
   },
   {
     label: "Saída",
-    icon: "arrow-up-circle-outline",
+    icon: "arrow-down",
     color: "#FB7185",
     route: "/(protected)/transaction/transactionsPage",
     type: "EXPENSE",
