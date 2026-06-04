@@ -1,4 +1,4 @@
-import theme from "@/app/themes/theme";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import Goal from "@/types/goal";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -34,6 +34,8 @@ type Props = {
 const CardHome = ({ item, fontLoaded, gradientIndex = 0 }: Props) => {
   const router = useRouter();
   const progress = useSharedValue(0);
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
 
   useEffect(() => {
     const current = Number(item.currentAmount);
@@ -115,7 +117,8 @@ const CardHome = ({ item, fontLoaded, gradientIndex = 0 }: Props) => {
 
 export default CardHome;
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+StyleSheet.create({
   card: {
     width: "100%",
     height: 180,
@@ -143,7 +146,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 34,
     fontWeight: "600",
-    color: theme.colors.text,
+    color: "#fff",
   },
   cardSubtitle: {
     fontSize: 16,

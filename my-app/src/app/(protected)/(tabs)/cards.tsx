@@ -1,14 +1,13 @@
-import { View, Text, StyleSheet, ScrollView } from "react-native";
-import { GestureHandlerRootView} from "react-native-gesture-handler";
-import { StatusBar } from "expo-status-bar";
-import { useState, useCallback } from "react";
 import { BlurCarousel } from "@/components/molecules/blur-carousel";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import BancoIcon from "@/services/apiBanco";
-import  theme  from "@/app/themes/theme";
-import { useRouter } from "expo-router";
-import { FontAwesome } from "@expo/vector-icons";
-import { TouchableOpacity } from "react-native";
 import { isBancoNome } from "@/utils/banco";
+import { FontAwesome } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { useCallback, useState } from "react";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 type CardItem = {
   id: string;
@@ -154,6 +153,8 @@ const DATA = [
 export default function App() {
   const [currentCard, setCurrentCard] = useState<CardItem>(DATA[0]);
   const router = useRouter();
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
 
   const getBackgroundColor = (title: string) => {
     return dataBackgroundColors[title.toLocaleLowerCase() as keyof typeof dataBackgroundColors]?.fundo || '#ec0192';
@@ -248,7 +249,8 @@ export default function App() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
+ StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#100420",

@@ -1,17 +1,20 @@
-import theme from "@/app/themes/theme"
-import { StyleSheet, TextInput, TextInputProps } from "react-native"
+import { useAppTheme } from "@/hooks/useAppTheme";
+import { StyleSheet, TextInput, TextInputProps } from "react-native";
 
 function Input({ style: styleProp, ...rest }: TextInputProps) {
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
   return (
     <TextInput
-      style={[style.input, styleProp]}
+      style={[styles.input, styleProp]}
       placeholderTextColor={theme.colors.textSecondary}
       {...rest}
     />
   )
 }
 
-const style = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+StyleSheet.create({
     input: {
         backgroundColor: "rgba(255,255,255,0.04)",
         borderWidth: 0.5,

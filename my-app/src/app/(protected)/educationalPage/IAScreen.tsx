@@ -1,7 +1,7 @@
 import { api } from "@/api/api";
-import theme from "@/app/themes/theme";
 import Button from "@/components/Button";
 import Screen from "@/components/Screen";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import useAuth from "@/hooks/useAuth";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -11,6 +11,9 @@ function IAScreen() {
   const router = useRouter();
   const { goals } = useLocalSearchParams();
   const { token } = useAuth();
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
+
   type Tip = {
     title: string;
     description: string;
@@ -88,7 +91,8 @@ function IAScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+StyleSheet.create({
   container: {
     gap: 20,
   },

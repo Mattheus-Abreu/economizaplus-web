@@ -1,16 +1,18 @@
-import theme from "@/app/themes/theme";
 import Button from "@/components/Button";
-import Checkbox from "@/components/inputs/Checkbox"
+import Checkbox from "@/components/inputs/Checkbox";
 import Screen from "@/components/Screen";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import { Link, useRouter } from "expo-router";
-import { useState } from "react"
-import { Alert, ScrollView, StyleSheet, Text, View } from "react-native"
+import { useState } from "react";
+import { Alert, StyleSheet, Text, View } from "react-native";
 
 
 function finEducation() {
     const [goal, setGoal] = useState<string[]>([]);
     const [preferences, setPreferences] = useState<string[]>([]);
     const router = useRouter();
+    const theme = useAppTheme();
+    const styles = createStyles(theme);
 
     function redirectPage() {
         if (goal.length > 0) {
@@ -55,7 +57,8 @@ function finEducation() {
 }
 
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+StyleSheet.create({
     container: {
         gap: 20
     },

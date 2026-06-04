@@ -1,4 +1,3 @@
-import theme from "@/app/themes/theme";
 import Arrow from "@/assets/images/Arrow.svg";
 import { GRADIENTS } from "@/components/CardHome";
 import {
@@ -14,6 +13,7 @@ import Screen from "@/components/Screen";
 import { SearchBar } from "@/components/search-bar/SearchBar";
 import { Shimmer, ShimmerGroup } from "@/components/shimmer/Shimmer";
 import { useGoals } from "@/contexts/goalContext";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
@@ -33,6 +33,8 @@ function goalPage() {
   const { goals } = useGoals();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [search, setSearch] = useState<string>("");
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
 
   const normalizeText = (text: string) =>
   text
@@ -116,13 +118,13 @@ function goalPage() {
                           <SymbolView
                             name="target"
                             size={60}
-                            tintColor="#fff"
+                            tintColor={theme.colors.text}
                           />
                         ) : (
                           <Ionicons
                             name="trending-up-outline"
                             size={60}
-                            color="#fff"
+                            color={theme.colors.text}
                           />
                         )}
                       </EmptyMedia>
@@ -175,7 +177,8 @@ function goalPage() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+StyleSheet.create({
   container: {
     flex: 1,
     gap: 16
@@ -214,9 +217,9 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.06)",
+    backgroundColor: theme.colors.glass + "5",
     borderWidth: 0.5,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderColor: theme.colors.glass,
     alignItems: "center",
     justifyContent: "center",
   },

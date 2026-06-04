@@ -1,15 +1,15 @@
-import theme from "@/app/themes/theme";
 import Button from "@/components/Button";
 import Screen from "@/components/Screen";
 import { CircularProgress } from "@/components/circular-progress";
 import Input from "@/components/inputs/Input";
+import AppModal, { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
 import { useGoals } from "@/contexts/goalContext";
+import { useWallets } from "@/contexts/walletContext";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
-import DateTimePickerModal from "react-native-modal-datetime-picker";
-import { useLocalSearchParams, useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { BaseButton } from "react-native-gesture-handler";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -19,16 +19,17 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { BaseButton } from "react-native-gesture-handler";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { Easing, useSharedValue, withTiming } from "react-native-reanimated";
-import { useWallets } from "@/contexts/walletContext";
-import { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
-import AppModal from "@/components/modal/modal";
 
 function createGoal() {
   const router = useRouter();
   const { addGoal, updateGoal } = useGoals();
   const { wallets } = useWallets();
   const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
 
   const params = useLocalSearchParams<{
     id?: string;
@@ -386,7 +387,8 @@ function createGoal() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+StyleSheet.create({
   header: {
     paddingTop: 56,
     paddingHorizontal: 24,

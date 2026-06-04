@@ -1,16 +1,16 @@
+import { useAppTheme } from "@/hooks/useAppTheme";
+import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect } from "react";
-import { StyleSheet, View, Dimensions, Text } from "react-native";
+import { Dimensions, StyleSheet, Text, View } from "react-native";
 import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
   Easing,
+  useAnimatedStyle,
+  useSharedValue,
   withRepeat,
   withSequence,
+  withTiming,
 } from "react-native-reanimated";
-import { LinearGradient } from "expo-linear-gradient";
 import type { AnimatedProgressBarProps } from "./types";
-import theme from "@/app/themes/theme";
 
 export const AnimatedProgressBar: React.FC<AnimatedProgressBarProps> = ({
   progress = 0,
@@ -36,6 +36,8 @@ export const AnimatedProgressBar: React.FC<AnimatedProgressBarProps> = ({
   const progressValue = useSharedValue(0);
   const indeterminateValue = useSharedValue(0);
   const pulseValue = useSharedValue(1);
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
 
   const screenWidth = Dimensions.get("window").width;
 
@@ -210,7 +212,8 @@ export const AnimatedProgressBar: React.FC<AnimatedProgressBarProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+StyleSheet.create({
   container: {
     alignItems: "center",
     justifyContent: "center",

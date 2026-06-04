@@ -1,14 +1,14 @@
 import Dropdown from "@/components/dropdown";
 import { useGoals } from "@/contexts/goalContext";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import Goal from "@/types/goal";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { AnimatedCircularProgress } from "react-native-circular-progress";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSharedValue, withTiming } from "react-native-reanimated";
-import { SemiCircularProgress } from "./semi-circular-progress";
 import AppModal, { MODAL_HIDDEN, ModalConfig } from "./modal/modal";
+import { SemiCircularProgress } from "./semi-circular-progress";
 
 type Props = {
   item: Goal;
@@ -20,6 +20,8 @@ function GoalCard({ item, gradient, gradientIndex }: Props) {
   const router = useRouter();
   const { deleteGoal } = useGoals();
   const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
 
   function formatAmount(value: string): string {
     const num = parseFloat(value);
@@ -104,20 +106,20 @@ useEffect(() => {
 
         <Dropdown>
           <Dropdown.Trigger style={styles.trigger}>
-            <Ionicons name="ellipsis-horizontal" size={20} color="#fff" />
+            <Ionicons name="ellipsis-horizontal" size={20} color={theme.colors.text} />
           </Dropdown.Trigger>
 
           <Dropdown.Content style={styles.menu}>
             <Dropdown.Item onPress={handleEdit}>
               <Text style={styles.itemText}>Editar</Text>
-              <Ionicons name="pencil" size={16} color="#111" />
+              <Ionicons name="pencil" size={16} color={theme.colors.foreground} />
             </Dropdown.Item>
 
             <Dropdown.Item onPress={handleDelete}>
               <Text style={[styles.itemText, styles.destructive]}>
                 Deletar
               </Text>
-              <Ionicons name="trash-outline" size={16} color="#dc2626" />
+              <Ionicons name="trash-outline" size={16} color={theme.colors.destructive} />
             </Dropdown.Item>
           </Dropdown.Content>
         </Dropdown>
@@ -168,11 +170,12 @@ useEffect(() => {
   );
 }
 
- const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+StyleSheet.create({
   card: {
     borderRadius: 24,
     padding: 20,
-    backgroundColor: "#1A0F2E",
+    backgroundColor: theme.colors.surface,
     gap: 20,
   },
 
@@ -185,7 +188,7 @@ useEffect(() => {
   title: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#fff",
+    color: theme.colors.text,
   },
 
   chart: {
@@ -195,12 +198,12 @@ useEffect(() => {
   percent: {
     fontSize: 26,
     fontWeight: "700",
-    color: "#fff",
+    color: theme.colors.text,
   },
 
   subtitle: {
     fontSize: 13,
-    color: "rgba(255,255,255,0.6)",
+    color: theme.colors.textSecondary,
   },
 
   infoRow: {
@@ -215,13 +218,13 @@ useEffect(() => {
 
   infoLabel: {
     fontSize: 12,
-    color: "rgba(255,255,255,0.5)",
+    color: theme.colors.glass,
   },
 
   infoValue: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#fff",
+    color: theme.colors.text,
     marginTop: 4,
   },
 
@@ -229,24 +232,24 @@ useEffect(() => {
     width: 36,
     height: 36,
     borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.08)",
+    backgroundColor: theme.colors.glass,
     justifyContent: "center",
     alignItems: "center",
   },
 
   menu: {
-    backgroundColor: "#fff",
+    backgroundColor: theme.colors.text,
     borderRadius: 14,
     padding: 6,
   },
 
   itemText: {
     fontSize: 15,
-    color: "#111",
+    color: theme.colors.foreground,
   },
 
   destructive: {
-    color: "#FF4D4D",
+    color: theme.colors.destructive,
   },
 
 });

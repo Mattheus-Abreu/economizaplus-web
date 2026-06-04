@@ -1,24 +1,22 @@
-import theme from "@/app/themes/theme";
 import Button from "@/components/Button";
 import Screen from "@/components/Screen";
 import Input from "@/components/inputs/Input";
+import AppModal, { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
+import { useWallets } from "@/contexts/walletContext";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
-import { useWallets } from "@/contexts/walletContext";
-import { LinearGradient } from "expo-linear-gradient";
-import { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
-import AppModal from "@/components/modal/modal";
 
 type WalletType = "CASH" | "INVESTMENT" | "SAVINGS_ACCOUNT" | "CHECKING_ACCOUNT";
 
@@ -26,6 +24,8 @@ function createWallet() {
   const router = useRouter();
   const { addWallet, updateWallet } = useWallets();
   const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
 
   const params = useLocalSearchParams();
 
@@ -294,7 +294,8 @@ const walletTypes: { id: WalletType; name: string }[] = [
 }
 
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+StyleSheet.create({
   header: {
     paddingTop: 56,
     paddingHorizontal: 24,

@@ -1,15 +1,14 @@
-import theme from "@/app/themes/theme";
-import tabBarStyle from "@/styles/tabBarStyle";
+import { useAppTheme } from "@/hooks/useAppTheme";
+import { createTabBarStyle } from "@/styles/tabBarStyle";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
-import { useLinkBuilder, useTheme } from "@react-navigation/native";
-import {  LayoutChangeEvent, View } from "react-native";
-import TabBarButton from "./TabBarButton";
-import { use, useState } from "react";
+import { useState } from "react";
+import { LayoutChangeEvent, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
+import TabBarButton from "./TabBarButton";
 
 function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
-  const { colors } = useTheme();
-  const { buildHref } = useLinkBuilder();
+  const theme = useAppTheme();
+  const styles = createTabBarStyle(theme);
 
   const [dimensions, setDimensions] = useState({ width: 100, height: 20 });
   const routes = state.routes.filter(route => route.name);
@@ -29,12 +28,12 @@ function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 
 
   return (
-    <View onLayout={onTabbarLayout} style={tabBarStyle.tabbar}>
+    <View onLayout={onTabbarLayout} style={styles.tabbar}>
       <Animated.View style={[animatedStyle,{
         position: "absolute",
-        backgroundColor: "rgba(124,58,237,0.15)",
+        backgroundColor: theme.colors.primary + "30",
         borderWidth: 1,
-        borderColor: "rgba(124,58,237,0.3)",
+        borderColor: theme.colors.glass,
         borderRadius: 40,
         marginHorizontal: 12,
         height: dimensions.height - 17,

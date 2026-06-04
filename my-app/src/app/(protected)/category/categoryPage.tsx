@@ -1,3 +1,16 @@
+import CardCategory from "@/components/CardCategory";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/empty-state";
+import FloatingButton from "@/components/FloatingButton";
+import Screen from "@/components/Screen";
+import { SearchBar } from "@/components/search-bar/SearchBar";
+import { Shimmer, ShimmerGroup } from "@/components/shimmer/Shimmer";
+import { useCategory } from "@/contexts/categoryContext";
+import { useAppTheme } from "@/hooks/useAppTheme";
+import Category from "@/types/category";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { SymbolView } from "expo-symbols";
+import { useEffect, useMemo, useState } from "react";
 import {
   FlatList,
   Platform,
@@ -6,25 +19,14 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import theme from "@/app/themes/theme";
-import Screen from "@/components/Screen";
-import { FontAwesome, Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import { useCategory } from "@/contexts/categoryContext";
-import FloatingButton from "@/components/FloatingButton";
-import { useEffect, useMemo, useState } from "react";
-import { Shimmer, ShimmerGroup } from "@/components/shimmer/Shimmer";
-import CardCategory from "@/components/CardCategory";
-import Category from "@/types/category";
-import { SearchBar } from "@/components/search-bar/SearchBar";
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/empty-state";
-import { SymbolView } from "expo-symbols";
 
 function categoryPage() {
   const router = useRouter();
   const { categories } = useCategory();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [search, setSearch] = useState<string>("");
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
 
   const normalizeText = (text: string) =>
   text
@@ -133,13 +135,13 @@ function categoryPage() {
                       <SymbolView
                         name="square.grid.2x2"
                         size={60}
-                        tintColor="#fff"
+                        tintColor={theme.colors.text}
                       />
                     ) : (
                       <Ionicons
                         name="grid-outline"
                         size={60}
-                        color="#fff"
+                        color={theme.colors.text}
                       />
                     )}
                   </EmptyMedia>
@@ -162,7 +164,8 @@ function categoryPage() {
 
 export default categoryPage;
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+StyleSheet.create({
   content: {
     paddingTop: 56,
     paddingBottom: 120,
@@ -180,9 +183,9 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.06)",
+    backgroundColor: theme.colors.glass + "5",
     borderWidth: 0.5,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderColor: theme.colors.glass,
     alignItems: "center",
     justifyContent: "center",
   },

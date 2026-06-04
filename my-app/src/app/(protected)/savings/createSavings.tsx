@@ -1,15 +1,16 @@
-import theme from "@/app/themes/theme";
 import Button from "@/components/Button";
 import Screen from "@/components/Screen";
 import { CircularProgress } from "@/components/circular-progress";
 import Input from "@/components/inputs/Input";
+import AppModal, { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
 import { useGoals } from "@/contexts/goalContext";
+import { useSaving } from "@/contexts/savingContext";
+import { useWallets } from "@/contexts/walletContext";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
-import DateTimePickerModal from "react-native-modal-datetime-picker";
-import { useLocalSearchParams, useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { BaseButton } from "react-native-gesture-handler";
 import {
   ScrollView,
   StyleSheet,
@@ -17,11 +18,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { BaseButton } from "react-native-gesture-handler";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { Easing, useSharedValue, withTiming } from "react-native-reanimated";
-import { useWallets } from "@/contexts/walletContext";
-import { useSaving } from "@/contexts/savingContext";
-import { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
-import AppModal from "@/components/modal/modal";
 
 function createSavings() {
   const router = useRouter();
@@ -29,6 +28,8 @@ function createSavings() {
   const { wallets } = useWallets();
   const { goals } = useGoals();
   const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
 
   const params = useLocalSearchParams<{
     id?: string;
@@ -48,7 +49,7 @@ function createSavings() {
 
   const progress = useSharedValue(0);
 
-  const selectedGoal = goals.find((g) => g.id === goalId);
+  const selectedGoal = goals?.find((g) => g.id === goalId);
 
   useEffect(() => {
     if (!selectedGoal) {
@@ -124,7 +125,7 @@ function createSavings() {
       return;
     }
 
-    const selectedWallet = wallets.find(w => w.id === walletId);
+    const selectedWallet = wallets?.find(w => w.id === walletId);
 
     if (!selectedWallet) {
       setModal({
@@ -236,10 +237,10 @@ function createSavings() {
           <View style={styles.field}>
             <Text style={styles.fieldLabel}>Debitar da carteira</Text>
             <View style={styles.typeContainer}>
-              {wallets.length === 0 ? (
+              {wallets?.length === 0 ? (
                 <Text style={styles.emptyField}>Nenhuma carteira cadastrada</Text>
               ) : (
-                wallets.map((w) => (
+                wallets?.map((w) => (
                   <TouchableOpacity
                     key={w.id}
                     onPress={() => setWalletId(w.id)}
@@ -260,10 +261,10 @@ function createSavings() {
           <View style={styles.field}>
             <Text style={styles.fieldLabel}>Meta</Text>
             <View style={styles.typeContainer}>
-              {goals.length === 0 ? (
+              {goals?.length === 0 ? (
                 <Text style={styles.emptyField}>Nenhuma meta cadastrada</Text>
               ) : (
-                goals.map((g) => (
+                goals?.map((g) => (
                   <TouchableOpacity
                     key={g.id}
                     onPress={() => setGoalId(g.id)}
@@ -373,7 +374,8 @@ function createSavings() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+StyleSheet.create({
   header: {
     paddingTop: 56,
     paddingHorizontal: 24,
