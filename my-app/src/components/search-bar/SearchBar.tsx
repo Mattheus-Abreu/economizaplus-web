@@ -15,11 +15,11 @@ import Animated, {
   withTiming,
   interpolate,
   useAnimatedProps,
+  runOnJS,
 } from "react-native-reanimated";
 import { SymbolView } from "expo-symbols";
 import { BlurView, type BlurViewProps } from "expo-blur";
 import type { SearchBarProps } from "./SearchBar.types";
-import { scheduleOnRN } from "react-native-worklets";
 import { Ionicons } from "@expo/vector-icons";
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
@@ -208,7 +208,7 @@ export const SearchBar = ({
 
   const handleClear = () => {
     textOpacity.value = withTiming(0, { duration: 150 }, () => {
-      scheduleOnRN(setQuery, "");
+      runOnJS(setQuery)("");
       textOpacity.value = withTiming(1, { duration: 150 });
     });
 
