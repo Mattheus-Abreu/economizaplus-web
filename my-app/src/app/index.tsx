@@ -1,12 +1,8 @@
 import { Redirect } from "expo-router";
-import useAuth from "@/hooks/useAuth";
 
+// TEMP: pular login para visualizar tela de profile
 function Index() {
-  const { isLoggedIn, isReady } = useAuth();
-
-  if (!isReady) return null;
-
-  return <Redirect href={isLoggedIn ? "/(protected)/(tabs)" : "/(auth)/signin"} />;
+  return <Redirect href={"/(protected)/(tabs)/profile"} />;
 }
 
 export default Index;
