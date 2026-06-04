@@ -1,4 +1,4 @@
-import { api } from "@/api/api";
+import { api } from "@/api";
 import Button from "@/components/Button";
 import Input from "@/components/inputs/Input";
 import Logo from "@/components/Logo";
@@ -9,13 +9,13 @@ import * as Google from "expo-auth-session/providers/google";
 import { Link } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    Text,
-    View,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  View,
 } from "react-native";
-import signinStyle from "../../styles/signinStyle";
+import signinStyle from "@/styles/signinStyle";
 import theme from "../themes/theme";
 import { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
 import AppModal from "@/components/modal/modal";

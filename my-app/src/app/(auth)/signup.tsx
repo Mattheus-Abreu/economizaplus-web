@@ -1,4 +1,4 @@
-import { api } from "@/api/api";
+import { api } from "@/api";
 import Button from "@/components/Button";
 import Input from "@/components/inputs/Input";
 import Logo from "@/components/Logo";
@@ -9,13 +9,13 @@ import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import { useState } from "react";
 import {
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    Text,
-    View,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  View,
 } from "react-native";
-import signupStyle from "../../styles/signupStyle";
+import signupStyle from "@/styles/signupStyle";
 import theme from "../themes/theme";
 import AppModal, { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
 
