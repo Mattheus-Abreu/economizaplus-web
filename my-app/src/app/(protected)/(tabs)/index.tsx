@@ -13,7 +13,7 @@ import { useFonts } from "expo-font";
 import { Link, Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import {
   GestureHandlerRootView,
   ScrollView,
@@ -22,6 +22,8 @@ import { BlurCarousel } from "../../../components/carousel";
 import Icons from "../../../components/Icons";
 
 const QUICK_ACTIONS_HEIGHT = 90;
+const SURFACE_PADDING = 24;
+const GOAL_CARD_WIDTH = Dimensions.get("window").width - SURFACE_PADDING - 40;
 
 function Home() {
   const { goals } = useGoals();
@@ -60,7 +62,6 @@ function Home() {
         <StatusBar style="light" />
 
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
@@ -160,16 +161,20 @@ function Home() {
                   Nenhuma meta criada ainda
                 </Text>
               ) : (
-                <BlurCarousel
-                  data={goals ?? []}
-                  renderItem={({ item, index }: { item: Goal; index: number }) => (
-                    <CardHome
-                      item={item}
-                      fontLoaded={fontLoaded}
-                      gradientIndex={index}
-                    />
-                  )}
-                />
+                <View style={{ marginHorizontal: -SURFACE_PADDING }}>
+                  <BlurCarousel
+                    data={goals ?? []}
+                    itemWidth={GOAL_CARD_WIDTH}
+                    horizontalSpacing={SURFACE_PADDING}
+                    renderItem={({ item, index }: { item: Goal; index: number }) => (
+                      <CardHome
+                        item={item}
+                        fontLoaded={fontLoaded}
+                        gradientIndex={index}
+                      />
+                    )}
+                  />
+                </View>
               )}
           </View>
           </ShimmerGroup>
@@ -245,12 +250,13 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
   },
   surface: {
     backgroundColor: theme.colors.surface,
-    flex: 1,
     borderTopStartRadius: 36,
     borderTopEndRadius: 36,
     paddingTop: QUICK_ACTIONS_HEIGHT / 2 + 5,
     padding: 24,
+    paddingBottom: 120,
     gap: 20,
+    minHeight: Dimensions.get("window").height * 0.75,
   },
   quickActionsWrapper: {
     position: "absolute",

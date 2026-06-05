@@ -67,121 +67,121 @@ function walletPage() {
 
   const count = filteredWallets.length;
 
+  const listHeader = (
+    <>
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => router.back()}
+        >
+          <FontAwesome
+            name="arrow-left"
+            size={16}
+            color={theme.colors.textSecondary}
+          />
+        </TouchableOpacity>
+
+        <SearchBar
+          containerWidth={undefined}
+          tint={theme.colors.textSecondary}
+          placeholder="Pesquisar"
+          onSearch={(text) => setSearch(text)}
+          onClear={() => setSearch("")}
+          onSearchDone={() => setSearch("")}
+          style={{ flex: 1 }}
+        />
+      </View>
+
+      <View style={styles.hero}>
+        <Text style={styles.heroLabel}>Minhas carteiras</Text>
+        <Text style={styles.heroTitle}>Carteiras</Text>
+        <Text style={styles.heroSub}>Crie e gerencie suas carteiras</Text>
+      </View>
+
+      <View style={styles.cardContainer}>
+        <CardInsights
+          title="Saldo total"
+          subtitle={formattedBalance ?? "R$ 0,00"}
+          variant="success"
+        />
+        <CardInsights
+          title="Carteiras"
+          subtitle={`${count} ${count === 1 ? "ativa" : "ativas"}`}
+        />
+      </View>
+
+      {isLoading ? (
+        <View style={{ gap: 12 }}>
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Shimmer key={index} style={styles.walletSkeleton} />
+          ))}
+        </View>
+      ) : filteredWallets.length === 0 ? (
+        <SafeAreaView style={[styles.container, { marginTop: -90 }]}>
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia
+                variant="icon"
+                style={{
+                  backgroundColor: theme.colors.surface,
+                }}
+              >
+                {Platform.OS === "ios" ? (
+                  <SymbolView
+                    name="wallet.bifold"
+                    size={60}
+                    tintColor={theme.colors.text}
+                  />
+                ) : (
+                  <Ionicons name="wallet-outline" size={60} color={theme.colors.text} />
+                )}
+              </EmptyMedia>
+              <EmptyTitle>
+                {search
+                  ? `Nenhuma carteira encontrada para "${search}"`
+                  : "Nenhuma carteira cadastrada"}
+              </EmptyTitle>
+              <View
+                style={{
+                  position: "absolute",
+                  bottom: -260,
+                  right: -70,
+                  gap: 15,
+                  alignItems: "center",
+                }}
+              >
+                <EmptyDescription>
+                  {search
+                    ? "Tente buscar outra carteira"
+                    : "Que tal começar criando uma carteira"}
+                </EmptyDescription>
+                {!search && (
+                  <Arrow
+                    width={100}
+                    height={60}
+                    style={{ transform: [{ rotate: "20deg" }] }}
+                  />
+                )}
+              </View>
+            </EmptyHeader>
+          </Empty>
+        </SafeAreaView>
+      ) : (
+        <Text style={styles.walletsLabel}>Minhas carteiras</Text>
+      )}
+    </>
+  );
+
   return (
     <Screen>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={() => router.back()}
-          >
-            <FontAwesome
-              name="arrow-left"
-              size={16}
-              color={theme.colors.textSecondary}
-            />
-          </TouchableOpacity>
-
-          <SearchBar
-            containerWidth={undefined}
-            tint={theme.colors.textSecondary}
-            placeholder="Pesquisar"
-            onSearch={(text) => setSearch(text)}
-            onClear={() => setSearch("")}
-            onSearchDone={() => setSearch("")}
-            style={{ flex: 1 }}
-          />
-        </View>
-
-        <View style={styles.hero}>
-          <Text style={styles.heroLabel}>Minhas carteiras</Text>
-          <Text style={styles.heroTitle}>Carteiras</Text>
-          <Text style={styles.heroSub}>Crie e gerencie suas carteiras</Text>
-        </View>
-
-        <View style={styles.cardContainer}>
-          <CardInsights
-            title="Saldo total"
-            subtitle={formattedBalance ?? "R$ 0,00"}
-            variant="success"
-          />
-          <CardInsights
-            title="Carteiras"
-            subtitle={`${count} ${count === 1 ? "ativa" : "ativas"}`}
-          />
-        </View>
-
-        {isLoading ? (
-          Array.from({ length: 3 }).map((_, index) => (
-            <Shimmer key={index} style={styles.walletSkeleton} />
-          ))
-        ) : filteredWallets.length === 0 ? (
-          <SafeAreaView style={[styles.container, {marginTop: -90}]}>
-            <Empty>
-              <EmptyHeader>
-                <EmptyMedia
-                  variant="icon"
-                  style={{
-                    backgroundColor: theme.colors.surface,
-                  }}
-                >
-                  {Platform.OS === "ios" ? (
-                    <SymbolView
-                      name="wallet.bifold"
-                      size={60}
-                      tintColor={theme.colors.text}
-                    />
-                  ) : (
-                    <Ionicons name="wallet-outline" size={60} color={theme.colors.text} />
-                  )}
-                </EmptyMedia>
-                <EmptyTitle>
-                  {search
-                    ? `Nenhuma carteira encontrada para "${search}"`
-                    : "Nenhuma carteira cadastrada"}
-                </EmptyTitle>
-                <View
-                  style={{
-                    position: "absolute",
-                    bottom: -260,
-                    right: -70,
-                    gap: 15,
-                    alignItems: "center",
-                  }}
-                >
-                  <EmptyDescription>
-                    {search
-                      ? "Tente buscar outra carteira"
-                      : "Que tal começar criando uma carteira"}
-                  </EmptyDescription>
-                  {!search && (
-                    <Arrow
-                      width={100}
-                      height={60}
-                      style={{ transform: [{ rotate: "20deg" }] }}
-                    />
-                  )}
-                </View>
-              </EmptyHeader>
-            </Empty>
-          </SafeAreaView>
-        ) : (
-          <View style={styles.walletsContainer}>
-            <Text style={styles.walletsLabel}>Minhas carteiras</Text>
-            <FlatList
-              data={filteredWallets}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => <CardWallet item={item} />}
-              contentContainerStyle={{
-                gap: 12,
-                paddingTop: 8,
-                paddingBottom: 100,
-              }}
-              showsVerticalScrollIndicator={false}
-            />
-          </View>
-        )}
-      </View>
+      <FlatList
+        data={isLoading || filteredWallets.length === 0 ? [] : filteredWallets}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => <CardWallet item={item} />}
+        ListHeaderComponent={listHeader}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      />
       <FloatingButton
         style={styles.fab}
         onPress={() => router.push("/wallet/createWallet")}
@@ -196,6 +196,9 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
   StyleSheet.create({
   container: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 120,
     gap: 20,
   },
   header: {
@@ -229,6 +232,7 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     fontSize: 13,
     color: theme.colors.textSecondary,
     marginTop: 8,
+    marginBottom: 12,
     lineHeight: 18,
   },
 
@@ -256,11 +260,6 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     borderRadius: 12,
   },
 
-  walletsContainer: {
-    flex: 1,
-    gap: 12,
-  },
-
   walletsLabel: {
     fontSize: 20,
     fontWeight: "700",
@@ -268,9 +267,7 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
   },
 
   fab: {
-    position: "absolute",
-    bottom: 100,
+    bottom: 110,
     right: 20,
-    padding: 25,
   },
 });
