@@ -1,6 +1,4 @@
 import Button from "@/components/Button";
-import { Dialog } from "@/components/dialog";
-import Icons from "@/components/Icons";
 import Input from "@/components/inputs/Input";
 import AppModal, { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
 import Screen from "@/components/Screen";
@@ -12,93 +10,100 @@ import { StatusBar } from "expo-status-bar";
 import type { ComponentProps } from "react";
 import { useState } from "react";
 import {
+  LayoutAnimation,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   useWindowDimensions,
   View,
 } from "react-native";
-import {
-  BaseButton,
-  GestureHandlerRootView,
-} from "react-native-gesture-handler";
-import ColorPicker from "react-native-wheel-color-picker";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
 
 type IconName = ComponentProps<typeof FontAwesome>["name"];
+
+const PRESET_COLORS = [
+  "#EF4444", "#F97316", "#EAB308", "#22C55E", "#10B981",
+  "#14B8A6", "#06B6D4", "#3B82F6", "#6366F1", "#8B5CF6",
+  "#A855F7", "#EC4899", "#F43F5E", "#64748B", "#FBBF24",
+  "#0EA5E9", "#84CC16", "#FB923C",
+];
+
+const ICON_LIST: IconName[] = [
+  "home", "credit-card", "shopping-bag", "shopping-cart", "car", "film",
+  "line-chart", "dollar", "gamepad", "gift", "plane", "pencil",
+  "heartbeat", "cutlery", "book", "bicycle", "music", "coffee",
+  "university", "medkit", "wifi", "bolt", "leaf", "wrench",
+];
+
+const LAYOUT_ANIM = {
+  duration: 200,
+  create: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
+  update: { type: LayoutAnimation.Types.easeInEaseOut },
+  delete: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
+};
 
 function createCategory() {
   const { width } = useWindowDimensions();
   const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
   const router = useRouter();
   const { addCategory, updateCategory } = useCategory();
-  const params = useLocalSearchParams<{
-    id?: string;
-    name?: string;
-    icon?: IconName;
-    color?: string;
-  }>();
+  const params = useLocalSearchParams<{ id?: string; name?: string; icon?: IconName; color?: string }>();
   const isEditing = !!params.id;
   const theme = useAppTheme();
   const styles = createStyles(theme);
 
+  const [color, setColor] = useState(params.color ?? PRESET_COLORS[5]);
+  const [icon, setIcon] = useState<IconName>((params.icon as IconName) ?? "home");
+  const [name, setName] = useState(params.name ?? "");
 
-  const [color, setColor] = useState(params.color ?? theme.colors.text);
-  const [icon, setIcon] = useState<IconName>(
-    (params.icon as IconName) ?? "home"
-  );
-  const [name, setName] = useState(params.name ??"");
-  
+  const iconScale = useSharedValue(1);
+  const colorPulse = useSharedValue(1);
 
-  const icons: IconName[] = [
-    "home",
-    "credit-card",
-    "shopping-bag",
-    "car",
-    "film",
-    "line-chart",
-    "dollar",
-    "gamepad",
-    "gift",
-    "plane",
-    "pencil",
-  ];
+  const iconAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: iconScale.value }],
+  }));
+
+  const colorPulseStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: colorPulse.value }],
+  }));
+
+  function handleColorChange(newColor: string) {
+    LayoutAnimation.configureNext(LAYOUT_ANIM);
+    setColor(newColor);
+    colorPulse.value = withSequence(
+      withTiming(0.82, { duration: 60 }),
+      withTiming(1, { duration: 80 })
+    );
+  }
+
+  function handleIconChange(newIcon: IconName) {
+    LayoutAnimation.configureNext(LAYOUT_ANIM);
+    setIcon(newIcon);
+    iconScale.value = withSequence(
+      withTiming(0, { duration: 70 }),
+      withTiming(1, { duration: 100 })
+    );
+  }
 
   async function handleSubmit() {
-    if (!name.trim() || !icon || !color) 
+    if (!name.trim() || !icon || !color)
       return setModal({
         visible: true,
         variant: "warning",
         title: "Campos obrigatórios",
-        description: "Por favor, preencha todos os campos para continuar."
+        description: "Por favor, preencha todos os campos para continuar.",
+        buttons: [{ label: "Ok", onPress: () => setModal(MODAL_HIDDEN), variant: "secondary" }],
       });
     try {
-      if(isEditing){
-        await updateCategory(params.id!, {
-          name,
-          icon,
-          color,
-        });
-        setModal({
-          visible: true,
-          variant: "success",
-          title: "Sucesso",
-          description: "Categoria atualizada com sucesso!"
-        });
-      } else {
-        await addCategory({
-          name,
-          icon,
-          color,
-          type: "custom",
-        });
-        setModal({
-          visible: true,
-          variant: "success",
-          title: "Sucesso",
-          description: "Categoria criada com sucesso!"
-        });
-      }
+      if (isEditing) await updateCategory(params.id!, { name, icon, color });
+      else await addCategory({ name, icon, color, type: "custom" });
       router.back();
     } catch (error: any) {
       setModal({
@@ -106,25 +111,34 @@ function createCategory() {
         variant: "error",
         title: "Erro",
         description: error.message,
+        buttons: [{ label: "Fechar", onPress: () => setModal(MODAL_HIDDEN), variant: "secondary" }],
       });
     }
-
   }
+
+  const iconAreaWidth = width - 48;
+  const ICON_COLS = 6;
+  const iconTileSize = Math.floor((iconAreaWidth - (ICON_COLS - 1) * 8) / ICON_COLS);
+  const COLOR_COLS = 9;
+  const swatchSize = Math.floor((iconAreaWidth - (COLOR_COLS - 1) * 8) / COLOR_COLS);
 
   return (
     <Screen style={{ padding: 0 }}>
-      <GestureHandlerRootView>
-        <StatusBar style="light" />
+      <StatusBar style="light" />
 
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={styles.scroll}
+      >
+        {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={() => router.back()}
-          >
+          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <FontAwesome name="arrow-left" size={16} color={theme.colors.textSecondary} />
           </TouchableOpacity>
         </View>
 
+        {/* Hero */}
         <View style={styles.hero}>
           <Text style={styles.heroLabel}>
             {isEditing ? "Editar categoria" : "Criar categoria"}
@@ -139,13 +153,9 @@ function createCategory() {
           </Text>
         </View>
 
-        <View style={styles.form}>
-          <View
-            style={[
-              styles.fieldInput,
-              name.length > 0 && styles.fieldInputActive,
-            ]}
-          >
+        {/* Name field */}
+        <View style={styles.section}>
+          <View style={[styles.fieldInput, name.length > 0 && styles.fieldInputActive]}>
             <Ionicons
               name="pencil"
               size={18}
@@ -159,67 +169,62 @@ function createCategory() {
               onChangeText={setName}
             />
           </View>
-          <View>
-            <Text style={styles.fieldLabel}>Escolha um ícone</Text>
-          </View>
-          <View style={{ flexDirection: "row", gap: 10 }}>
-            {icons.map((iconName) => (
-              <TouchableOpacity
-                key={iconName}
-                onPress={() => setIcon(iconName)}
-              >
-                <FontAwesome
-                  name={iconName}
-                  size={24}
-                  color={icon === iconName ? color : "gray"}
-                />
-              </TouchableOpacity>
-            ))}
+        </View>
+
+        {/* Icon picker */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Ícone</Text>
+          <View style={styles.iconGrid}>
+            {ICON_LIST.map((iconName) => {
+              const selected = icon === iconName;
+              return (
+                <TouchableOpacity
+                  key={iconName}
+                  style={[
+                    styles.iconTile,
+                    { width: iconTileSize, height: iconTileSize },
+                    selected && { backgroundColor: color + "30", borderColor: color },
+                  ]}
+                  onPress={() => handleIconChange(iconName)}
+                  activeOpacity={0.65}
+                >
+                  <FontAwesome
+                    name={iconName}
+                    size={18}
+                    color={selected ? color : theme.colors.textSecondary}
+                  />
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
 
-        <Dialog>
-          <Dialog.Trigger>
-            <View style={[styles.field, { padding: 25 }]}>
-              <BaseButton>
-                <View style={[styles.fieldInput, styles.fieldInputActive]}>
-                  <Text style={styles.fieldLabel}>Selecione uma cor</Text>
-                </View>
-              </BaseButton>
-            </View>
-          </Dialog.Trigger>
+        {/* Color picker */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Cor</Text>
+          <View style={styles.colorGrid}>
+            {PRESET_COLORS.map((c) => {
+              const selected = color === c;
+              return (
+                <Pressable
+                  key={c}
+                  style={[
+                    styles.swatch,
+                    { width: swatchSize, height: swatchSize, backgroundColor: c },
+                    selected && styles.swatchSelected,
+                  ]}
+                  onPress={() => handleColorChange(c)}
+                >
+                  {selected && (
+                    <FontAwesome name="check" size={12} color="#fff" />
+                  )}
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
 
-          <Dialog.Backdrop blurAmount={25} backgroundColor="rgba(0,0,0,0.7)" />
-
-          <Dialog.Content>
-            <View style={[styles.content, { width: width - 48 }]}>
-              <Text style={[styles.title]}>Selecione uma cor</Text>
-
-              <Text style={[styles.subtitle]}>
-                Adicione cor as suas categorias
-              </Text>
-
-              <View style={styles.colorPicker}>
-                <ColorPicker color={color} onColorChange={setColor} />
-              </View>
-
-              <View style={styles.actions}>
-                <Dialog.Close asChild>
-                  <Pressable style={[styles.btn, styles.cancelBtn]}>
-                    <Text style={[styles.cancelText]}>Cancelar</Text>
-                  </Pressable>
-                </Dialog.Close>
-
-                <Dialog.Close asChild>
-                  <Pressable style={[styles.btn, styles.deleteBtn]}>
-                    <Text style={[styles.deleteText]}>Confirmar</Text>
-                  </Pressable>
-                </Dialog.Close>
-              </View>
-            </View>
-          </Dialog.Content>
-        </Dialog>
-
+        {/* Preview */}
         <View style={styles.dividerRow}>
           <View style={styles.divider} />
           <Text style={styles.dividerLabel}>Prévia</Text>
@@ -228,14 +233,33 @@ function createCategory() {
 
         <View style={styles.previewWrapper}>
           <View style={styles.previewCard}>
-            <Icons name={icon} label={name} color={color} />
+            <Animated.View style={[styles.previewColorBar, { backgroundColor: color }, colorPulseStyle]} />
+            <Animated.View style={[styles.previewIconWrap, { backgroundColor: color + "25" }, colorPulseStyle]}>
+              <Animated.View style={iconAnimStyle}>
+                <FontAwesome name={icon} size={20} color={color} />
+              </Animated.View>
+            </Animated.View>
+            <View style={styles.previewMiddle}>
+              <Text style={styles.previewName} numberOfLines={1}>
+                {name.trim() || "Nome da categoria"}
+              </Text>
+              <Text style={styles.previewMeta}>0 transações</Text>
+            </View>
+            <View style={styles.previewRight}>
+              <Text style={[styles.previewAmount, { color: theme.colors.textSecondary }]}>—</Text>
+            </View>
           </View>
         </View>
 
-        <View style={{ paddingHorizontal: 20, marginTop: 20 }}>
-          <Button label={isEditing ? "Salvar alterações" : "Criar categoria"} onPress={handleSubmit} />
+        {/* Submit */}
+        <View style={styles.submitWrap}>
+          <Button
+            label={isEditing ? "Salvar alterações" : "Criar categoria"}
+            onPress={handleSubmit}
+          />
         </View>
-      </GestureHandlerRootView>
+      </ScrollView>
+
       <AppModal
         visible={modal.visible}
         onClose={() => setModal(MODAL_HIDDEN)}
@@ -248,202 +272,124 @@ function createCategory() {
   );
 }
 
-const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
-StyleSheet.create({
-  header: {
-    paddingTop: 56,
-    paddingHorizontal: 24,
-    paddingBottom: 4,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: theme.colors.glass + "5",
-    borderWidth: 0.5,
-    borderColor: theme.colors.glass,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  hero: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 28,
-  },
-  heroLabel: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: theme.colors.primary,
-    letterSpacing: 1.4,
-    textTransform: "uppercase",
-    marginBottom: 8,
-  },
-  heroTitle: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: theme.colors.text,
-    lineHeight: 34,
-  },
-  heroSub: {
-    fontSize: 13,
-    color: theme.colors.textSecondary,
-    marginTop: 8,
-    lineHeight: 18,
-  },
-  form: {
-    paddingHorizontal: 24,
-    gap: 16,
-  },
-  trigger: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: theme.colors.glass + "5",
-    borderColor: theme.colors.glass,
-    borderWidth: 2,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  content: {
-    backgroundColor: theme.colors.glass + "5",
-    borderRadius: 24,
-    paddingVertical: 32,
-    paddingHorizontal: 24,
-    alignItems: "center",
-    alignSelf: "center",
-  },
-  btnText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: theme.colors.text,
-  },
-  colorPicker: {
-    width: "100%",
-    height: 200,
-    marginBottom: 100,
-  },
-  iconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: theme.colors.glass + "5",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  inlineInput: {
-    flex: 1,
-    height: 54,
-    backgroundColor: "transparent",
-    borderWidth: 0,
-    borderRadius: 0,
-    paddingHorizontal: 0,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: "600",
-    color: theme.colors.text,
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 15,
-    color: theme.colors.textSecondary,
-    marginBottom: 28,
-  },
-  actions: {
-    flexDirection: "row",
-    gap: 12,
-    width: "100%",
-  },
-  btn: {
-    flex: 1,
-    paddingVertical: 16,
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  cancelBtn: {
-    backgroundColor: theme.colors.glass + "5",
-  },
-  cancelText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#fff",
-  },
-  deleteBtn: {
-    flexDirection: "row",
-    gap: 8,
-    backgroundColor: theme.colors.primary,
-  },
-  deleteText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#fff",
-  },
-  field: {
-    gap: 6,
-  },
-  fieldLabel: {
-    fontSize: 11,
-    fontWeight: "500",
-    color: theme.colors.textSecondary,
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-    paddingLeft: 2,
-  },
-  fieldInput: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    borderRadius: 14,
-    height: 54,
-    paddingHorizontal: 16,
-    backgroundColor: "rgba(255,255,255,0.04)",
-    borderWidth: 0.5,
-    borderColor: "rgba(255,255,255,0.1)",
-  },
-  fieldInputActive: {
-    borderColor: theme.colors.primary,
-    backgroundColor: "rgba(124,58,237,0.06)",
-  },
-  dividerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 24,
-    marginTop: 28,
-    marginBottom: 16,
-    gap: 12,
-  },
-  divider: {
-    flex: 1,
-    height: 0.5,
-    backgroundColor: "rgba(255,255,255,0.08)",
-  },
-  dividerLabel: {
-    fontSize: 11,
-    fontWeight: "500",
-    color: theme.colors.textSecondary,
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-  },
-  previewWrapper: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  previewCard: {
-    borderRadius: 18,
-    alignSelf: "center",
-    alignItems: "center",
-  },
-  previewLeft: {
-    flex: 1,
-    marginRight: 16,
-  },
-  previewName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: theme.colors.text,
-  },
-});
+const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
+  StyleSheet.create({
+    scroll: { paddingBottom: 48 },
+    header: { paddingTop: 56, paddingHorizontal: 24, paddingBottom: 4 },
+    backBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 12,
+      backgroundColor: theme.colors.glass + "5",
+      borderWidth: 0.5,
+      borderColor: theme.colors.glass,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    hero: { paddingHorizontal: 24, paddingTop: 24, paddingBottom: 28 },
+    heroLabel: {
+      fontSize: 11,
+      fontWeight: "600",
+      color: theme.colors.primary,
+      letterSpacing: 1.4,
+      textTransform: "uppercase",
+      marginBottom: 8,
+    },
+    heroTitle: { fontSize: 28, fontWeight: "700", color: theme.colors.text, lineHeight: 34 },
+    heroSub: { fontSize: 13, color: theme.colors.textSecondary, marginTop: 8, lineHeight: 18 },
+    section: { paddingHorizontal: 24, marginBottom: 18, gap: 10 },
+    sectionLabel: {
+      fontSize: 11,
+      fontWeight: "600",
+      color: theme.colors.textSecondary,
+      letterSpacing: 1.2,
+      textTransform: "uppercase",
+    },
+    fieldInput: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      borderRadius: 14,
+      height: 54,
+      paddingHorizontal: 16,
+      backgroundColor: "rgba(255,255,255,0.04)",
+      borderWidth: 0.5,
+      borderColor: "rgba(255,255,255,0.1)",
+    },
+    fieldInputActive: {
+      borderColor: theme.colors.primary,
+      backgroundColor: "rgba(124,58,237,0.06)",
+    },
+    inlineInput: {
+      flex: 1,
+      height: 54,
+      backgroundColor: "transparent",
+      borderWidth: 0,
+      borderRadius: 0,
+      paddingHorizontal: 0,
+    },
+    iconGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+    iconTile: {
+      borderRadius: 10,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: "rgba(255,255,255,0.05)",
+      borderWidth: 1.5,
+      borderColor: "rgba(255,255,255,0.08)",
+    },
+    colorGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+    swatch: { borderRadius: 8, justifyContent: "center", alignItems: "center" },
+    swatchSelected: { borderWidth: 2.5, borderColor: "#fff" },
+    dividerRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 24,
+      marginBottom: 20,
+      gap: 12,
+    },
+    divider: { flex: 1, height: 0.5, backgroundColor: "rgba(255,255,255,0.08)" },
+    dividerLabel: {
+      fontSize: 11,
+      fontWeight: "500",
+      color: theme.colors.textSecondary,
+      letterSpacing: 0.8,
+      textTransform: "uppercase",
+    },
+    previewWrapper: { paddingHorizontal: 24, marginBottom: 28 },
+    previewCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: theme.colors.surface,
+      borderRadius: 18,
+      borderWidth: 0.5,
+      borderColor: "rgba(255,255,255,0.07)",
+      overflow: "hidden",
+      padding: 14,
+      gap: 12,
+    },
+    previewColorBar: {
+      position: "absolute",
+      left: 0,
+      top: 0,
+      bottom: 0,
+      width: 4,
+      borderTopLeftRadius: 18,
+      borderBottomLeftRadius: 18,
+    },
+    previewIconWrap: {
+      width: 44,
+      height: 44,
+      borderRadius: 12,
+      justifyContent: "center",
+      alignItems: "center",
+      marginLeft: 8,
+    },
+    previewMiddle: { flex: 1, gap: 3 },
+    previewName: { fontSize: 15, fontWeight: "600", color: theme.colors.text },
+    previewMeta: { fontSize: 12, color: theme.colors.textSecondary },
+    previewRight: { alignItems: "flex-end" },
+    previewAmount: { fontSize: 15, fontWeight: "700" },
+    submitWrap: { paddingHorizontal: 24 },
+  });
 
 export default createCategory;
