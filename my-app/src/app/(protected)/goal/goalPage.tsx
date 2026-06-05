@@ -230,11 +230,8 @@ StyleSheet.create({
     marginBottom: 16,
   },
   fab: {
-    position: "absolute",
-    bottom: 30,
+    bottom: 32,
     right: 20,
-    padding: 25,
-
   },
 });
 
