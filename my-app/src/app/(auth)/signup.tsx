@@ -2,9 +2,10 @@ import { api } from "@/api";
 import Button from "@/components/Button";
 import Input from "@/components/inputs/Input";
 import Logo from "@/components/Logo";
+import AppModal, { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
 import Screen from "@/components/Screen";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import useAuth from "@/hooks/useAuth";
-import signinStyle from "@/styles/signinStyle";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import { useState } from "react";
@@ -12,12 +13,10 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StyleSheet,
   Text,
   View,
 } from "react-native";
-import signupStyle from "@/styles/signupStyle";
-import theme from "../themes/theme";
-import AppModal, { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
 
 function signup() {
   const [name, setName] = useState("");
@@ -26,6 +25,8 @@ function signup() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const { signIn } = useAuth();
   const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
 
   async function handleSignup() {
     if (
@@ -79,23 +80,23 @@ function signup() {
           showsVerticalScrollIndicator={false}
         >
           <View>
-            <View style={signinStyle.header}>
-              <View style={signinStyle.logoArea}>
+            <View style={styles.header}>
+              <View style={styles.logoArea}>
                 <Logo size="lg" />
               </View>
-              <Text style={signinStyle.title}>Novo Por aqui?</Text>
-              <Text style={signinStyle.subtitle}>
+              <Text style={styles.title}>Novo Por aqui?</Text>
+              <Text style={styles.subtitle}>
                 Crie uma conta para continuar
               </Text>
             </View>
 
-            <View style={signupStyle.form}>
-              <View style={signupStyle.field}>
-                <Text style={signupStyle.fieldLabel}>nome</Text>
+            <View style={styles.form}>
+              <View style={styles.field}>
+                <Text style={styles.fieldLabel}>nome</Text>
                 <View
                   style={[
-                    signupStyle.fieldInput,
-                    name.length > 0 && signupStyle.fieldInputActive,
+                    styles.fieldInput,
+                    name.length > 0 && styles.fieldInputActive,
                   ]}
                 >
                   <FontAwesome
@@ -104,7 +105,7 @@ function signup() {
                     color={name.length > 0 ? theme.colors.primary : "#94A3B8"}
                   />
                   <Input
-                    style={signupStyle.inlineInput}
+                    style={styles.inlineInput}
                     placeholder="Nome"
                     placeholderTextColor={theme.colors.textSecondary}
                     value={name}
@@ -112,12 +113,12 @@ function signup() {
                   />
                 </View>
               </View>
-              <View style={signupStyle.field}>
-                <Text style={signupStyle.fieldLabel}>email</Text>
+              <View style={styles.field}>
+                <Text style={styles.fieldLabel}>email</Text>
                 <View
                   style={[
-                    signupStyle.fieldInput,
-                    email.length > 0 && signupStyle.fieldInputActive,
+                    styles.fieldInput,
+                    email.length > 0 && styles.fieldInputActive,
                   ]}
                 >
                   <FontAwesome
@@ -126,7 +127,7 @@ function signup() {
                     color={email.length > 0 ? theme.colors.primary : "#94A3B8"}
                   />
                   <Input
-                    style={signupStyle.inlineInput}
+                    style={styles.inlineInput}
                     placeholder="Ex.: fulano@example.com"
                     placeholderTextColor={theme.colors.textSecondary}
                     keyboardType="email-address"
@@ -135,12 +136,12 @@ function signup() {
                   />
                 </View>
               </View>
-              <View style={signupStyle.field}>
-                <Text style={signupStyle.fieldLabel}>senha</Text>
+              <View style={styles.field}>
+                <Text style={styles.fieldLabel}>senha</Text>
                 <View
                   style={[
-                    signupStyle.fieldInput,
-                    password.length > 0 && signupStyle.fieldInputActive,
+                    styles.fieldInput,
+                    password.length > 0 && styles.fieldInputActive,
                   ]}
                 >
                   <Ionicons
@@ -151,7 +152,7 @@ function signup() {
                     }
                   />
                   <Input
-                    style={signupStyle.inlineInput}
+                    style={styles.inlineInput}
                     placeholder="Senha"
                     placeholderTextColor={theme.colors.textSecondary}
                     secureTextEntry
@@ -160,12 +161,12 @@ function signup() {
                   />
                 </View>
               </View>
-              <View style={signupStyle.field}>
-                <Text style={signupStyle.fieldLabel}>confirmar senha</Text>
+              <View style={styles.field}>
+                <Text style={styles.fieldLabel}>confirmar senha</Text>
                 <View
                   style={[
-                    signupStyle.fieldInput,
-                    confirmPassword.length > 0 && signupStyle.fieldInputActive,
+                    styles.fieldInput,
+                    confirmPassword.length > 0 && styles.fieldInputActive,
                   ]}
                 >
                   <Ionicons
@@ -178,7 +179,7 @@ function signup() {
                     }
                   />
                   <Input
-                    style={signupStyle.inlineInput}
+                    style={styles.inlineInput}
                     placeholder="Confirmar Senha"
                     placeholderTextColor={theme.colors.textSecondary}
                     secureTextEntry
@@ -190,9 +191,9 @@ function signup() {
               <Button label="Cadastrar" onPress={handleSignup} />
             </View>
 
-            <Text style={signupStyle.footerText}>
+            <Text style={styles.footerText}>
               Já tem conta?{" "}
-              <Link href="/signin" style={signupStyle.footerLink}>
+              <Link href="/signin" style={styles.footerLink}>
                 Entre aqui
               </Link>
             </Text>
@@ -210,5 +211,89 @@ function signup() {
     </Screen>
   );
 }
+
+const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
+  StyleSheet.create({
+    screen: {
+    padding: 24,
+    justifyContent: "center",
+  },
+  logoArea: {
+    alignItems: "center",
+    marginBottom: 36,
+  },
+  logo:{
+    paddingTop: 20,
+    paddingBottom: 20
+  },
+  header:{
+    paddingTop: 100,
+    paddingBottom: 30,
+    justifyContent: "center",
+    alignItems:"center"
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: theme.colors.text,
+    lineHeight: 34,
+  },
+  subtitle:{
+    fontSize: theme.fontSize.text,
+    fontWeight: 400,
+    color: theme.colors.textSecondary
+  },
+  illustration: {
+    resizeMode: "contain",
+    marginTop: 30,
+  },
+  form: {
+    marginTop: 24,
+    gap: 16,
+  },
+  field: {
+    gap: 6,
+  },
+  fieldLabel: {
+    fontSize: 11,
+    fontWeight: "500",
+    color: theme.colors.textSecondary,
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    paddingLeft: 2,
+  },
+  fieldInput: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderRadius: 14,
+    height: 54,
+    paddingHorizontal: 16,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    borderWidth: 0.5,
+    borderColor: "rgba(255,255,255,0.1)",
+  },
+  fieldInputActive: {
+    borderColor: theme.colors.primary,
+    backgroundColor: "rgba(124,58,237,0.06)",
+  },
+    inlineInput: {
+    flex: 1,
+    height: 54,
+    backgroundColor: "transparent",
+    borderWidth: 0,
+    borderRadius: 0,
+    paddingHorizontal: 0,
+  },
+  footerText: {
+    textAlign: "center",
+    marginTop: 24,
+    color: "#d4dee6",
+  },
+  footerLink: {
+    color: theme.colors.primary,
+    fontWeight: 700,
+  },
+  })
 
 export default signup;

@@ -1,4 +1,5 @@
-import React, { createContext, ReactNode, useMemo } from "react";
+import { useAppTheme } from "@/hooks/useAppTheme";
+import React, { createContext, useMemo } from "react";
 import {
   StyleSheet,
   Text,
@@ -27,6 +28,8 @@ export const Empty: React.FC<IEmptyProps> = ({
   variant = "default",
   style,
 }) => {
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
   const contextValue = useMemo<IEmptyContextValue>(
     () => ({
       variant,
@@ -52,6 +55,8 @@ export const Empty: React.FC<IEmptyProps> = ({
 // ==================== EMPTY HEADER ====================
 
 export const EmptyHeader: React.FC<IEmptyHeader> = ({ children, style }) => {
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
   return <View style={[styles.emptyHeader, style]}>{children}</View>;
 };
 
@@ -62,6 +67,8 @@ export const EmptyMedia: React.FC<IEmptyMedia> = ({
   variant = "icon",
   style,
 }) => {
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
   return (
     <View
       style={[
@@ -78,6 +85,8 @@ export const EmptyMedia: React.FC<IEmptyMedia> = ({
 // ==================== EMPTY TITLE ====================
 
 export const EmptyTitle: React.FC<IEmptyTitle> = ({ children, style }) => {
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
   return <Text style={[styles.emptyTitle, style]}>{children}</Text>;
 };
 
@@ -87,12 +96,16 @@ export const EmptyDescription: React.FC<IEmptyDescription> = ({
   children,
   style,
 }) => {
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
   return <Text style={[styles.emptyDescription, style]}>{children}</Text>;
 };
 
 // ==================== EMPTY CONTENT ====================
 
 export const EmptyContent: React.FC<IEmptyContent> = ({ children, style }) => {
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
   return <View style={[styles.emptyContent, style]}>{children}</View>;
 };
 
@@ -125,7 +138,8 @@ export const EmptyButton: React.FC<IButton> = ({
 };
 
 // ==================== ICON CLOUD COMPONENT ====================
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+  StyleSheet.create({
   empty: {
     // backgroundColor: "transparent",
     // borderRadius: 16,
@@ -136,7 +150,7 @@ const styles = StyleSheet.create({
   } as ViewStyle,
   emptyOutline: {
     borderWidth: 2,
-    borderColor: "#333333",
+    borderColor: theme.colors.glass,
     borderStyle: "dashed",
   } as ViewStyle,
 
@@ -157,7 +171,7 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 24,
-    backgroundColor: "#1a1a1a",
+    backgroundColor: theme.colors.surface,
     alignItems: "center",
     justifyContent: "center",
   } as ViewStyle,
@@ -166,7 +180,7 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 28,
     fontWeight: "600",
-    color: "#ffffff",
+    color: theme.colors.text,
     marginBottom: 16,
     textAlign: "center",
   } as TextStyle,
@@ -174,7 +188,7 @@ const styles = StyleSheet.create({
   // Empty description
   emptyDescription: {
     fontSize: 16,
-    color: "#999999",
+    color: theme.colors.textSecondary,
     textAlign: "center",
     lineHeight: 24,
     paddingHorizontal: 20,

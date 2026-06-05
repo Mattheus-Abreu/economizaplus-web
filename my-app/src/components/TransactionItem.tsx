@@ -1,11 +1,11 @@
-import theme from "@/app/themes/theme";
 import { useTransactions } from "@/contexts/transactionContext";
-import { useRouter } from "expo-router";
-import { StyleSheet, Text, View } from "react-native";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
 import Dropdown from "./dropdown";
 import AppModal, { MODAL_HIDDEN, ModalConfig } from "./modal/modal";
-import { useState } from "react";
 
 type Transaction = {
   id: string;
@@ -28,6 +28,8 @@ export default function TransactionItem({ item }: Props) {
   const { deleteTransaction } = useTransactions();
   const router = useRouter();
   const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
 
   function getColor(type: string) {
     if (type === "INCOME") return "#22C55E";
@@ -154,7 +156,8 @@ export default function TransactionItem({ item }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+StyleSheet.create({
   row: {
     flexDirection: "row",
     justifyContent: "space-between",

@@ -1,7 +1,8 @@
-import theme from "@/app/themes/theme";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import { StyleSheet } from "react-native";
 
-const homeStyle = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+StyleSheet.create({
     container:{
         flexDirection: 'row',
         justifyContent: 'space-between',  
@@ -14,4 +15,4 @@ const homeStyle = StyleSheet.create({
     }
 });
 
-export default homeStyle;
+export default createStyles;

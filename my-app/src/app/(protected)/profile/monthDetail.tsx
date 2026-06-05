@@ -1,5 +1,5 @@
-import theme from "@/app/themes/theme";
 import Screen from "@/components/Screen";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import { useCategory } from "@/contexts/categoryContext";
 import { useTransactions } from "@/contexts/transactionContext";
 import { MOCK_CATEGORIES, MOCK_MONTHLY_TOTALS, MOCK_TRANSACTIONS } from "@/mocks/profileMocks";
@@ -40,6 +40,8 @@ const chartMax = Math.max(...MOCK_MONTHLY_TOTALS.map((m) => m.total));
 
 export default function MonthDetail() {
   const router = useRouter();
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
   const { transactions } = useTransactions();
   const { categories } = useCategory();
 
@@ -333,7 +335,8 @@ export default function MonthDetail() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
+  StyleSheet.create({
   headerGradient: {
     paddingTop: 56,
     paddingBottom: 40,

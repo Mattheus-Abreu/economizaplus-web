@@ -1,5 +1,6 @@
-import theme from "@/app/themes/theme";
 import Screen from "@/components/Screen";
+import { useTheme } from "@/components/theme-switch/hooks";
+import { AnimationType } from "@/components/theme-switch/types";
 import {
   MOCK_CATEGORIES,
   MOCK_MONTHLY_TOTALS,
@@ -71,6 +72,8 @@ const chartMax = Math.max(...MOCK_MONTHLY_TOTALS.map((m) => m.total));
 
 function profile() {
   const router = useRouter();
+  const { colors, toggleTheme, isDark } = useTheme();
+  const styles = createStyles(colors);
 
   const [monthIdx, setMonthIdx] = useState(MOCK_MONTHLY_TOTALS.length - 1);
   const currentMonth = MOCK_MONTHLY_TOTALS[monthIdx];
@@ -167,8 +170,20 @@ function profile() {
             <TouchableOpacity style={styles.editBtn}>
               <Text style={styles.editBtnText}>Editar</Text>
             </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.iconBtn}
+              onPress={(e) =>
+                toggleTheme({
+                  animationType: isDark ? AnimationType.CircularInverted : AnimationType.Circular,
+                  touchX: e.nativeEvent.pageX,
+                  touchY: e.nativeEvent.pageY,
+                })
+              }
+            >
+              <Ionicons name={isDark ? "moon" : "sunny"} size={20} color={colors.text} />
+            </TouchableOpacity>
             <TouchableOpacity style={styles.iconBtn}>
-              <Ionicons name="settings-outline" size={20} color={theme.colors.text} />
+              <Ionicons name="settings-outline" size={20} color={colors.text} />
             </TouchableOpacity>
           </View>
         </View>
@@ -222,7 +237,7 @@ function profile() {
             onPress={goToPrev}
             disabled={monthIdx === 0}
           >
-            <FontAwesome name="chevron-left" size={13} color={monthIdx === 0 ? "rgba(255,255,255,0.2)" : theme.colors.text} />
+            <FontAwesome name="chevron-left" size={13} color={monthIdx === 0 ? "rgba(255,255,255,0.2)" : colors.text} />
           </TouchableOpacity>
 
           <View style={styles.monthLabelWrap}>
@@ -241,7 +256,7 @@ function profile() {
             onPress={goToNext}
             disabled={monthIdx === MOCK_MONTHLY_TOTALS.length - 1}
           >
-            <FontAwesome name="chevron-right" size={13} color={monthIdx === MOCK_MONTHLY_TOTALS.length - 1 ? "rgba(255,255,255,0.2)" : theme.colors.text} />
+            <FontAwesome name="chevron-right" size={13} color={monthIdx === MOCK_MONTHLY_TOTALS.length - 1 ? "rgba(255,255,255,0.2)" : colors.text} />
           </TouchableOpacity>
         </View>
 
@@ -403,7 +418,7 @@ function profile() {
                     <FontAwesome
                       name={item.icon as any}
                       size={12}
-                      color={theme.colors.textSecondary}
+                      color={colors.textSecondary}
                       style={{ width: 14 }}
                     />
                     <Text style={styles.payLabel} numberOfLines={1}>{item.label}</Text>
@@ -422,7 +437,7 @@ function profile() {
             </View>
 
             <View style={[styles.card, styles.planCard]}>
-              <Ionicons name="pricetag-outline" size={32} color={theme.colors.text} />
+              <Ionicons name="pricetag-outline" size={32} color={colors.text} />
               <Text style={styles.planName}>{USER.plan}</Text>
               <Text style={styles.cardSublabel}>Meu plano</Text>
             </View>
@@ -434,7 +449,8 @@ function profile() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
+  StyleSheet.create({
   // Header
   header: {
     flexDirection: "row",
@@ -444,7 +460,7 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingBottom: 10,
   },
-  headerTitle: { fontSize: 28, fontWeight: "700", color: theme.colors.text },
+  headerTitle: { fontSize: 28, fontWeight: "700", color: colors.text },
   headerActions: { flexDirection: "row", alignItems: "center", gap: 10 },
   editBtn: {
     paddingHorizontal: 18,
@@ -453,7 +469,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.3)",
   },
-  editBtnText: { color: theme.colors.text, fontSize: 14, fontWeight: "500" },
+  editBtnText: { color: colors.text, fontSize: 14, fontWeight: "500" },
   iconBtn: {
     width: 40, height: 40, borderRadius: 20,
     backgroundColor: "rgba(255,255,255,0.08)",
@@ -478,30 +494,30 @@ const styles = StyleSheet.create({
   pillIncome:  { backgroundColor: "rgba(34,197,94,0.1)",  borderColor: "rgba(34,197,94,0.3)" },
   pillExpense: { backgroundColor: "rgba(244,63,94,0.1)",  borderColor: "rgba(244,63,94,0.3)" },
   pillIconWrap: { width: 18, height: 18, borderRadius: 9, alignItems: "center", justifyContent: "center" },
-  pillText: { fontSize: 12, fontWeight: "600", color: theme.colors.text },
+  pillText: { fontSize: 12, fontWeight: "600", color: colors.text },
   avatarBorder: {
     width: 120, height: 120, borderRadius: 60,
-    borderWidth: 3, borderColor: theme.colors.primary, overflow: "hidden",
+    borderWidth: 3, borderColor: colors.primary, overflow: "hidden",
   },
   avatarCircle: { flex: 1, backgroundColor: "#2D1B69", alignItems: "center", justifyContent: "center" },
-  avatarInitials: { fontSize: 40, fontWeight: "700", color: theme.colors.text },
+  avatarInitials: { fontSize: 40, fontWeight: "700", color: colors.text },
 
   // User info
   userInfo: {
     alignItems: "center", paddingHorizontal: 20,
     marginTop: 14, gap: 4, marginBottom: 20,
   },
-  userName: { fontSize: 30, fontWeight: "800", color: theme.colors.text },
-  userMeta: { fontSize: 13, color: theme.colors.textSecondary },
-  userMetaBold: { fontWeight: "700", color: theme.colors.text },
+  userName: { fontSize: 30, fontWeight: "800", color: colors.text },
+  userMeta: { fontSize: 13, color: colors.textSecondary },
+  userMetaBold: { fontWeight: "700", color: colors.text },
 
   // Tab row
   tabRow: {
     flexDirection: "row", alignItems: "center",
     paddingHorizontal: 20, gap: 12, marginBottom: 12,
   },
-  tabText: { fontSize: 13, color: theme.colors.textSecondary, fontWeight: "500" },
-  tabActive: { color: theme.colors.text, fontWeight: "600" },
+  tabText: { fontSize: 13, color: colors.textSecondary, fontWeight: "500" },
+  tabActive: { color: colors.text, fontWeight: "600" },
   tabLine: { flex: 1, height: 1, backgroundColor: "rgba(255,255,255,0.1)" },
 
   // Month selector
@@ -522,7 +538,7 @@ const styles = StyleSheet.create({
   monthArrowDisabled: { opacity: 0.3 },
   monthLabelWrap: { flex: 1, alignItems: "center", overflow: "hidden" },
   monthSelectorLabel: {
-    fontSize: 15, fontWeight: "700", color: theme.colors.text,
+    fontSize: 15, fontWeight: "700", color: colors.text,
     textTransform: "capitalize",
   },
 
@@ -531,7 +547,7 @@ const styles = StyleSheet.create({
   gridRow: { flexDirection: "row", gap: 12 },
 
   // Card base
-  card: { backgroundColor: theme.colors.surface, borderRadius: 22, padding: 16 },
+  card: { backgroundColor: colors.surface, borderRadius: 22, padding: 16 },
 
   // Chart card
   chartHeader: {
@@ -542,7 +558,7 @@ const styles = StyleSheet.create({
   },
   variationBadge: { alignItems: "flex-end", gap: 2 },
   variationText: { fontSize: 15, fontWeight: "700" },
-  variationSub: { fontSize: 11, color: theme.colors.textSecondary },
+  variationSub: { fontSize: 11, color: colors.textSecondary },
   chartWrap: {
     alignItems: "flex-end",
     gap: BAR_GAP,
@@ -555,18 +571,18 @@ const styles = StyleSheet.create({
   },
   chartBarWrap: { width: "100%", justifyContent: "flex-end", alignItems: "center" },
   chartBar: { width: "100%", borderRadius: 6, minHeight: 6 },
-  chartMonthLabel: { fontSize: 11, color: theme.colors.textSecondary, fontWeight: "500" },
+  chartMonthLabel: { fontSize: 11, color: colors.textSecondary, fontWeight: "500" },
   chartMonthLabelActive: { color: "#fff", fontWeight: "700" },
 
   // Gastos card
-  cardHeading: { fontSize: 20, fontWeight: "700", color: theme.colors.text },
-  cardSublabel: { fontSize: 15, color: theme.colors.textSecondary },
+  cardHeading: { fontSize: 20, fontWeight: "700", color: colors.text },
+  cardSublabel: { fontSize: 15, color: colors.textSecondary },
   amountLine: {
     flexDirection: "row", alignItems: "baseline",
     gap: 5, marginTop: 8, marginBottom: 4, flexWrap: "wrap",
   },
-  amountSm: { fontSize: 20, fontWeight: "700", color: theme.colors.text },
-  amountMd: { fontSize: 20, fontWeight: "700", color: theme.colors.text },
+  amountSm: { fontSize: 20, fontWeight: "700", color: colors.text },
+  amountMd: { fontSize: 20, fontWeight: "700", color: colors.text },
   tagVariation: { fontSize: 13, fontWeight: "600" },
   tagGreen: { fontSize: 13, fontWeight: "600", color: "#22C55E" },
   bars: { flexDirection: "row", gap: 4, marginTop: 10, height: 7 },
@@ -595,18 +611,18 @@ const styles = StyleSheet.create({
   miniCardType: { fontSize: 13, color: "rgba(255,255,255,0.7)" },
 
   // Upcoming
-  upcomingTitle: { fontSize: 20, fontWeight: "700", color: theme.colors.text },
+  upcomingTitle: { fontSize: 20, fontWeight: "700", color: colors.text },
   payRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   payLeft: { flexDirection: "row", alignItems: "center", gap: 6, flex: 1 },
-  payLabel: { fontSize: 13, color: theme.colors.text, flex: 1 },
-  payDate: { fontSize: 13, color: theme.colors.textSecondary, fontWeight: "500" },
+  payLabel: { fontSize: 13, color: colors.text, flex: 1 },
+  payDate: { fontSize: 13, color: colors.textSecondary, fontWeight: "500" },
 
   // Plan card
   planCard: {
     flex: 1, aspectRatio: 1, alignSelf: "flex-start",
     backgroundColor: "#1F2937", justifyContent: "flex-end", gap: 4,
   },
-  planName: { fontSize: 22, fontWeight: "800", color: theme.colors.text, marginTop: 8 },
+  planName: { fontSize: 22, fontWeight: "800", color: colors.text, marginTop: 8 },
 });
 
 export default profile;

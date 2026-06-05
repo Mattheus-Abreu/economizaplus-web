@@ -1,14 +1,14 @@
 import Dropdown from "@/components/dropdown";
+import { useCategory } from "@/contexts/categoryContext";
+import { useGoals } from "@/contexts/goalContext";
 import { useTransactions } from "@/contexts/transactionContext";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import Transaction from "@/types/transaction";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { MODAL_HIDDEN, ModalConfig } from "./modal/modal";
-import AppModal from "./modal/modal";
-import { useCategory } from "@/contexts/categoryContext";
-import theme from "@/app/themes/theme";
+import AppModal, { MODAL_HIDDEN, ModalConfig } from "./modal/modal";
 
 type Props = {
   item: Transaction;
@@ -18,11 +18,18 @@ function CardTransaction({ item }: Props) {
   const router = useRouter();
   const { deleteTransaction } = useTransactions();
   const { categories } = useCategory();
+  const { goals } = useGoals();
   const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
 
   const category = useMemo(() => {
     return (categories ?? []).find((c) => c.id === item.categoryId);
   }, [categories, item.categoryId]);
+
+  const goal = useMemo(() => {
+    return goals?.find(g => g.id === item.goalId);
+  }, [goals, item.goalId]);
 
   function formatAmount(value: number): string {
     if (!value) return "–";
@@ -39,7 +46,7 @@ function CardTransaction({ item }: Props) {
       case "EXPENSE":
         return "#F43F5E";
       case "TRANSFER":
-        return "#7C3AED";
+        return "#FF9800";
       default:
         return "#fff";
     }
@@ -153,11 +160,13 @@ function CardTransaction({ item }: Props) {
 
         <View style={styles.content}>
           <Text style={styles.title}>
-            {category?.name ?? item.description}
+            {category?.name ?? goal?.name ?? item.description}
           </Text>
 
-          {item.description && (
-            <Text style={styles.subtitle}>{item.description}</Text>
+          {(goal?.description || item.description) && (
+            <Text style={styles.subtitle}>
+              {goal?.description || item.description}
+            </Text>
           )}
 
           <View style={styles.metaRow}>
@@ -170,20 +179,20 @@ function CardTransaction({ item }: Props) {
         <View style={styles.right}>
           <Dropdown>
             <Dropdown.Trigger style={styles.trigger}>
-              <Ionicons name="ellipsis-horizontal" size={18} color="#fff" />
+              <Ionicons name="ellipsis-horizontal" size={18} color={theme.colors.text} />
             </Dropdown.Trigger>
 
             <Dropdown.Content style={styles.menu}>
               <Dropdown.Item onPress={handleEdit}>
                 <Text style={styles.itemText}>Editar</Text>
-                <Ionicons name="pencil" size={16} color="#111" />
+                <Ionicons name="pencil" size={16} color={theme.colors.foreground}/>
               </Dropdown.Item>
 
               <Dropdown.Item onPress={handleDelete}>
                 <Text style={[styles.itemText, styles.destructive]}>
                   Deletar
                 </Text>
-                <Ionicons name="trash" size={16} color="#EF4444" />
+                <Ionicons name="trash" size={16} color={theme.colors.destructive} />
               </Dropdown.Item>
             </Dropdown.Content>
           </Dropdown>
@@ -211,13 +220,14 @@ function CardTransaction({ item }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+StyleSheet.create({
   card: {
     borderRadius: 20,
     padding: 18,
-    backgroundColor: "rgba(255,255,255,0.04)",
+    backgroundColor: theme.colors.surface,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.06)",
+    borderColor: theme.colors.glass,
     overflow: "hidden",
   },
 
@@ -263,7 +273,7 @@ const styles = StyleSheet.create({
 
   subtitle: {
     fontSize: 13,
-    color: "rgba(255,255,255,0.6)",
+    color: theme.colors.textSecondary,
   },
 
   metaRow: {
@@ -275,7 +285,7 @@ const styles = StyleSheet.create({
 
   date: {
     fontSize: 12,
-    color: "rgba(255,255,255,0.4)",
+    color: theme.colors.textSecondary,
   },
 
   right: {
@@ -292,25 +302,25 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 10,
-    backgroundColor: "rgba(255,255,255,0.08)",
+    backgroundColor: theme.colors.glass,
     justifyContent: "center",
     alignItems: "center",
   },
 
   menu: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: theme.colors.surface,
     borderRadius: 14,
     paddingVertical: 6,
   },
 
   itemText: {
     fontSize: 15,
-    color: "#111",
+    color: theme.colors.foreground,
     fontWeight: "500",
   },
 
   destructive: {
-    color: "#FF4D4D",
+    color: theme.colors.destructive,
   },
 });
 

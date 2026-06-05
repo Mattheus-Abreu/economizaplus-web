@@ -1,7 +1,8 @@
+import { useAppTheme } from "@/hooks/useAppTheme";
 import { StyleSheet } from "react-native";
-import theme from "../app/themes/theme";
 
-const checkboxStyle = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -25,4 +26,4 @@ const checkboxStyle = StyleSheet.create({
   },
 });
 
-export default checkboxStyle;
+export default createStyles;

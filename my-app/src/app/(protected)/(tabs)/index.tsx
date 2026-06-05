@@ -1,38 +1,36 @@
-import theme from "@/app/themes/theme";
 import CardHome from "@/components/CardHome";
 import Logo from "@/components/Logo";
+import AppModal, { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
 import QuickActions from "@/components/QuickActions";
 import Screen from "@/components/Screen";
+import { Shimmer, ShimmerGroup } from "@/components/shimmer/Shimmer";
+import { useCategory } from "@/contexts/categoryContext";
 import { useGoals } from "@/contexts/goalContext";
-import useAuth from "@/hooks/useAuth";
+import { useAppTheme } from "@/hooks/useAppTheme";
+import { useBalance } from "@/hooks/useBalance";
 import Goal from "@/types/goal";
-import { FontAwesome } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
-import { Link, Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { Link, Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { useEffect, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import {
-    GestureHandlerRootView,
-    ScrollView,
+  GestureHandlerRootView,
+  ScrollView,
 } from "react-native-gesture-handler";
 import { BlurCarousel } from "../../../components/carousel";
 import Icons from "../../../components/Icons";
-import { useBalance } from "@/hooks/useBalance";
-import { useEffect, useState } from "react";
-import { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
-import AppModal from "@/components/modal/modal";
-import { useCategory } from "@/contexts/categoryContext";
-import { ShimmerGroup, Shimmer } from "@/components/shimmer/Shimmer";
 
 const QUICK_ACTIONS_HEIGHT = 90;
 
 function Home() {
-  const { signOut } = useAuth();
   const { goals } = useGoals();
   const { categories } = useCategory();
   const { formattedBalance } = useBalance();
   const router = useRouter();
   const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
 
   const [fontLoaded] = useFonts({
     InterRegular: require("@/assets/fonts/Inter-Regular.otf"),
@@ -56,30 +54,6 @@ function Home() {
     return () => clearTimeout(timeout);
   }, [goals, categories]);
 
-  function handleLogout() {
-    setModal({
-      visible: true,
-      variant: "warning",
-      title: "Sair",
-      description: "Tem certeza que deseja sair da sua conta?",
-      buttons: [
-        {
-          label: "Cancelar",
-          onPress: () => setModal(MODAL_HIDDEN),
-          variant: "secondary",
-        },
-        {
-          label: "Sair",
-          onPress: () => {
-            signOut();
-            setModal(MODAL_HIDDEN);
-          },
-          variant: "danger",
-        },
-      ],
-    })
-  }
-
   return (
     <Screen style={{ padding: 0 }}>
       <GestureHandlerRootView>
@@ -100,13 +74,7 @@ function Home() {
           <View style={styles.header}>
             <Logo size="md" />
 
-            <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
-              <FontAwesome
-                name="sign-out"
-                size={20}
-                color={theme.colors.textSecondary}
-              />
-            </TouchableOpacity>
+            
           </View>
 
           <View style={styles.balanceArea}>
@@ -223,7 +191,8 @@ function Home() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
+  StyleSheet.create({
   header: {
     paddingHorizontal: 20,
     paddingTop: 60,

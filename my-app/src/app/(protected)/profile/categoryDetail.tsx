@@ -1,5 +1,5 @@
-import theme from "@/app/themes/theme";
 import Screen from "@/components/Screen";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import { useCategory } from "@/contexts/categoryContext";
 import { useTransactions } from "@/contexts/transactionContext";
 import { MOCK_TRANSACTIONS } from "@/mocks/profileMocks";
@@ -32,6 +32,8 @@ function formatDate(dateStr: string) {
 
 export default function CategoryDetail() {
   const router = useRouter();
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
   const { transactions } = useTransactions();
   const { categories } = useCategory();
 
@@ -170,7 +172,8 @@ function darken(hex: string): string {
   return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
+  StyleSheet.create({
   headerGradient: {
     paddingTop: 56,
     paddingBottom: 40,

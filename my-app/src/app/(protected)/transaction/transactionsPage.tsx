@@ -1,8 +1,6 @@
-import theme from "@/app/themes/theme";
 import Arrow from "@/assets/images/Arrow.svg";
 import CardTransaction from "@/components/CardTransaction";
 import { ChipGroup } from "@/components/chip-group/Chip";
-import { SCREEN_WIDTH } from "@/components/const";
 import {
   Empty,
   EmptyDescription,
@@ -16,6 +14,7 @@ import { SearchBar } from "@/components/search-bar/SearchBar";
 import { Shimmer } from "@/components/shimmer/Shimmer";
 import { useCategory } from "@/contexts/categoryContext";
 import { useTransactions } from "@/contexts/transactionContext";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
@@ -34,6 +33,8 @@ function TransactionPage() {
   const router = useRouter();
   const { transactions } = useTransactions();
   const { categories } = useCategory();
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
 
   const { type } = useLocalSearchParams();
   const activeType = type ?? "all";
@@ -154,14 +155,14 @@ function TransactionPage() {
                       <SymbolView
                         name="arrow.up.arrow.down"
                         size={60}
-                        tintColor="#fff"
+                        tintColor={theme.colors.text}
                       />
                     ) : (
-                      <Ionicons name="swap-vertical" size={60} color="#fff" />
+                      <Ionicons name="swap-vertical" size={60} color={theme.colors.text} />
                     )}
                   </EmptyMedia>
 
-                  <EmptyTitle>{search ? `Nenhuma resultado para "${search}"` : `Nenhuma transação ${activeType === "all" ? `(${activeType})` : "" }`}</EmptyTitle>
+                  <EmptyTitle>{search ? `Nenhuma resultado para "${search}"` : `Nenhuma transação ${activeType === "" ? `(${activeType})` : "" }`}</EmptyTitle>
 
                   <View style={styles.emptyContent}>
                     <EmptyDescription>
@@ -201,7 +202,8 @@ function TransactionPage() {
 
 export default TransactionPage;
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+StyleSheet.create({
   container: {
     flex: 1,
     gap: 16,
@@ -219,9 +221,9 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.06)",
+    backgroundColor: theme.colors.glass + "5",
     borderWidth: 0.5,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderColor: theme.colors.glass,
     alignItems: "center",
     justifyContent: "center",
   },

@@ -1,30 +1,29 @@
+import Button from "@/components/Button";
+import { Dialog } from "@/components/dialog";
+import Icons from "@/components/Icons";
+import Input from "@/components/inputs/Input";
+import AppModal, { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
+import Screen from "@/components/Screen";
+import { useCategory } from "@/contexts/categoryContext";
+import { useAppTheme } from "@/hooks/useAppTheme";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import type { ComponentProps } from "react";
+import { useState } from "react";
 import {
-  View,
+  Pressable,
   StyleSheet,
   Text,
-  Pressable,
-  useWindowDimensions,
   TouchableOpacity,
+  useWindowDimensions,
+  View,
 } from "react-native";
 import {
   BaseButton,
   GestureHandlerRootView,
 } from "react-native-gesture-handler";
-import { StatusBar } from "expo-status-bar";
-import { Dialog } from "@/components/dialog";
 import ColorPicker from "react-native-wheel-color-picker";
-import { FontAwesome, Ionicons } from "@expo/vector-icons";
-import type { ComponentProps } from "react";
-import { useState } from "react";
-import Input from "@/components/inputs/Input";
-import Button from "@/components/Button";
-import theme from "@/app/themes/theme";
-import Icons from "@/components/Icons";
-import { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
-import AppModal from "@/components/modal/modal";
-import Screen from "@/components/Screen";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useCategory } from "@/contexts/categoryContext";
 
 type IconName = ComponentProps<typeof FontAwesome>["name"];
 
@@ -40,9 +39,11 @@ function createCategory() {
     color?: string;
   }>();
   const isEditing = !!params.id;
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
 
 
-  const [color, setColor] = useState(params.color ?? "#fff");
+  const [color, setColor] = useState(params.color ?? theme.colors.text);
   const [icon, setIcon] = useState<IconName>(
     (params.icon as IconName) ?? "home"
   );
@@ -120,7 +121,7 @@ function createCategory() {
             style={styles.backBtn}
             onPress={() => router.back()}
           >
-            <FontAwesome name="arrow-left" size={16} color={"#94A3B8"} />
+            <FontAwesome name="arrow-left" size={16} color={theme.colors.textSecondary} />
           </TouchableOpacity>
         </View>
 
@@ -148,7 +149,7 @@ function createCategory() {
             <Ionicons
               name="pencil"
               size={18}
-              color={name.length > 0 ? theme.colors.primary : "#94A3B8"}
+              color={name.length > 0 ? theme.colors.primary : theme.colors.textSecondary}
             />
             <Input
               style={styles.inlineInput}
@@ -247,7 +248,8 @@ function createCategory() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+StyleSheet.create({
   header: {
     paddingTop: 56,
     paddingHorizontal: 24,
@@ -257,9 +259,9 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.06)",
+    backgroundColor: theme.colors.glass + "5",
     borderWidth: 0.5,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderColor: theme.colors.glass,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -271,7 +273,7 @@ const styles = StyleSheet.create({
   heroLabel: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#7C3AED",
+    color: theme.colors.primary,
     letterSpacing: 1.4,
     textTransform: "uppercase",
     marginBottom: 8,
@@ -279,12 +281,12 @@ const styles = StyleSheet.create({
   heroTitle: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#fff",
+    color: theme.colors.text,
     lineHeight: 34,
   },
   heroSub: {
     fontSize: 13,
-    color: "#94A3B8",
+    color: theme.colors.textSecondary,
     marginTop: 8,
     lineHeight: 18,
   },
@@ -296,14 +298,14 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "#1A1333",
-    borderColor: "rgba(255,255,255,0.06)",
+    backgroundColor: theme.colors.glass + "5",
+    borderColor: theme.colors.glass,
     borderWidth: 2,
     justifyContent: "center",
     alignItems: "center",
   },
   content: {
-    backgroundColor: "#1A1333",
+    backgroundColor: theme.colors.glass + "5",
     borderRadius: 24,
     paddingVertical: 32,
     paddingHorizontal: 24,
@@ -313,7 +315,7 @@ const styles = StyleSheet.create({
   btnText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#fff",
+    color: theme.colors.text,
   },
   colorPicker: {
     width: "100%",
@@ -324,7 +326,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: "rgba(255,107,107,0.15)",
+    backgroundColor: theme.colors.glass + "5",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 20,
@@ -340,12 +342,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: "600",
-    color: "#fff",
+    color: theme.colors.text,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 15,
-    color: "#8e8e93",
+    color: theme.colors.textSecondary,
     marginBottom: 28,
   },
   actions: {
@@ -361,7 +363,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   cancelBtn: {
-    backgroundColor: "#434344",
+    backgroundColor: theme.colors.glass + "5",
   },
   cancelText: {
     fontSize: 16,
@@ -371,7 +373,7 @@ const styles = StyleSheet.create({
   deleteBtn: {
     flexDirection: "row",
     gap: 8,
-    backgroundColor: "#7C3AED",
+    backgroundColor: theme.colors.primary,
   },
   deleteText: {
     fontSize: 16,
@@ -384,7 +386,7 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 11,
     fontWeight: "500",
-    color: "#8e8e93",
+    color: theme.colors.textSecondary,
     letterSpacing: 0.8,
     textTransform: "uppercase",
     paddingLeft: 2,
@@ -401,7 +403,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.1)",
   },
   fieldInputActive: {
-    borderColor: "#7C3AED",
+    borderColor: theme.colors.primary,
     backgroundColor: "rgba(124,58,237,0.06)",
   },
   dividerRow: {
@@ -440,7 +442,7 @@ const styles = StyleSheet.create({
   previewName: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#fff",
+    color: theme.colors.text,
   },
 });
 
