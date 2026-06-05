@@ -59,12 +59,12 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
 StyleSheet.create({
   container: {
     flex: 1,
-    minHeight: 100,
+    minHeight: 85,
     padding: 10,
     borderRadius: 20,
     backgroundColor: theme.colors.surface,
     borderWidth: 1,
-    borderColor: theme.colors.glass,
+    borderColor: theme.colors.border,
     justifyContent: "center",
     alignItems: "center",
     gap: 6,
@@ -83,7 +83,7 @@ StyleSheet.create({
   },
 
   subtitle: {
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: "800",
     color: theme.colors.text,
   },

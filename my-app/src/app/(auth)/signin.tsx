@@ -1,4 +1,4 @@
-import { api } from "@/api";
+import { api } from "@/api/api";
 import Button from "@/components/Button";
 import Input from "@/components/inputs/Input";
 import Logo from "@/components/Logo";

@@ -18,7 +18,7 @@ import {
   View
 } from "react-native";
 
-type WalletType = "CASH" | "INVESTMENT" | "SAVINGS_ACCOUNT" | "CHECKING_ACCOUNT";
+type WalletType = "CASH" | "INVESTMENT" | "SAVINGS_ACCOUNT" | "CHECKING_ACCOUNT" | "GOAL";
 
 function createWallet() {
   const router = useRouter();
@@ -54,6 +54,7 @@ const walletTypes: { id: WalletType; name: string }[] = [
   { id: "SAVINGS_ACCOUNT", name: "Poupança" },
   { id: "CASH", name: "Dinheiro" },
   { id: "INVESTMENT", name: "Investimento" },
+  { id: "GOAL", name: "Caixinha" },
 ];
 
   function formatAmount(value: string): string {
@@ -160,7 +161,6 @@ const walletTypes: { id: WalletType; name: string }[] = [
 
           <View style={styles.field}>
             <Text style={styles.fieldLabel}>Nome da carteira</Text>
-
             <View
               style={[
                 styles.fieldInput,

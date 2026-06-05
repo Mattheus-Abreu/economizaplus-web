@@ -7,8 +7,8 @@ import useAuth from "@/hooks/useAuth";
 import BancoIcon from "@/services/apiBanco";
 import * as cardService from "@/services/cardService";
 import Card from "@/types/card";
-import { getBankColor, getBancoNomeSafe } from "@/utils/banco";
 import Transaction from "@/types/transaction";
+import { getBancoNomeSafe, getBankColor } from "@/utils/banco";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -381,7 +381,7 @@ function profile() {
             onPress={goToPrev}
             disabled={monthIdx === 0}
           >
-            <FontAwesome name="chevron-left" size={13} color={monthIdx === 0 ? "rgba(255,255,255,0.2)" : colors.text} />
+            <FontAwesome name="chevron-left" size={13} color={monthIdx === 0 ? colors.glass : colors.text} />
           </TouchableOpacity>
           <View style={styles.monthLabelWrap}>
             <Animated.Text style={[styles.monthSelectorLabel, { transform: [{ translateX: labelX }], opacity: labelOpacity }]}>
@@ -626,8 +626,8 @@ const createStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
     width: 120, height: 120, borderRadius: 60,
     borderWidth: 3, borderColor: colors.primary, overflow: "hidden",
   },
-  avatarCircle: { flex: 1, backgroundColor: "#2D1B69", alignItems: "center", justifyContent: "center" },
-  avatarInitials: { fontSize: 40, fontWeight: "700", color: colors.text },
+  avatarCircle: { flex: 1, backgroundColor: "rgba(124, 58, 237, 0.2)", alignItems: "center", justifyContent: "center" },
+  avatarInitials: { fontSize: 40, fontWeight: "700", color: colors.primaryForeground },
 
   userInfo: { alignItems: "center", paddingHorizontal: 20, marginTop: 14, gap: 4, marginBottom: 20 },
   userName: { fontSize: 30, fontWeight: "800", color: colors.text },
