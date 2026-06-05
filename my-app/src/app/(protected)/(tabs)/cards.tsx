@@ -1,7 +1,7 @@
 import { BlurCarousel } from "@/components/molecules/blur-carousel";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import BancoIcon from "@/services/apiBanco";
-import { isBancoNome } from "@/utils/banco";
+import { BANK_COLORS, getBancoNomeSafe } from "@/utils/banco";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -21,89 +21,6 @@ type CardItem = {
   }>
 };
 
-const dataBackgroundColors = {
-  nubank: {
-    fundo: '#820AD1',
-  },
-  cora: {
-    fundo: '#FE3E6D',
-  },
-  itau: {
-    fundo: '#EC7000',
-  },
-  inter: {
-    fundo: '#FF7A00',
-  },
-  bancodobrasil: {
-    fundo: '#003D7A',
-  },
-  bradesco: {
-    fundo: '#CC092F',
-  },
-  santander: {
-    fundo: '#EC0000',
-  },
-  caixa: {
-    fundo: '#0066A1',
-  },
-  btg: {
-    fundo: '#001E62',
-  },
-  xp: {
-    fundo: '#ffffff',
-  },
-  infinitepay: {
-    fundo: '#171527',
-  },
-  picpay: {
-    fundo: '#21C25E',
-  },
-  mercadopago: {
-    fundo: '#00BCFF',
-  },
-  pagbank: {
-    fundo: '#42A936',
-  },
-  c6: {
-    fundo: '#121212',
-  },
-  digio: {
-    fundo: '#00275C',
-  },
-  sicoob: {
-    fundo: '#003B43',
-  },
-  neon: {
-    fundo: '#161C3E',
-  },
-  pan: {
-    fundo: '#FFFFFF',
-  },
-  safra: {
-    fundo: '#151D43',
-  },
-  wise: {
-    fundo: '#9FE870',
-  },
-  paypal: {
-    fundo: '#ffffff',
-  },
-  stripe: {
-    fundo: '#635BFF',
-  },
-  stone: {
-    fundo: '#ffffff',
-  },
-  next: {
-    fundo: '#00FF5F',
-  },
-  original: {
-    fundo: '#00A857',
-  },
-  sicredi: {
-    fundo: '#ffffff',
-  }
-};
 
 const DATA = [
   {
@@ -157,12 +74,9 @@ export default function App() {
   const styles = createStyles(theme);
 
   const getBackgroundColor = (title: string) => {
-    return dataBackgroundColors[title.toLocaleLowerCase() as keyof typeof dataBackgroundColors]?.fundo || '#ec0192';
+    const key = title.toLowerCase().replace(/\s/g, "");
+    return BANK_COLORS[key] ?? "#ec0192";
   };
-
-  function getBancoNomeSafe(title: string) {
-    return isBancoNome(title) ? title : "nubank";
-  }
 
   const renderTransactions = () => {
     return currentCard.transactions.map((transaction, index) => (

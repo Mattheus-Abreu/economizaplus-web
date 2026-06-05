@@ -2,10 +2,7 @@ import { useAppTheme } from "@/hooks/useAppTheme";
 import Goal from "@/types/goal";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { useEffect } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Easing, useSharedValue, withTiming } from "react-native-reanimated";
-import { CircularProgress } from "./circular-progress";
 
 export const GRADIENTS: [string, string][] = [
   ["#F43F5E", "#FB7185"],
@@ -16,13 +13,25 @@ export const GRADIENTS: [string, string][] = [
   ["#EC4899", "#F9A8D4"],
 ];
 
-function formatAmount(value: string): string {
-  const num = parseFloat(value);
-  if (isNaN(num)) return "–";
-  return num.toLocaleString("pt-BR", {
-    minimumFractionDigits: 0,
+function formatAmount(value: number): string {
+  if (isNaN(value)) return "0";
+  return value.toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
+}
+
+function formatDeadline(dateStr: string): string | null {
+  if (!dateStr) return null;
+  const deadline = new Date(dateStr);
+  const now = new Date();
+  const diffDays = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDays < 0) return "Prazo encerrado";
+  if (diffDays === 0) return "Vence hoje";
+  if (diffDays === 1) return "Vence amanhã";
+  if (diffDays < 30) return `${diffDays} dias restantes`;
+  const months = Math.floor(diffDays / 30);
+  return `${months} ${months === 1 ? "mês" : "meses"} restante${months === 1 ? "" : "s"}`;
 }
 
 type Props = {
@@ -33,26 +42,14 @@ type Props = {
 
 const CardHome = ({ item, fontLoaded, gradientIndex = 0 }: Props) => {
   const router = useRouter();
-  const progress = useSharedValue(0);
   const theme = useAppTheme();
   const styles = createStyles(theme);
 
-  useEffect(() => {
-    const current = Number(item.currentAmount);
-    const target = Number(item.targetAmount);
-
-    if (!current || !target || target <= 0) {
-      progress.value = withTiming(0, { duration: 600 });
-      return;
-    }
-
-    const percent = Math.min((current / target) * 100, 100);
-    progress.value = withTiming(percent, {
-      duration: 800,
-      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-    });
-  }, [item.currentAmount, item.targetAmount]);
-
+  const currentAmount = Number(item.currentAmount);
+  const targetAmount = Number(item.targetAmount);
+  const progressPercent =
+    targetAmount > 0 ? Math.min((currentAmount / targetAmount) * 100, 100) : 0;
+  const deadlineText = formatDeadline(item.deadline);
   const gradient = GRADIENTS[gradientIndex % GRADIENTS.length];
 
   return (
@@ -61,54 +58,49 @@ const CardHome = ({ item, fontLoaded, gradientIndex = 0 }: Props) => {
         colors={gradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={styles.cardGradient}
+        style={StyleSheet.absoluteFillObject}
       />
+
       <Pressable
         onPress={() =>
           router.push({
             pathname: "/(protected)/goal/goalDetail",
-            params: { 
-              id: item.id,
-              gradientIndex: gradientIndex.toString(),
-             },
+            params: { id: item.id, gradientIndex: gradientIndex.toString() },
           })
         }
         style={({ pressed }) => [
           styles.pressable,
-          {
-            opacity: pressed ? 0.85 : 1,
-            transform: [{ scale: pressed ? 0.97 : 1 }],
-          },
+          { opacity: pressed ? 0.88 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] },
         ]}
       >
-        <View style={styles.progressContainer}>
-          <CircularProgress
-            progress={progress}
-            size={80}
-            strokeWidth={7}
-            outerCircleColor="rgba(255,255,255,0.15)"
-            progressCircleColor="#ffffff"
-            backgroundColor="#0000000f"
-          />
-        </View>
-
-        <View style={styles.cardMiddle}>
-          <Text
-            style={[
-              styles.cardTitle,
-              fontLoaded && { fontFamily: "InterMedium" },
-            ]}
-          >
+        {/* Top row */}
+        <View style={styles.topRow}>
+          <Text style={styles.label}>META</Text>
+          <Text style={styles.cardTitle} numberOfLines={2}>
             {item.name}
           </Text>
-          <Text
-            style={[
-              styles.cardSubtitle,
-              fontLoaded && { fontFamily: "InterRegular" },
-            ]}
-          >
-            Meta de R$ {formatAmount(item.targetAmount.toString()) || "0,00"}
-          </Text>
+        </View>
+
+        {/* Bottom row */}
+        <View style={styles.bottomBlock}>
+          <View style={styles.amountsRow}>
+            <Text style={styles.currentAmount}>
+              R$ {formatAmount(currentAmount)}
+            </Text>
+            <Text style={styles.targetAmount}>
+              de R$ {formatAmount(targetAmount)}
+            </Text>
+          </View>
+
+          <View style={styles.progressBarBg}>
+            <View
+              style={[styles.progressBarFill, { width: `${progressPercent}%` as any }]}
+            />
+          </View>
+
+          {deadlineText && (
+            <Text style={styles.deadline}>{deadlineText}</Text>
+          )}
         </View>
       </Pressable>
     </View>
@@ -117,45 +109,64 @@ const CardHome = ({ item, fontLoaded, gradientIndex = 0 }: Props) => {
 
 export default CardHome;
 
-const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
-StyleSheet.create({
-  card: {
-    width: "100%",
-    height: 180,
-    borderRadius: 28,
-    overflow: "hidden",
-    padding: 24,
-    justifyContent: "space-between",
-  },
-  cardGradient: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  pressable: {
-    flex: 1,
-    justifyContent: "space-between",
-  },
-  progressContainer: {
-    position: "absolute",
-    top: 16,
-    right: 5,
-  },
-  cardMiddle: {
-    gap: 8,
-    marginTop: 40,
-  },
-  cardTitle: {
-    fontSize: 34,
-    fontWeight: "600",
-    color: "#fff",
-  },
-  cardSubtitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "rgba(255,255,255,0.9)",
-  },
-  cardDeadline: {
-    fontSize: 13,
-    color: "rgba(255,255,255,0.6)",
-    marginTop: 2,
-  },
-});
+const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
+  StyleSheet.create({
+    card: {
+      width: "100%",
+      borderRadius: 24,
+      overflow: "hidden",
+      padding: 20,
+    },
+    pressable: {
+      gap: 16,
+    },
+    topRow: {
+      gap: 4,
+    },
+    label: {
+      fontSize: 10,
+      fontWeight: "700",
+      color: "rgba(255,255,255,0.6)",
+      letterSpacing: 1.5,
+    },
+    cardTitle: {
+      fontSize: 22,
+      fontWeight: "700",
+      color: "#fff",
+      lineHeight: 28,
+    },
+    bottomBlock: {
+      gap: 8,
+    },
+    amountsRow: {
+      flexDirection: "row",
+      alignItems: "baseline",
+      gap: 6,
+    },
+    currentAmount: {
+      fontSize: 18,
+      fontWeight: "700",
+      color: "#fff",
+    },
+    targetAmount: {
+      fontSize: 13,
+      fontWeight: "500",
+      color: "rgba(255,255,255,0.65)",
+    },
+    progressBarBg: {
+      height: 4,
+      backgroundColor: "rgba(255,255,255,0.25)",
+      borderRadius: 99,
+      overflow: "hidden",
+    },
+    progressBarFill: {
+      height: "100%",
+      backgroundColor: "#fff",
+      borderRadius: 99,
+    },
+    deadline: {
+      fontSize: 12,
+      color: "rgba(255,255,255,0.6)",
+      fontWeight: "500",
+    },
+  });
