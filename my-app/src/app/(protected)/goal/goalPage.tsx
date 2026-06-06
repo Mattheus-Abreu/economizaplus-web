@@ -1,4 +1,3 @@
-import Arrow from "@/assets/images/Arrow.svg";
 import { GRADIENTS } from "@/components/CardHome";
 import {
   Empty,
@@ -166,13 +165,7 @@ function goalPage() {
                     ? `Tente buscar por outro nome`
                     : "Que tal começar criando uma meta"}
                 </EmptyDescription>
-                {!search && (
-                  <Arrow
-                    width={100}
-                    height={60}
-                    style={{ transform: [{ rotate: "20deg" }] }}
-                  />
-                )}
+                
               </View>
             </EmptyHeader>
           </Empty>

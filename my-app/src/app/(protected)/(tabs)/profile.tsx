@@ -1,3 +1,4 @@
+import AppModal, { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
 import Screen from "@/components/Screen";
 import { useTheme } from "@/components/theme-switch/hooks";
 import { AnimationType } from "@/components/theme-switch/types";
@@ -26,11 +27,18 @@ import {
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 
+const { user } = useAuth();
+
+const auth = useAuth();
+
+console.log("AUTH:", auth);
+console.log("USER:", auth.user);
+
 const USER = {
-  name: "Gustavo Sousa",
+  name: user?.name ?? "Usuário",
   memberSince: "03.2026",
-  plan: "Básico",
-};
+  plan: "Plano Básico"
+}
 
 const MONTH_LABELS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
@@ -111,6 +119,7 @@ function profile() {
 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [dropdownPos, setDropdownPos] = useState({ top: 0, right: 16 });
+  const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
   const gearRef = useRef<View>(null);
   const pendingTheme = useRef<{ touchX: number; touchY: number } | null>(null);
 
@@ -125,6 +134,30 @@ function profile() {
       });
     }
   }, [settingsOpen]);
+
+  function handleSignOut(){
+    setModal({
+      visible: true,
+      variant: "warning",
+      title: "Sair da conta",
+      description: "Tem certeza que deseja sair da sua conta?",
+      buttons: [
+        {
+          label: "Cancelar",
+          onPress: () => setModal(MODAL_HIDDEN),
+          variant: "secondary",
+        },
+        {
+          label: "Sair",
+          onPress: async () => {
+            await signOut();
+            setModal(MODAL_HIDDEN);
+          },
+          variant: "danger",
+        },
+      ],
+    });
+  }
 
   function openSettings() {
     gearRef.current?.measureInWindow((_x, y, _w, height) => {
@@ -301,16 +334,16 @@ function profile() {
                       setSettingsOpen(false);
                     }}
                   >
-                    <Ionicons name={isDark ? "sunny-outline" : "moon-outline"} size={18} color="#fff" />
+                    <Ionicons name={isDark ? "sunny-outline" : "moon-outline"} size={18} color={colors.foreground} />
                     <Text style={styles.dropdownItemText}>{isDark ? "Modo claro" : "Modo escuro"}</Text>
                   </TouchableOpacity>
                   <View style={styles.dropdownDivider} />
                   <TouchableOpacity
                     style={styles.dropdownItem}
-                    onPress={() => { setSettingsOpen(false); signOut(); }}
+                    onPress={() => { setSettingsOpen(false); handleSignOut(); }}
                   >
-                    <Ionicons name="log-out-outline" size={18} color="#F43F5E" />
-                    <Text style={[styles.dropdownItemText, { color: "#F43F5E" }]}>Sair</Text>
+                    <Ionicons name="log-out-outline" size={18} color={colors.destructive} />
+                    <Text style={[styles.dropdownItemText, { color: colors.destructive }]}>Sair</Text>
                   </TouchableOpacity>
                 </View>
               </TouchableWithoutFeedback>
@@ -585,6 +618,14 @@ function profile() {
 
         </View>
       </ScrollView>
+      <AppModal
+        visible={modal.visible}
+        onClose={() => setModal(MODAL_HIDDEN)}
+        variant={modal.variant}
+        title={modal.title}
+        description={modal.description}
+        buttons={modal.buttons}
+      />
     </Screen>
   );
 }
@@ -720,13 +761,13 @@ const createStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
   modalBackdrop: { flex: 1 },
   dropdown: {
     position: "absolute",
-    backgroundColor: "#1E1E2E",
+    backgroundColor: colors.surface,
     borderRadius: 14,
     paddingVertical: 6,
     minWidth: 180,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
-    shadowColor: "#000",
+    borderColor: colors.glass,
+    shadowColor: colors.foreground,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.4,
     shadowRadius: 16,
@@ -736,7 +777,7 @@ const createStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
     flexDirection: "row", alignItems: "center", gap: 10,
     paddingHorizontal: 16, paddingVertical: 13,
   },
-  dropdownItemText: { fontSize: 15, fontWeight: "500", color: "#fff" },
+  dropdownItemText: { fontSize: 15, fontWeight: "500", color: colors.foreground },
   dropdownDivider: { height: 1, backgroundColor: "rgba(255,255,255,0.08)", marginHorizontal: 12 },
 
   emptyChart: { height: 80, alignItems: "center", justifyContent: "center" },

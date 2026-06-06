@@ -148,7 +148,7 @@ export default function CategoryPage() {
       <View style={styles.searchWrap}>
         <SearchBar
           tint={theme.colors.textSecondary}
-          placeholder="Pesquisar categorias..."
+          placeholder="Pesquisar"
           onSearch={setSearch}
           onClear={() => setSearch("")}
           onSearchDone={() => setSearch("")}
