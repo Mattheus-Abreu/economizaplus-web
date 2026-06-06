@@ -3,7 +3,7 @@ import Button from "@/components/Button";
 import Screen from "@/components/Screen";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import useAuth from "@/hooks/useAuth";
-import { Ionicons } from "@expo/vector-icons";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -213,6 +213,16 @@ function IAScreen() {
           contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
         >
+          <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => router.back()}
+        >
+          <FontAwesome
+            name="arrow-left"
+            size={16}
+            color={theme.colors.textSecondary}
+          />
+        </TouchableOpacity>
           {/* Header */}
           <View style={styles.pageHeader}>
             <LinearGradient
@@ -337,7 +347,16 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
       alignItems: "center",
       padding: 24,
     },
-
+    backBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 12,
+      backgroundColor: theme.colors.glass + "10",
+      borderWidth: 0.5,
+      borderColor: theme.colors.glass,
+      alignItems: "center",
+      justifyContent: "center",
+    },
     // ── Loading ──
     loadingCard: {
       alignItems: "center",

@@ -1,7 +1,6 @@
 import { darkTheme, lightTheme } from "@/components/theme-switch/conf";
 import { ThemeMode, ThemeProvider } from "@/components/theme-switch/context";
 import { AuthContext, AuthProvider } from "@/contexts/authContext";
-
 import { Stack } from "expo-router";
 import { useContext } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";

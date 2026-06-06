@@ -57,7 +57,7 @@ function SignInPage() {
 
       try {
         const res = await api.post("/api/login/google", { idToken });
-        signIn(res.data.token);
+        signIn(res.data.token, res.data.user);
       } catch (error: any) {
         setModal({
           visible: true,
@@ -85,7 +85,7 @@ function SignInPage() {
         email,
         password,
       });
-      signIn(response.data.token);
+      signIn(response.data.token, response.data.user);
     } catch (error: any) {
       console.log(error.response?.data);
       setModal({
@@ -314,13 +314,13 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
   forgotPassword: {
     fontSize: 12,
     textAlign: "right",
-    color: "#d4dee6",
+    color: theme.colors.textSecondary,
     marginBottom: 20,
   },
   footerText: {
     textAlign: "center",
     marginTop: 24,
-    color: "#d4dee6",
+    color: theme.colors.textSecondary,
   },
   footerLink: {
     color: theme.colors.primary,

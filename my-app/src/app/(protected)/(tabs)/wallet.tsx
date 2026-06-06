@@ -1,12 +1,10 @@
-import Arrow from "@/assets/images/Arrow.svg";
 import CardInsights from "@/components/CardInsights";
 import CardWallet from "@/components/CardWallet";
 import {
   Empty,
-  EmptyDescription,
   EmptyHeader,
   EmptyMedia,
-  EmptyTitle,
+  EmptyTitle
 } from "@/components/empty-state";
 import FloatingButton from "@/components/FloatingButton";
 import Screen from "@/components/Screen";
@@ -91,7 +89,6 @@ function walletPage() {
   };
 }, [wallets]);
 
-  // Card azul com saldo total e breakdown por tipo de carteira
   const balanceSummaryCard = (
   <View style={styles.balanceCard}>
     <View style={styles.balanceCardTop}>
@@ -153,7 +150,6 @@ function walletPage() {
 
   const listHeader = (
     <>
-      {/* Header com botão voltar + busca */}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backBtn}
@@ -177,7 +173,6 @@ function walletPage() {
         />
       </View>
 
-      {/* Hero com borda lateral azul */}
       <View style={styles.hero}>
         <Text style={styles.heroLabel}>Minhas Carteiras</Text>
         <Text style={styles.heroTitle}>Seu patrimônio</Text>
@@ -188,10 +183,8 @@ function walletPage() {
         </Text>
       </View>
 
-      {/* Card de saldo total — sempre visível */}
       {!isLoading && (wallets ?? []).length > 0 && balanceSummaryCard}
 
-      {/* Skeletons / Empty / Label da seção */}
       {isLoading ? (
         <View style={{ gap: 10 }}>
           {Array.from({ length: 3 }).map((_, index) => (
@@ -199,7 +192,7 @@ function walletPage() {
           ))}
         </View>
       ) : filteredWallets.length === 0 ? (
-        <SafeAreaView style={[styles.container, { marginTop: -90 }]}>
+        <SafeAreaView style={[styles.container]}>
           <Empty>
             <EmptyHeader>
               <EmptyMedia
@@ -236,18 +229,7 @@ function walletPage() {
                   alignItems: "center",
                 }}
               >
-                <EmptyDescription>
-                  {search
-                    ? "Tente buscar outra carteira"
-                    : "Que tal começar criando uma carteira"}
-                </EmptyDescription>
-                {!search && (
-                  <Arrow
-                    width={100}
-                    height={60}
-                    style={{ transform: [{ rotate: "20deg" }] }}
-                  />
-                )}
+                
               </View>
             </EmptyHeader>
           </Empty>
@@ -300,7 +282,6 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
       alignItems: "center",
       gap: 12,
     },
-    // Hero com borda lateral esquerda azul
     hero: {
       paddingVertical: 5,
       paddingLeft: 14,

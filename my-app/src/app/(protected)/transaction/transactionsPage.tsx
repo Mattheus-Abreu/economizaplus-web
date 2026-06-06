@@ -1,4 +1,3 @@
-import Arrow from "@/assets/images/Arrow.svg";
 import CardTransaction from "@/components/CardTransaction";
 import { ChipGroup } from "@/components/chip-group/Chip";
 import {
@@ -24,8 +23,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   FlatList,
-  Platform,
   ScrollView as NativeScrollView,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -293,7 +292,7 @@ export default function TransactionPage() {
           <View style={styles.searchWrap}>
             <SearchBar
               tint="rgba(255,255,255,0.7)"
-              placeholder="Pesquisar transações..."
+              placeholder="Pesquisar"
               onSearch={setSearch}
               onClear={() => setSearch("")}
               onSearchDone={() => {}}
@@ -496,9 +495,6 @@ export default function TransactionPage() {
             <EmptyDescription>
               {search ? "Tente outros termos" : "Que tal começar criando uma transação"}
             </EmptyDescription>
-            {!search && (
-              <Arrow width={100} height={60} style={{ transform: [{ rotate: "20deg" }] }} />
-            )}
           </View>
         </EmptyHeader>
       </Empty>

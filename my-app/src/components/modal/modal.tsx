@@ -1,4 +1,6 @@
+import { useAppTheme } from "@/hooks/useAppTheme";
 import { Ionicons } from "@expo/vector-icons";
+import React from "react";
 import {
   Modal,
   Pressable,
@@ -7,10 +9,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import React from "react";
 
 type IconName = React.ComponentProps<typeof Ionicons>["name"];
-
 type ModalVariant = "success" | "error" | "warning" | "info" | "confirm";
 
 type ModalButton = {
@@ -26,64 +26,18 @@ type AppModalProps = {
   title: string;
   description?: string;
   buttons?: ModalButton[];
-  dismissible?: boolean; 
+  dismissible?: boolean;
 };
 
 const VARIANTS: Record<
   ModalVariant,
-  { icon: IconName; color: string; background: string; border: string }
+  { icon: IconName; color: string }
 > = {
-  success: {
-    icon: "checkmark-circle",
-    color: "#22C55E",
-    background: "rgba(34,197,94,0.1)",
-    border: "rgba(34,197,94,0.25)",
-  },
-  error: {
-    icon: "close-circle",
-    color: "#EF4444",
-    background: "rgba(239,68,68,0.1)",
-    border: "rgba(239,68,68,0.25)",
-  },
-  warning: {
-    icon: "warning",
-    color: "#F97316",
-    background: "rgba(249,115,22,0.1)",
-    border: "rgba(249,115,22,0.25)",
-  },
-  info: {
-    icon: "information-circle",
-    color: "#38BDF8",
-    background: "rgba(56,189,248,0.1)",
-    border: "rgba(56,189,248,0.25)",
-  },
-  confirm: {
-    icon: "help-circle",
-    color: "#7C3AED",
-    background: "rgba(124,58,237,0.1)",
-    border: "rgba(124,58,237,0.25)",
-  },
-};
-
-const BUTTON_STYLES: Record<
-  NonNullable<ModalButton["variant"]>,
-  { background: string; text: string; border: string }
-> = {
-  primary: {
-    background: "#7C3AED",
-    text: "#ffffff",
-    border: "#7C3AED",
-  },
-  secondary: {
-    background: "transparent",
-    text: "#94A3B8",
-    border: "rgba(255,255,255,0.1)",
-  },
-  danger: {
-    background: "rgba(239,68,68,0.12)",
-    text: "#EF4444",
-    border: "rgba(239,68,68,0.3)",
-  },
+  success: { icon: "checkmark-circle", color: "#22C55E" },
+  error:   { icon: "close-circle",     color: "#E05C7A" },
+  warning: { icon: "warning",          color: "#FCA370" },
+  info:    { icon: "information-circle", color: "#5DA8D4" },
+  confirm: { icon: "help-circle",      color: "#7C3AED" },
 };
 
 function AppModal({
@@ -95,6 +49,8 @@ function AppModal({
   buttons,
   dismissible = true,
 }: AppModalProps) {
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
   const config = VARIANTS[variant];
 
   const resolvedButtons: ModalButton[] =
@@ -102,10 +58,10 @@ function AppModal({
       ? buttons
       : variant === "confirm"
       ? [
-          { label: "Cancelar", variant: "secondary", onPress: onClose },
-          { label: "Confirmar", variant: "primary", onPress: onClose },
+          { label: "Cancelar",  variant: "secondary", onPress: onClose },
+          { label: "Confirmar", variant: "primary",   onPress: onClose },
         ]
-      : [{ label: "OK", onPress: onClose, variant: "primary" }];
+      : [{ label: "OK", variant: "primary", onPress: onClose }];
 
   return (
     <Modal
@@ -120,12 +76,14 @@ function AppModal({
         onPress={dismissible ? onClose : undefined}
       >
         <Pressable style={styles.card} onPress={(e) => e.stopPropagation()}>
+
+          {/* Icon */}
           <View
             style={[
               styles.iconWrap,
               {
-                backgroundColor: config.background,
-                borderColor: config.border,
+                backgroundColor: config.color + "18",
+                borderColor: config.color + "40",
               },
             ]}
           >
@@ -138,6 +96,7 @@ function AppModal({
             <Text style={styles.description}>{description}</Text>
           ) : null}
 
+          {/* Buttons */}
           <View
             style={[
               styles.buttonsRow,
@@ -145,7 +104,9 @@ function AppModal({
             ]}
           >
             {resolvedButtons.map((btn, index) => {
-              const btnStyle = BUTTON_STYLES[btn.variant ?? "primary"];
+              const isPrimary   = btn.variant === "primary" || !btn.variant;
+              const isSecondary = btn.variant === "secondary";
+              const isDanger    = btn.variant === "danger";
 
               return (
                 <TouchableOpacity
@@ -153,98 +114,137 @@ function AppModal({
                   activeOpacity={0.8}
                   onPress={() => {
                     btn.onPress?.();
-
-                    if (btn.variant !== "secondary") {
-                      onClose();
-                    }
+                    if (!isSecondary) onClose();
                   }}
                   style={[
                     styles.button,
                     resolvedButtons.length === 1 && styles.buttonFull,
-                    {
-                      backgroundColor: btnStyle.background,
-                      borderColor: btnStyle.border,
-                    },
+                    isPrimary   && styles.buttonPrimary,
+                    isSecondary && styles.buttonSecondary,
+                    isDanger    && styles.buttonDanger,
                   ]}
                 >
-                  <Text style={[styles.buttonText, { color: btnStyle.text }]}>
+                  <Text
+                    style={[
+                      styles.buttonText,
+                      isPrimary   && styles.buttonTextPrimary,
+                      isSecondary && styles.buttonTextSecondary,
+                      isDanger    && styles.buttonTextDanger,
+                    ]}
+                  >
                     {btn.label}
                   </Text>
                 </TouchableOpacity>
               );
             })}
           </View>
+
         </Pressable>
       </Pressable>
     </Modal>
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.6)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-  },
-  card: {
-    width: "100%",
-    maxWidth: 360,
-    backgroundColor: "#1A1333",
-    borderRadius: 24,
-    borderWidth: 0.5,
-    borderColor: "rgba(255,255,255,0.08)",
-    padding: 24,
-    alignItems: "center",
-    gap: 12,
-  },
-  iconWrap: {
-    width: 72,
-    height: 72,
-    borderRadius: 20,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 4,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#F8FAFC",
-    textAlign: "center",
-  },
-  description: {
-    fontSize: 14,
-    color: "#94A3B8",
-    textAlign: "center",
-    lineHeight: 20,
-  },
-  buttonsRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginTop: 12,
-    width: "100%",
-  },
-  buttonsSingle: {
-    justifyContent: "center",
-  },
-  button: {
-    flex: 1,
-    height: 48,
-    borderRadius: 14,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  buttonFull: {
-    flex: 1,
-  },
-  buttonText: {
-    fontSize: 15,
-    fontWeight: "600",
-  },
-});
+const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
+  StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.6)",
+      justifyContent: "center",
+      alignItems: "center",
+      padding: 24,
+    },
+    card: {
+      width: "100%",
+      maxWidth: 360,
+      backgroundColor: theme.colors.surface,
+      borderRadius: 24,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      padding: 24,
+      alignItems: "center",
+      gap: 12,
+    },
+    iconWrap: {
+      width: 72,
+      height: 72,
+      borderRadius: 20,
+      borderWidth: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 4,
+    },
+    title: {
+      fontSize: theme.fontSize.title,
+      fontWeight: "700",
+      color: theme.colors.text,
+      textAlign: "center",
+    },
+    description: {
+      fontSize: theme.fontSize.text,
+      color: theme.colors.textSecondary,
+      textAlign: "center",
+      lineHeight: 20,
+    },
+    buttonsRow: {
+      flexDirection: "row",
+      gap: 10,
+      marginTop: 12,
+      width: "100%",
+    },
+    buttonsSingle: {
+      justifyContent: "center",
+    },
+    button: {
+      flex: 1,
+      height: 54,
+      borderRadius: 16,
+      borderWidth: 1,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    buttonFull: {
+      flex: 1,
+    },
+
+    // Primary — igual ao Button.tsx
+    buttonPrimary: {
+      backgroundColor: theme.colors.primary,
+      borderColor: theme.colors.primary,
+    },
+    buttonTextPrimary: {
+      color: theme.colors.primaryForeground,
+      fontSize: theme.fontSize.text,
+      fontWeight: "600",
+    },
+
+    // Secondary — sutil, só borda
+    buttonSecondary: {
+      backgroundColor: "transparent",
+      borderColor: theme.colors.border,
+    },
+    buttonTextSecondary: {
+      color: theme.colors.textSecondary,
+      fontSize: theme.fontSize.text,
+      fontWeight: "600",
+    },
+
+    // Danger — vermelho do tema
+    buttonDanger: {
+      backgroundColor: theme.colors.destructive + "18",
+      borderColor: theme.colors.destructive + "50",
+    },
+    buttonTextDanger: {
+      color: theme.colors.destructive,
+      fontSize: theme.fontSize.text,
+      fontWeight: "600",
+    },
+
+    buttonText: {
+      fontSize: theme.fontSize.text,
+      fontWeight: "600",
+    },
+  });
 
 export default AppModal;
 

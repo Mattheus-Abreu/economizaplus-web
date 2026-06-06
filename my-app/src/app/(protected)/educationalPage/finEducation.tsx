@@ -3,9 +3,10 @@ import Checkbox from "@/components/inputs/Checkbox";
 import { Pagination } from "@/components/pagination/Pagination";
 import Screen from "@/components/Screen";
 import { useAppTheme } from "@/hooks/useAppTheme";
+import useAuth from "@/hooks/useAuth";
 import { Ionicons } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
   StyleSheet,
@@ -73,6 +74,13 @@ function finEducation() {
   const router = useRouter();
   const theme = useAppTheme();
   const styles = createStyles(theme);
+  const { clearFirstLogin } = useAuth();
+
+  // Marca o onboarding como visto imediatamente ao chegar aqui.
+  // Assim "Pular" e o botão "Gerar dicas" funcionam sem redirecionar novamente.
+  useEffect(() => {
+    clearFirstLogin();
+  }, []);
 
   const opacity = useSharedValue(1);
   const translateX = useSharedValue(0);
@@ -85,9 +93,7 @@ function finEducation() {
   function animateTo(nextIndex: number) {
     if (nextIndex < 0 || nextIndex >= PAGES.length) return;
     const direction = nextIndex > currentIndex ? 1 : -1;
-
     setCurrentIndex(nextIndex);
-
     opacity.value = withTiming(0, { duration: DURATION / 2, easing: EASING });
     translateX.value = withTiming(
       -SLIDE_OFFSET * direction,
@@ -107,7 +113,7 @@ function finEducation() {
       Alert.alert("Atenção", "Selecione pelo menos um plano para continuar!");
       return;
     }
-    // Passa os goals como param → IAScreen detecta e faz POST (gera novo plano)
+    // Passa goals nos params → IAScreen detecta e faz POST
     router.replace({
       pathname: "/educationalPage/IAScreen",
       params: { goals: JSON.stringify(goal) },
@@ -122,7 +128,7 @@ function finEducation() {
     <Screen style={styles.screen}>
       <View style={styles.skipRow}>
         {!isLastPage ? (
-          <Link href="/" style={styles.skip}>
+          <Link href="/(protected)/(tabs)" style={styles.skip}>
             Pular
           </Link>
         ) : (
@@ -201,7 +207,10 @@ function finEducation() {
       </View>
 
       {isLastPage && (
-        <Link href="/" style={styles.skipBottom}>
+        <Link
+          href="/(protected)/(tabs)"
+          style={styles.skipBottom}
+        >
           Pular por agora
         </Link>
       )}
