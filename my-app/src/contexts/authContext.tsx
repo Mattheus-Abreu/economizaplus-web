@@ -6,6 +6,9 @@ type User = {
   id: string;
   name: string;
   email: string;
+  role: string;
+  plan: string;
+  createdAt: string;
 };
 
 type AuthState = {

@@ -27,25 +27,11 @@ import {
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 
-const { user } = useAuth();
-
-const auth = useAuth();
-
-console.log("AUTH:", auth);
-console.log("USER:", auth.user);
-
-const USER = {
-  name: user?.name ?? "Usuário",
-  memberSince: "03.2026",
-  plan: "Plano Básico"
-}
-
 const MONTH_LABELS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
 function formatBRL(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
-
 
 function darken(hex: string): string {
   const n = parseInt(hex.replace("#", ""), 16);
@@ -122,6 +108,26 @@ function profile() {
   const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
   const gearRef = useRef<View>(null);
   const pendingTheme = useRef<{ touchX: number; touchY: number } | null>(null);
+
+  const { user } = useAuth();
+
+  const memberSince = user?.createdAt
+    ? new Date(user.createdAt).toLocaleDateString("pt-BR", { month: "2-digit", year: "numeric" }).replace("/", ".")
+    : "—";
+
+  const PLAN_LABEL: Record<string, string> = {
+    BASIC:    "Básico",
+    PREMIUM:  "Premium",
+    INACTIVE: "Inativo",
+    LOCAL:    "Básico",
+    GOOGLE:   "Básico",
+  };
+
+  const USER = {
+    name:        user?.name ?? "Usuário",
+    memberSince,
+    plan:        PLAN_LABEL[user?.plan ?? ""] ?? user?.plan ?? "Básico",
+  };
 
   useEffect(() => {
     if (!settingsOpen && pendingTheme.current) {

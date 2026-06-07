@@ -1,26 +1,28 @@
-import React, { useState, useRef, useEffect } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { BlurView, type BlurViewProps } from "expo-blur";
+import { SymbolView } from "expo-symbols";
+import { useEffect, useRef, useState } from "react";
 import {
-  View,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Text,
   Dimensions,
   Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Animated, {
-  useSharedValue,
+  interpolate,
+  runOnJS,
+  useAnimatedProps,
   useAnimatedStyle,
+  useSharedValue,
   withSpring,
   withTiming,
-  interpolate,
-  useAnimatedProps,
-  runOnJS,
 } from "react-native-reanimated";
-import { SymbolView } from "expo-symbols";
-import { BlurView, type BlurViewProps } from "expo-blur";
+import { useTheme } from "../theme-switch/hooks";
+import { ThemeColors } from "../theme-switch/types";
 import type { SearchBarProps } from "./SearchBar.types";
-import { Ionicons } from "@expo/vector-icons";
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 const AnimatedView = Animated.createAnimatedComponent(View);
@@ -58,6 +60,9 @@ export const SearchBar = ({
   const textScale = useSharedValue(1);
   const textTranslateY = useSharedValue(0);
   const currentWidth = useSharedValue(containerWidth || screenWidth - 32);
+
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
 
   useEffect(() => {
     if (containerWidth) {
@@ -356,7 +361,8 @@ export const SearchBar = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     width: "100%",
     paddingHorizontal: 0,
@@ -372,7 +378,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   searchContainer: {
-    backgroundColor: "rgba(118, 118, 128, 0.12)",
+    backgroundColor: colors.surface + "80",
     borderRadius: 12,
     minHeight: 35,
     justifyContent: "center",
@@ -392,7 +398,7 @@ const styles = StyleSheet.create({
   },
   input: {
     width: "100%",
-    color: "#FFFFFF",
+    color: colors.text,
     fontSize: 17,
     fontFamily: "System",
     fontWeight: "400",

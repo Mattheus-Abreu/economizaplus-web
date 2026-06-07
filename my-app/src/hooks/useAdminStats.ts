@@ -76,6 +76,7 @@ export function useAdminStats() {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
+        console.log(data?.planDistribution) 
         setData(res.data);
         setStatus("success");
       })
