@@ -1,15 +1,55 @@
-import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, TouchableOpacity } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
-import { TouchableOpacity } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import theme from "@/app/themes/theme";
 import { useState } from "react";
 import Input from "@/components/inputs/Input";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Picker } from '@react-native-picker/picker';
+import { Dropdown } from "react-native-element-dropdown";
 
+const bancos = [
+  { label: 'Nubank', value: 'nubank' },
+  { label: 'Cora', value: 'cora' },
+  { label: 'Inter', value: 'inter' },
+  { label: 'Banco do Brasil', value: 'bancodobrasil' },
+  { label: 'Bradesco', value: 'bradesco' },
+  { label: 'Santander', value: 'santander' },
+  { label: 'Caixa', value: 'caixa' },
+  { label: 'BTG Pactual', value: 'btg' },
+  { label: 'Banco XP', value: 'xp' },
+  { label: 'Infinite Pay', value: 'infinitepay' },
+  { label: 'PicPay', value: 'picpay' },
+  { label: 'Mercado Pago', value: 'mercadopago' },
+  { label: 'PagBank', value: 'pagbank' },
+  { label: 'Banco C6', value: 'c6' },
+  { label: 'Digio', value: 'digio' },
+  { label: 'Sicoob', value: 'sicoob' },
+  { label: 'Neon', value: 'neon' },
+  { label: 'Banco Pan', value: 'pan' },
+  { label: 'Banco Safra', value: 'safra' },
+  { label: 'Wise', value: 'wise' },
+  { label: 'PayPal', value: 'paypal' },
+  { label: 'Stripe', value: 'stripe' },
+  { label: 'Stone', value: 'stone' },
+  { label: 'Next', value: 'next' },
+  { label: 'BancoOriginal', value: 'original' },
+  { label: 'Sicredi', value: 'sicredi' },
+];
 
+const typesCards = [
+  { label: 'Crédito', value: 'credito' },
+  { label: 'Débito', value: 'debito' },
+];
+
+const brandsCards = [
+  { label: 'Visa', value: 'visa' },
+  { label: 'Mastercard', value: 'mastercard' },
+  { label: 'Elo', value: 'elo' },
+  { label: 'Hipercard', value: 'hipercard' },
+];
 
 export default function newCard() {
     const router = useRouter();
@@ -127,7 +167,13 @@ export default function newCard() {
 
 
   return (
-    <GestureHandlerRootView style={styles.container}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
+    >
+      <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+        <GestureHandlerRootView style={styles.container}>
       <StatusBar style="light" />
             <View style={styles.header}>
                   <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
@@ -143,20 +189,30 @@ export default function newCard() {
               <Text style={styles.title}>Novo Cartão</Text>
             </View>
 
-            <ScrollView style={styles.form} showsVerticalScrollIndicator={false}>
+            <ScrollView
+              style={styles.form}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={{ paddingBottom: 24 }}
+            >
             <View >
               <View>
                 <View style={styles.field}>
-                  <Text style={styles.fieldLabel}>Nome do banco</Text>
-                  <View style={[styles.fieldInput, nameBank.length > 0 && styles.fieldInputActive]}>
-                    <Ionicons name="card-outline" size={20} color={theme.colors.textSecondary} />
-                    <Input
-                      style={styles.inlineInput}
-                      placeholder="Digite o nome do banco"
-                      placeholderTextColor={theme.colors.textSecondary}
+                  <Text style={styles.fieldLabel}>Bandeira do banco</Text>
+                  <View style={[styles.fieldInput, brandBank.length > 0 && styles.fieldInputActive]}>
+                  
+                    <Dropdown
+                      style={styles.dropdown}
+                      placeholderStyle={styles.dropdownPlaceholder}
+                      selectedTextStyle={styles.dropdownSelectedText}
+                      data={bancos}
+                      labelField="label"
+                      valueField="value"
+                      placeholder="Selecione um banco"
                       value={nameBank}
-                      onChangeText={setNameBank}
+                      onChange={item => setNameBank(item.value)}
                     />
+                    
                   </View>
                 </View>
               </View>
@@ -165,14 +221,18 @@ export default function newCard() {
                 <View style={styles.field}>
                   <Text style={styles.fieldLabel}>Bandeira do banco</Text>
                   <View style={[styles.fieldInput, brandBank.length > 0 && styles.fieldInputActive]}>
-                  <Ionicons name="logo-paypal" size={20} color={theme.colors.textSecondary} />
+
                     
-                    <Input
-                      style={styles.inlineInput}
-                      placeholder="Digite a bandeira do banco"
-                      placeholderTextColor={theme.colors.textSecondary}
+                    <Dropdown
+                      style={styles.dropdown}
+                      placeholderStyle={styles.dropdownPlaceholder}
+                      selectedTextStyle={styles.dropdownSelectedText}
+                      data={brandsCards}
+                      labelField="label"
+                      valueField="value"
+                      placeholder="Selecione a bandeira do cartão"
                       value={brandBank}
-                      onChangeText={setBrandBank}
+                      onChange={item => setBrandBank(item.value)}
                     />
                   </View>
                 </View>
@@ -187,7 +247,7 @@ export default function newCard() {
                     <Input
                       style={styles.inlineInput}
                       placeholder="Digite os ultimos 4 dígitos"
-                      placeholderTextColor={theme.colors.textSecondary}
+                      
                       value={lastDigits}
                       onChangeText={(text) => setLastDigits(text.replace(/\D/g, '').slice(0, 4))}
                       keyboardType="numeric"
@@ -203,12 +263,16 @@ export default function newCard() {
                   <View style={[styles.fieldInput, typeCard.length > 0 && styles.fieldInputActive]}>
                   <Ionicons name="card-outline" size={20} color={theme.colors.textSecondary} />
                     
-                    <Input
-                      style={styles.inlineInput}
-                      placeholder="Ex: Crédito ou Débito"
-                      placeholderTextColor={theme.colors.textSecondary}
+                    <Dropdown
+                      style={styles.dropdown}
+                      placeholderStyle={styles.dropdownPlaceholder}
+                      selectedTextStyle={styles.dropdownSelectedText}
+                      data={typesCards}
+                      labelField="label"
+                      valueField="value"
+                      placeholder="Selecione o tipo do cartão"
                       value={typeCard}
-                      onChangeText={setTypeCard}
+                      onChange={item => setTypeCard(item.value)}
                     />
                   </View>
                 </View>
@@ -296,7 +360,9 @@ export default function newCard() {
                 </Pressable>
               </View>              
 
-    </GestureHandlerRootView>
+        </GestureHandlerRootView>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -335,12 +401,13 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
     textTransform: "uppercase",
     paddingLeft: 5,
+    paddingTop: 7,
   },
   fieldInput: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    backgroundColor: "rgba(255,255,255,0.04)",
+   
     borderWidth: 0.5,
     borderColor: "rgba(255,255,255,0.1)",
     borderRadius: 14,
@@ -350,6 +417,19 @@ const styles = StyleSheet.create({
   fieldInputActive: {
     borderColor: theme.colors.primary,
     backgroundColor: "rgba(124,58,237,0.06)",
+  },
+  dropdown: {
+    flex: 1,
+    height: "100%",
+    backgroundColor: "transparent",
+  },
+  dropdownPlaceholder: {
+    color: theme.colors.textSecondary,
+    fontSize: 12,
+  },
+  dropdownSelectedText: {
+    color: theme.colors.text,
+    fontSize: 12,
   },
   inlineInput: {
     flex: 1,
@@ -363,7 +443,7 @@ const styles = StyleSheet.create({
   save:{
     paddingHorizontal: 24,
     paddingTop: 20,
-    paddingBottom: 32,
+    paddingBottom: 55,
   },
   submitBtn: {
     width: "100%",

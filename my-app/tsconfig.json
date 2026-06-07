@@ -13,7 +13,8 @@
     "src",
     "expo-asset.d.ts",
     ".expo/types/**/*.ts",
-    "expo-env.d.ts"
+    "expo-env.d.ts",
+    "svg.d.ts"
   ],
   "exclude": [
     "node_modules",

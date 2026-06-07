@@ -14,7 +14,7 @@ export default function BancoIcon({
   formato,
   cor,
   fundo,
-  tamanho = 60,
+  tamanho = 30,
 }: BancoIconProps) {
   const svg = svgBanco({ nome, formato, cor, fundo, tamanho });
 
@@ -24,3 +24,4 @@ export default function BancoIcon({
     <SvgFromXml xml={svg} width={tamanho} height={tamanho} />
   );
 }
+

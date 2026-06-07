@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   itemContent: {
-    borderRadius: 20,
+    borderRadius: 10,
     overflow: "hidden",
     shadowColor: "#000",
     shadowOffset: {
@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   blurOverlay: {
-    borderRadius: 20,
+    borderRadius: 10,
   },
 });
 
