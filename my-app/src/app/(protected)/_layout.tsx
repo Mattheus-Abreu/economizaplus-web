@@ -3,14 +3,8 @@ import { Redirect, Stack } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
 import AppProviders from "./providers";
 
-/**
- * Arquivo: src/app/(protected)/_layout.tsx
- *
- * Só cuida de prover contextos e registrar rotas.
- * A lógica de redirecionamento ficou no index.tsx.
- */
 function ProtectedLayout() {
-  const { isLoggedIn, isReady } = useAuth();
+  const { isLoggedIn, isReady, user } = useAuth();
 
   if (!isReady) {
     return (
@@ -24,6 +18,17 @@ function ProtectedLayout() {
     return <Redirect href="/(auth)/signin" />;
   }
 
+  if (user?.role === "ADMIN") {
+    return (
+      <AppProviders>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="admin/adminPage" />
+        </Stack>
+        <Redirect href="/(protected)/admin/adminPage" />
+      </AppProviders>
+    );
+  }
+
   return (
     <AppProviders>
       <Stack screenOptions={{ headerShown: false }}>
@@ -31,6 +36,7 @@ function ProtectedLayout() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="educationalPage/finEducation" />
         <Stack.Screen name="educationalPage/IAScreen" />
+        <Stack.Screen name="admin/adminPage" />
       </Stack>
     </AppProviders>
   );
