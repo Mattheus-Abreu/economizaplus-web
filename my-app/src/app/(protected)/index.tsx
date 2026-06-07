@@ -11,8 +11,7 @@ import { ActivityIndicator, View } from "react-native";
  */
 function ProtectedIndex() {
   const { isReady, isLoggedIn, isFirstLogin } = useAuth();
-  console.log("[ProtectedIndex]", { isReady, isLoggedIn, isFirstLogin });
-
+  
   if (!isReady) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
