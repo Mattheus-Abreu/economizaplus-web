@@ -1,8 +1,8 @@
-import { BancoNome, svgBanco } from "@edusites/bancos-brasil";
+import { svgBanco } from "@edusites/bancos-brasil/src/core.js";
 import { SvgFromXml } from "react-native-svg";
 
 type BancoIconProps = {
-  nome: BancoNome;
+  nome: string;
   formato?: "quadrado" | "circulo" | "sem";
   cor?: string;
   fundo?: string;

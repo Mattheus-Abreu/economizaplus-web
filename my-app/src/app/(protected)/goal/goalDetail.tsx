@@ -1,37 +1,39 @@
-import theme from "@/app/themes/theme";
-import Screen from "@/components/Screen";
+import Button from "@/components/Button";
 import { GRADIENTS } from "@/components/CardHome";
+import AppModal, { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
+import { AnimatedProgressBar } from "@/components/progressBar";
+import SavingList from "@/components/SavingList";
+import Screen from "@/components/Screen";
 import { useGoals } from "@/contexts/goalContext";
+import { useSaving } from "@/contexts/savingContext";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import {
-  Alert,
-  ScrollView,
+  FlatList,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
-import { useSharedValue, withTiming, Easing } from "react-native-reanimated";
-import { useEffect } from "react";
-import { AnimatedProgressBar } from "@/components/progressBar";
-import Button from "@/components/Button";
-import { useSaving } from "@/contexts/savingContext";
-import { useWallets } from "@/contexts/walletContext"
+import { Easing, useSharedValue, withTiming } from "react-native-reanimated";
 
 function goalDetail() {
   const router = useRouter();
   const { goals, deleteGoal } = useGoals();
   const { loadSavings, getSavingsByGoal } = useSaving();
-  const { wallets } = useWallets();
+  const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
 
   const params = useLocalSearchParams<{
     id: string;
     gradientIndex?: string;
   }>();
 
-  const goal = goals.find((g) => g.id === params.id);
+  const goal = (goals ?? []).find((g) => g.id === params.id);
 
   const gradientIndex = Number(params.gradientIndex ?? 0);
   const gradient = GRADIENTS[gradientIndex % GRADIENTS.length];
@@ -45,9 +47,7 @@ function goalDetail() {
     if (!goal) return;
 
     const percent =
-      safeTarget > 0
-        ? Math.min((safeCurrent / safeTarget) * 100, 100)
-        : 0;
+      safeTarget > 0 ? Math.min((safeCurrent / safeTarget) * 100, 100) : 0;
 
     progress.value = withTiming(percent, {
       duration: 800,
@@ -56,18 +56,23 @@ function goalDetail() {
   }, [goal]);
 
   useEffect(() => {
-    if (goal?.id) {
-      loadSavings(goal.id);
-    }
+    if (!goal) return;
+
+    loadSavings(goal.id);
   }, [goal?.id]);
 
   if (!goal) {
     return (
-      <Screen style={{ padding: 24, justifyContent: "center", alignItems: "center" }}>
+      <Screen
+        style={{ padding: 24, justifyContent: "center", alignItems: "center" }}
+      >
         <Text style={{ color: theme.colors.textSecondary }}>
           Meta não encontrada
         </Text>
-        <TouchableOpacity onPress={() => router.back()} style={{ marginTop: 16 }}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={{ marginTop: 16 }}
+        >
           <Text style={{ color: theme.colors.primary }}>Voltar</Text>
         </TouchableOpacity>
       </Screen>
@@ -97,156 +102,260 @@ function goalDetail() {
   }
 
   function handleDelete() {
-    Alert.alert("Deletar meta", "Tem certeza que deseja excluir essa meta?", [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Excluir",
-        style: "destructive",
-        onPress: async () => {
-          await deleteGoal(goal!.id);
-          router.back();
+    setModal({
+      visible: true,
+      variant: "confirm",
+      title: "Excluir meta",
+      description:
+        "Tem certeza que deseja excluir esta meta? Esta ação não pode ser desfeita.",
+      buttons: [
+        {
+          label: "Cancelar",
+          variant: "secondary",
+          onPress: () => setModal(MODAL_HIDDEN),
         },
-      },
-    ]);
+        {
+          label: "Excluir",
+          variant: "danger",
+          onPress: async () => {
+            await deleteGoal(goal!.id);
+            setModal(MODAL_HIDDEN);
+            router.back();
+          },
+        },
+      ],
+    });
   }
 
   function handleDeposit() {
-    router.push({
-      pathname: "/(protected)/savings/createSavings",
-      params: {
-        goalId: goal!.id,
-        goalName: goal!.name,
-      },
-    });
+    if (progressPercent >= 100) {
+      setModal({
+        visible: true,
+        variant: "warning",
+        title: "Meta já atingida",
+        description:
+          "Você já atingiu 100% do seu objetivo. Parabéns! Não é necessário fazer mais depósitos.",
+        buttons: [
+          {
+            label: "Cancelar",
+            variant: "secondary",
+            onPress: () => setModal(MODAL_HIDDEN),
+          },
+          {
+            label: "Continuar",
+            variant: "primary",
+            onPress: () => {
+              setModal(MODAL_HIDDEN);
+              router.push({ pathname: "/(protected)/savings/createSavings" });
+            },
+          },
+        ],
+      });
+    } else {
+      router.push({
+        pathname: "/(protected)/savings/createSavings",
+        params: {
+          goalId: goal!.id,
+          goalName: goal!.name,
+        },
+      });
+    }
   }
 
   return (
     <Screen style={{ padding: 0 }}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
-        
-        <LinearGradient
-          colors={gradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.headerGradient}
-        >
-          <View style={styles.headerRow}>
-            <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-              <FontAwesome name="arrow-left" size={16} color="rgba(255,255,255,0.8)" />
-            </TouchableOpacity>
-
-            <View style={styles.headerActions}>
-              <TouchableOpacity style={styles.iconBtn} onPress={handleEdit}>
-                <Ionicons name="pencil-outline" size={18} color="rgba(255,255,255,0.8)" />
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.iconBtn} onPress={handleDelete}>
-                <Ionicons name="trash-outline" size={18} color="rgba(255,255,255,0.8)" />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <View style={styles.heroContent}>
-            <Text style={styles.goalName}>{goal.name}</Text>
-
-            <Text style={styles.goalDeadline}>
-              Prazo:{" "}
-              {new Date(goal.deadline).toLocaleDateString("pt-BR", {
-                day: "2-digit",
-                month: "long",
-                year: "numeric",
-              })}
-            </Text>
-          </View>
-        </LinearGradient>
-
-        <View style={styles.summaryRow}>
-          <View style={styles.summaryCard}>
-            <Text style={styles.summaryLabel}>Guardado</Text>
-            <Text style={styles.summaryValue}>
-              R$ {safeCurrent.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-            </Text>
-          </View>
-
-          <View style={[styles.summaryCard, styles.summaryCardMiddle]}>
-            <Text style={styles.summaryLabel}>Meta</Text>
-            <Text style={styles.summaryValue}>
-              R$ {safeTarget.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-            </Text>
-          </View>
-
-          <View style={styles.summaryCard}>
-            <Text style={styles.summaryLabel}>Faltam</Text>
-            <Text style={[styles.summaryValue, { color: theme.colors.primary }]}>
-              R$ {remaining.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.barSection}>
-          <View style={styles.barHeader}>
-            <Text style={styles.barLabel}>Progresso</Text>
-            <Text style={styles.barPercent}>{progressPercent}%</Text>
-          </View>
-
-          <AnimatedProgressBar
-            progress={progressPercent / 100}
-            useGradient
-            gradientColors={gradient}
-            trackColor="rgba(255,255,255,0.08)"
-            height={10}
-            width="100%"
-            animationDuration={1000}
-          />
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Depósitos</Text>
-
-          {!goalSavings.length ? (
-            <Text style={styles.sectionEmpty}>
-              Nenhum depósito registrado ainda
-            </Text>
-          ) : (
-            goalSavings.map((saving) => {
-              const safeAmount = Number(saving?.amount ?? 0);
-
-              return (
-                <View
-                  key={saving.id}
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    paddingVertical: 12,
-                    borderBottomWidth: 1,
-                    borderColor: "rgba(255,255,255,0.08)",
-                  }}
+      <FlatList
+        data={goalSavings}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => <SavingList item={item} />}
+        ListHeaderComponent={
+          <>
+            <LinearGradient
+              colors={[gradient[1], gradient[0]]}
+              start={{ x: 1, y: 0 }}
+              end={{ x: 0, y: 0 }}
+              style={styles.headerGradient}
+            >
+              <View style={styles.headerRow}>
+                <TouchableOpacity
+                  style={styles.backBtn}
+                  onPress={() => router.back()}
                 >
-                  <Text style={{color: theme.colors.textSecondary}}>{wallets.filter((w) => w.id === saving.walletId)?.[0]?.name || "Carteira não encontrada"}</Text>
-                  <Text style={{ color: theme.colors.secondary }}>
-                    + R$ {safeAmount.toLocaleString("pt-BR", {
-                      minimumFractionDigits: 2,
-                    })}
+                  <FontAwesome
+                    name="arrow-left"
+                    size={16}
+                    color="rgba(255,255,255,0.8)"
+                  />
+                </TouchableOpacity>
+
+                <View style={styles.headerActions}>
+                  <TouchableOpacity style={styles.iconBtn} onPress={handleEdit}>
+                    <Ionicons
+                      name="pencil-outline"
+                      size={18}
+                      color="rgba(255,255,255,0.8)"
+                    />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.iconBtn}
+                    onPress={handleDelete}
+                  >
+                    <Ionicons
+                      name="trash-outline"
+                      size={18}
+                      color="rgba(255,255,255,0.8)"
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <View style={styles.heroContent}>
+                <Text style={styles.goalName}>{goal.name}</Text>
+
+                <Text style={styles.goalDeadline}>
+                  Prazo:{" "}
+                  {new Date(goal.deadline).toLocaleDateString("pt-BR", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </Text>
+              </View>
+            </LinearGradient>
+
+            <View style={styles.summaryWrapper}>
+            <View style={styles.summaryRow}>
+              <View style={styles.summaryCard}>
+                <Text style={styles.summaryLabel}>Guardado</Text>
+                <Text style={styles.summaryValue}>
+                  R${" "}
+                  {safeCurrent.toLocaleString("pt-BR", {
+                    minimumFractionDigits: 2,
+                  })}
+                </Text>
+              </View>
+
+              <View style={[styles.summaryCard, styles.summaryCardMiddle]}>
+                <Text style={styles.summaryLabel}>Meta</Text>
+                <Text style={styles.summaryValue}>
+                  R${" "}
+                  {safeTarget.toLocaleString("pt-BR", {
+                    minimumFractionDigits: 2,
+                  })}
+                </Text>
+              </View>
+
+              <View style={styles.summaryCard}>
+                <Text style={styles.summaryLabel}>Faltam</Text>
+                <Text
+                  style={[styles.summaryValue, { color: theme.colors.primary }]}
+                >
+                  R${" "}
+                  {remaining.toLocaleString("pt-BR", {
+                    minimumFractionDigits: 2,
+                  })}
+                </Text>
+              </View>
+            </View>
+            </View>
+            <View style={styles.barSection}>
+              <View style={styles.barHeader}>
+                <Text style={styles.barLabel}>Progresso</Text>
+                <Text style={styles.barPercent}>{progressPercent}%</Text>
+              </View>
+
+              <AnimatedProgressBar
+                progress={progressPercent / 100}
+                useGradient
+                gradientColors={gradient}
+                trackColor="rgba(255,255,255,0.08)"
+                height={10}
+                width="100%"
+                animationDuration={1000}
+              />
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Depósitos</Text>
+            </View>
+          </>
+        }
+        ListFooterComponent={
+          <>
+            {progressPercent >= 100 && (
+              <View
+                style={{
+                  marginHorizontal: 24,
+                  marginTop: 16,
+                  backgroundColor: "rgba(34,197,94,0.1)",
+                  borderWidth: 0.5,
+                  borderColor: "rgba(34,197,94,0.3)",
+                  borderRadius: 14,
+                  padding: 16,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 12,
+                }}
+              >
+                <Ionicons
+                  name="checkmark-circle"
+                  size={24}
+                  color={theme.colors.secondary}
+                />
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      color: theme.colors.secondary,
+                      fontWeight: "600",
+                      fontSize: 14,
+                    }}
+                  >
+                    Meta concluída!
+                  </Text>
+                  <Text
+                    style={{
+                      color: "rgba(34,197,94,0.7)",
+                      fontSize: 12,
+                      marginTop: 2,
+                    }}
+                  >
+                    Você atingiu 100% do seu objetivo. Parabéns!
                   </Text>
                 </View>
-              );
-            })
-          )}
-        </View>
+              </View>
+            )}
 
-        <View style={styles.cta}>
-          <Button label="Fazer depósito" onPress={handleDeposit} />
-        </View>
+            <View style={styles.cta}>
+              <Button label="Fazer depósito" onPress={handleDeposit} />
+            </View>
+          </>
+        }
+        ListEmptyComponent={
+          <Text style={styles.sectionEmpty}>
+            Nenhum depósito registrado ainda
+          </Text>
+        }
+        contentContainerStyle={{ paddingBottom: 40 }}
+      />
 
-      </ScrollView>
+      <AppModal
+        visible={modal.visible}
+        onClose={() => setModal(MODAL_HIDDEN)}
+        variant={modal.variant}
+        title={modal.title}
+        description={modal.description}
+        buttons={modal.buttons}
+      />
     </Screen>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+StyleSheet.create({
   headerGradient: {
-    paddingTop: 56,
-    paddingBottom: 32,
+    paddingTop: 70,
+    paddingBottom: 80,
     paddingHorizontal: 24,
   },
   headerRow: {
@@ -303,21 +412,35 @@ const styles = StyleSheet.create({
   },
   progressLabel: {
     fontSize: 13,
-    color: "rgba(255,255,255,0.7)",
+    color: theme.colors.textSecondary,
   },
+  summaryWrapper: {
+    marginHorizontal: 24,
+    marginTop: -30,
+
+    shadowColor: theme.colors.foreground,
+    shadowOpacity: 0.2,
+    shadowRadius: 15,
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+
+    elevation: 10,
+  },
+
   summaryRow: {
     flexDirection: "row",
-    marginHorizontal: 24,
-    marginTop: -20,
     backgroundColor: theme.colors.surface,
     borderRadius: 16,
     overflow: "hidden",
-    borderWidth: 0.5,
-    borderColor: "rgba(255,255,255,0.08)",
+    borderWidth: 1,
+    borderColor: theme.colors.glass,
   },
   summaryCard: {
     flex: 1,
-    padding: 16,
+    paddingTop: 16,
+    paddingBottom: 16,
     alignItems: "center",
     gap: 4,
   },
@@ -333,7 +456,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   summaryValue: {
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: "700",
     color: theme.colors.text,
   },
@@ -369,6 +492,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: theme.colors.textSecondary,
     paddingVertical: 12,
+    paddingHorizontal: 24,
   },
   cta: {
     paddingHorizontal: 24,
@@ -389,6 +513,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#fff",
+  },
+  savingsSkeleton: {
+    width: "100%",
+    height: 50,
+    borderRadius: 16,
   },
 });
 

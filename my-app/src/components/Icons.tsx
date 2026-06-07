@@ -1,39 +1,43 @@
-import theme from '@/app/themes/theme';
+import { useAppTheme } from '@/hooks/useAppTheme';
 import { FontAwesome } from '@expo/vector-icons';
-import React from 'react';
 import { Text, View } from 'react-native';
 
 type Props = {
   name: keyof typeof FontAwesome.glyphMap;
-  label: string;
+  label?: string;
   color: string;
+  onlyIcon?: boolean;
 };
 
-const Icons = ({ name, label, color }: Props) => {
+const Icons = ({ name, label, color, onlyIcon }: Props) => {
+  const theme = useAppTheme();
   return (
     <View
       style={{
         padding: 10,
-        gap: 5, 
+        gap: 5,
         width: 80,
-        flexDirection: "column",
+        height: 80,
+        justifyContent: "center",
         alignItems: "center",
-        backgroundColor: theme.colors.glass,
+        backgroundColor: theme.colors.textSecondary + "10",
         borderRadius: 25,
       }}
     >
-      <FontAwesome name={name} size={30} color={color} />
+      <FontAwesome name={name} size={onlyIcon ? 35 : 30} color={color} />
 
-      <Text
-        style={{
-          color: theme.colors.text,
-          fontSize: 10,
-          fontWeight: "400",
-          marginTop: 5,
-        }}
-      >
-        {label}
-      </Text>
+      {!onlyIcon && (
+        <Text
+          style={{
+            color: theme.colors.text,
+            fontSize: 10,
+            fontWeight: "400",
+            marginTop: 5,
+          }}
+        >
+          {label}
+        </Text>
+      )}
     </View>
   );
 };

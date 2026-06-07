@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, TouchableOpacity } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -5,7 +6,11 @@ import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import theme from "@/app/themes/theme";
 import { useState } from "react";
+=======
+>>>>>>> 42f8d6f0e518dbe868e58a0dd48137161c5e06d7
 import Input from "@/components/inputs/Input";
+import { useAppTheme } from "@/hooks/useAppTheme";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 import { Dropdown } from "react-native-element-dropdown";
@@ -50,9 +55,16 @@ const brandsCards = [
   { label: 'Elo', value: 'elo' },
   { label: 'Hipercard', value: 'hipercard' },
 ];
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { useState } from "react";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export default function newCard() {
     const router = useRouter();
+    const theme = useAppTheme();
+    const styles = createStyles(theme);
 
     const dataCard = useLocalSearchParams<{
       id?: string;
@@ -157,15 +169,7 @@ export default function newCard() {
       }finally{
         setIsLoading(false);
       }
-
-
-
     }
-
-
-
-
-
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -366,7 +370,8 @@ export default function newCard() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+StyleSheet.create({
   container: {
     flex: 1,    
     backgroundColor: "#100420",

@@ -1,32 +1,35 @@
-import theme from "@/app/themes/theme";
 import Button from "@/components/Button";
 import Screen from "@/components/Screen";
 import { CircularProgress } from "@/components/circular-progress";
 import Input from "@/components/inputs/Input";
+import AppModal, { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
 import { useGoals } from "@/contexts/goalContext";
+import { useSaving } from "@/contexts/savingContext";
+import { useWallets } from "@/contexts/walletContext";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
-import DateTimePickerModal from "react-native-modal-datetime-picker";
-import { useLocalSearchParams, useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { BaseButton } from "react-native-gesture-handler";
 import {
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { BaseButton } from "react-native-gesture-handler";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { Easing, useSharedValue, withTiming } from "react-native-reanimated";
-import { useWallets } from "@/contexts/walletContext";
-import { useSaving } from "@/contexts/savingContext";
 
 function createSavings() {
   const router = useRouter();
   const { addSaving } = useSaving();
   const { wallets } = useWallets();
   const { goals } = useGoals();
+  const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
 
   const params = useLocalSearchParams<{
     id?: string;
@@ -46,7 +49,7 @@ function createSavings() {
 
   const progress = useSharedValue(0);
 
-  const selectedGoal = goals.find((g) => g.id === goalId);
+  const selectedGoal = goals?.find((g) => g.id === goalId);
 
   useEffect(() => {
     if (!selectedGoal) {
@@ -101,44 +104,80 @@ function createSavings() {
 
   async function handleSubmit() {
     if (!walletId || !goalId || !amount) {
-      Alert.alert("Atenção", "Selecione a carteira, a meta e informe o valor.");
+      setModal({
+        visible:true,
+        variant: "error",
+        title: "Dados incompletos",
+        description: "Preencha todos os campos para continuar!"
+      })
       return;
     }
 
     const numAmount = parseFloat(amount);
 
     if (isNaN(numAmount) || numAmount <= 0) {
-      Alert.alert("Atenção", "Informe um valor válido para o depósito.");
+      setModal({
+        visible:true,
+        variant: "error",
+        title: "Valor inválido",
+        description: "Informe um valor válido para o depósito."
+      });
       return;
     }
 
-    const selectedWallet = wallets.find(w => w.id === walletId);
+    const selectedWallet = wallets?.find(w => w.id === walletId);
 
     if (!selectedWallet) {
-      Alert.alert("Erro", "Carteira não encontrada.");
+      setModal({
+        visible:true,
+        variant: "error",
+        title: "Carteira não encontrada",
+        description: "Selecione uma carteira válida para continuar."
+      });
       return;
     }
 
     if (numAmount > selectedWallet.balance) {
-      Alert.alert(
-        "Saldo insuficiente",
-        "Você não possui saldo suficiente na carteira para esse depósito."
-      );
+      setModal({
+        visible:true,
+        variant: "error",
+        title: "Saldo insuficiente",
+        description: "Você não possui saldo suficiente na carteira para esse depósito."
+      });
       return;
     }
 
     try {
-      await addSaving({
+      const { isCompleted, goalName } = await addSaving({
         goalId,
         walletId,
         amount: numAmount,
         createdAt,
       });
-      Alert.alert("Sucesso", "Depósito realizado com sucesso!");
-      router.back();
+      if (isCompleted) {
+        setModal({
+          visible: true,
+          variant: "success",
+          title: "Meta alcançada!",
+          description: `Parabéns! Você alcançou a meta "${goalName}" com este depósito.`
+        })
+      } else {
+        setModal({
+          visible: true,
+          variant: "success",
+          title: "Depósito realizado",
+          description: "Seu depósito foi realizado com sucesso."
+        })
+        router.back();
+      }
     } catch (error: any) {
       console.log(error);
-      Alert.alert("Erro", error.message || "Erro ao realizar depósito!");
+      setModal({
+        visible: true,
+        variant: "error",
+        title: "Erro",
+        description: error.message || "Ocorreu um erro ao realizar o depósito."
+      })
     }
   }
 
@@ -198,10 +237,10 @@ function createSavings() {
           <View style={styles.field}>
             <Text style={styles.fieldLabel}>Debitar da carteira</Text>
             <View style={styles.typeContainer}>
-              {wallets.length === 0 ? (
+              {wallets?.length === 0 ? (
                 <Text style={styles.emptyField}>Nenhuma carteira cadastrada</Text>
               ) : (
-                wallets.map((w) => (
+                wallets?.map((w) => (
                   <TouchableOpacity
                     key={w.id}
                     onPress={() => setWalletId(w.id)}
@@ -222,10 +261,10 @@ function createSavings() {
           <View style={styles.field}>
             <Text style={styles.fieldLabel}>Meta</Text>
             <View style={styles.typeContainer}>
-              {goals.length === 0 ? (
+              {goals?.length === 0 ? (
                 <Text style={styles.emptyField}>Nenhuma meta cadastrada</Text>
               ) : (
-                goals.map((g) => (
+                goals?.map((g) => (
                   <TouchableOpacity
                     key={g.id}
                     onPress={() => setGoalId(g.id)}
@@ -323,11 +362,20 @@ function createSavings() {
           />
         </View>
       </ScrollView>
+      <AppModal
+          visible={modal.visible}
+          onClose={() => setModal(MODAL_HIDDEN)}
+          variant={modal.variant}
+          title={modal.title}
+          description={modal.description}
+          buttons={modal.buttons}
+        />
     </Screen>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+StyleSheet.create({
   header: {
     paddingTop: 56,
     paddingHorizontal: 24,

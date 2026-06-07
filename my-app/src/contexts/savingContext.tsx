@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
 import { savingService } from "@/services/savingService";
-import { useGoals } from "./goalContext";
 import Saving from "@/types/savings";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { useGoals } from "./goalContext";
 import { useWallets } from "./walletContext";
 
 type CreateSavingInput = {
@@ -9,11 +9,12 @@ type CreateSavingInput = {
   walletId: string;
   amount: number;
   createdAt: string;
+  description?: string;
 };
 
 type SavingContextData = {
   savings: Saving[];
-  addSaving: (data: CreateSavingInput) => Promise<void>;
+  addSaving: (data: CreateSavingInput) => Promise<{ isCompleted: boolean; goalName: string }>;
   loadSavings: (goalId?: string) => Promise<void>;
   getSavingsByGoal: (goalId: string) => Saving[];
 };
@@ -22,7 +23,7 @@ const SavingContext = createContext<SavingContextData>({} as SavingContextData);
 
 export function SavingProvider({ children }: { children: React.ReactNode }) {
   const [savings, setSavings] = useState<Saving[]>([]);
-  const { loadGoals } = useGoals(); 
+  const { loadGoals, goals } = useGoals(); 
   const { loadWallets } = useWallets();
 
   useEffect(() => {
@@ -41,16 +42,23 @@ export function SavingProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function addSaving(data: CreateSavingInput) {
-    await savingService.createSaving({
+    const goal = goals?.find(g => g.id === data.goalId);
+
+    const result = await savingService.createSaving({
       ...data,
       createdAt: new Date(data.createdAt).toISOString(),
+      description: goal?.description || "",
     });
+
+    const isCompleted = result.percentageComplete >= 100;
 
     await Promise.all([
       loadGoals(),
       loadSavings(data.goalId),
       loadWallets(),
     ]);
+
+    return { isCompleted, goalName: result.name };
   }
 
   function getSavingsByGoal(goalId: string): Saving[] {

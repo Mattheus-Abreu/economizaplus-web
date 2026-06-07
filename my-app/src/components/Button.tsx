@@ -1,6 +1,6 @@
-import { StyleSheet, Text, TouchableOpacity, TouchableOpacityProps } from "react-native"
-import theme from "@/app/themes/theme"
+import { useAppTheme } from "@/hooks/useAppTheme"
 import { Ionicons } from "@expo/vector-icons"
+import { StyleSheet, Text, TouchableOpacity, TouchableOpacityProps } from "react-native"
 
 type ButtonProps = TouchableOpacityProps & {
     label: string,
@@ -8,16 +8,19 @@ type ButtonProps = TouchableOpacityProps & {
 }
 
 function Button({ label, children, textStyle, style: styleProp, ...rest }: ButtonProps) {
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
   return (
-    <TouchableOpacity style={[style.container, styleProp]} {...rest} activeOpacity={0.85}>
+    <TouchableOpacity style={[styles.container, styleProp]} {...rest} activeOpacity={0.85}>
       {children}
-      <Text style={[style.label, textStyle]}>{label}</Text>
-      <Ionicons name="arrow-forward" size={18} color="#fff" />
+      <Text style={[styles.label, textStyle]}>{label}</Text>
+      <Ionicons name="arrow-forward" size={18} color="#fff"/>
     </TouchableOpacity>
   )
 }
 
-const style = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+StyleSheet.create({
     container: {
         width: "100%",
         height: 54,
@@ -29,7 +32,7 @@ const style = StyleSheet.create({
         flexDirection: "row"
     },
     label: {
-        color: theme.colors.text,
+        color: "#fff",
         fontSize: theme.fontSize.text,
         fontWeight: "600"
     }

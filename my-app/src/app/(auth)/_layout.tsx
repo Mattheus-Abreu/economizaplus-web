@@ -1,6 +1,5 @@
-import { Redirect, Stack } from "expo-router"
-import { AuthProvider } from "@/contexts/authContext"
-import useAuth from "@/hooks/useAuth"
+import useAuth from "@/hooks/useAuth";
+import { Redirect, Stack } from "expo-router";
 
 function AuthLayout() {
   const { isLoggedIn, isReady } = useAuth();
@@ -8,11 +7,10 @@ function AuthLayout() {
   if (!isReady) return null;
 
   if (isLoggedIn) {
-    return <Redirect href={"/(protected)/(tabs)"}/>
+    return <Redirect href="/(protected)" />;
   }
-  console.log("isLoggedIn:", isLoggedIn);
-  console.log("isReady:", isReady);
+
   return <Stack screenOptions={{ headerShown: false }} />;
 }
 
-export default AuthLayout
+export default AuthLayout;

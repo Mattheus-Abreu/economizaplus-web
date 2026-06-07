@@ -5,7 +5,7 @@ import { AuthContext } from "./authContext";
 import { useWallets } from "./walletContext";
 
 type TransactionContextType = {
-  transactions: Transaction[];
+  transactions: Transaction[] | undefined;
   loadTransactions: () => Promise<void>;
   addTransaction: (data: any) => Promise<void>;
   updateTransaction: (id: string, data: any) => Promise<void>;
@@ -15,7 +15,7 @@ type TransactionContextType = {
 const TransactionContext = createContext({} as TransactionContextType);
 
 export function TransactionProvider({ children }: any) {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[] | undefined>(undefined);
   const { token, isReady } = useContext(AuthContext);
   const { loadWallets } = useWallets(); 
 
@@ -39,8 +39,17 @@ export function TransactionProvider({ children }: any) {
   }
 
   async function deleteTransaction(id: string) {
-    await transactionService.deleteTransaction(id);
-    await Promise.all([loadTransactions(), loadWallets()]);
+    setTransactions((prev) => (prev ?? []).filter((t) => t.id !== id));
+
+    try {
+      await transactionService.deleteTransaction(id);
+
+      await loadWallets();
+    } catch (error) {
+      console.log("Erro ao deletar:", error);
+
+      await loadTransactions();
+    }
   }
 
   useEffect(() => {

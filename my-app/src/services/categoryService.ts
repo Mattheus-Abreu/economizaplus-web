@@ -6,7 +6,7 @@ export async function loadCategorires() {
   return response.data;
 }
 
-export async function createCategory(data: any) {
+export async function addCategory(data: any) {
   const response = await api.post("/api/categories", data);
 
   return response.data.goal ?? response.data;

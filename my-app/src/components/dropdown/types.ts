@@ -12,7 +12,7 @@ interface TriggerLayout {
 interface DropdownContextValue {
   visible: boolean;
   open: () => void;
-  close: () => void;
+  close: (OnClosed?: () => void) => void;
   triggerLayout: TriggerLayout | null;
   setTriggerLayout: (layout: TriggerLayout) => void;
   flipAnim: SharedValue<number>;

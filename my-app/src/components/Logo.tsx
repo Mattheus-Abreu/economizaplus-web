@@ -1,4 +1,4 @@
-import theme from "@/app/themes/theme";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import { StyleSheet, Text, View } from "react-native";
 
 type Props = {
@@ -13,6 +13,8 @@ const sizes = {
 
 function Logo({ size = "md" }: Props) {
   const s = sizes[size];
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
 
   return (
     <View style={styles.wrapper}>
@@ -25,7 +27,8 @@ function Logo({ size = "md" }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+StyleSheet.create({
   wrapper: {
     alignItems: "center",
     gap: 6,

@@ -23,6 +23,7 @@ import Animated, {
   Extrapolation,
   LinearTransition,
   withSpring,
+  runOnJS,
 } from "react-native-reanimated";
 import { BlurView } from "expo-blur";
 import type {
@@ -35,7 +36,6 @@ import type {
   ExtendedDialogContentProps,
   DialogContentProps,
 } from "./types";
-import { scheduleOnRN } from "react-native-worklets";
 
 const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
 const DialogContext = createContext<ExtendedDialogContextType | undefined>(
@@ -172,10 +172,10 @@ const DialogContent: React.FC<ExtendedDialogContentProps> = ({
         },
         (finished) => {
           if (finished) {
-            scheduleOnRN(setIsOpen, false);
-            scheduleOnRN(externalSetIsAnimating!, false);
+            runOnJS(setIsOpen)(false);
+            runOnJS(externalSetIsAnimating!)(false);
             if (onClose) {
-              scheduleOnRN(onClose);
+              runOnJS(onClose)();
             }
           }
         },

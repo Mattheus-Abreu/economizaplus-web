@@ -1,26 +1,31 @@
-import theme from "@/app/themes/theme";
 import Button from "@/components/Button";
 import Screen from "@/components/Screen";
 import Input from "@/components/inputs/Input";
+import AppModal, { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
+import { useWallets } from "@/contexts/walletContext";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  Alert,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
-import { useWallets } from "@/contexts/walletContext";
-import { LinearGradient } from "expo-linear-gradient";
 
-type WalletType = "CASH" | "INVESTMENT" | "SAVINGS_ACCOUNT" | "CHECKING_ACCOUNT";
+type WalletType = "CASH" | "INVESTMENT" | "SAVINGS_ACCOUNT" | "CHECKING_ACCOUNT" | "GOAL";
 
 function createWallet() {
   const router = useRouter();
   const { addWallet, updateWallet } = useWallets();
+  const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
 
   const params = useLocalSearchParams();
 
@@ -49,6 +54,7 @@ const walletTypes: { id: WalletType; name: string }[] = [
   { id: "SAVINGS_ACCOUNT", name: "Poupança" },
   { id: "CASH", name: "Dinheiro" },
   { id: "INVESTMENT", name: "Investimento" },
+  { id: "GOAL", name: "Caixinha" },
 ];
 
   function formatAmount(value: string): string {
@@ -62,7 +68,12 @@ const walletTypes: { id: WalletType; name: string }[] = [
 
   async function handleSubmit() {
     if (!name.trim() || !type || !balance) {
-      return Alert.alert("Atenção", "Preencha todos os campos!");
+      return setModal({
+        visible: true,
+        variant: "warning",
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha todos os campos para continuar."
+      })
     }
 
     try {
@@ -72,25 +83,44 @@ const walletTypes: { id: WalletType; name: string }[] = [
           type,
           balance: Number(balance),
         });
-        Alert.alert("Sucesso", "carteira atualizada com sucesso!");
+        setModal({
+          visible: true,
+          variant: "success",
+          title: "Sucesso",
+          description: "Cateira atualizada com sucesso!"
+        })
       } else {
         await addWallet({
           name,
           type,
           balance: Number(balance),
         });
-        Alert.alert("Sucesso", "carteira criada com sucesso!");
+        setModal({
+          visible: true,
+          variant: "success",
+          title: "Sucesso",
+          description: "Carteira criada com sucesso!"
+        })
       }
 
       router.back();
     } catch (error: any) {
       console.log(error);
-      Alert.alert("Erro", error.message || "Erro ao salvar carteira!");
+      setModal({
+        visible: true,
+        variant: "error",
+        title: "Erro",
+        description: error.message || `Ocorreu um erro ao ${isEditing ? "atualizar" : "criar"} a carteira.`
+      })
     }
   }
 
   return (
     <Screen style={{ padding: 0 }}>
+      <KeyboardAvoidingView 
+        style={{ flex: 1 }}
+        behavior={Platform.select({ ios: "padding", android: "padding" })}
+          >
       <ScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
@@ -131,7 +161,6 @@ const walletTypes: { id: WalletType; name: string }[] = [
 
           <View style={styles.field}>
             <Text style={styles.fieldLabel}>Nome da carteira</Text>
-
             <View
               style={[
                 styles.fieldInput,
@@ -251,12 +280,22 @@ const walletTypes: { id: WalletType; name: string }[] = [
           </View>
         </View>
       </ScrollView>
+      <AppModal
+          visible={modal.visible}
+          onClose={() => setModal(MODAL_HIDDEN)}
+          variant={modal.variant}
+          title={modal.title}
+          description={modal.description}
+          buttons={modal.buttons}
+        />
+        </KeyboardAvoidingView>
     </Screen>
   );
 }
 
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+StyleSheet.create({
   header: {
     paddingTop: 56,
     paddingHorizontal: 24,
@@ -266,9 +305,9 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.06)",
+    backgroundColor: theme.colors.glass + "10",
     borderWidth: 0.5,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderColor: theme.colors.glass,
     alignItems: "center",
     justifyContent: "center",
   },

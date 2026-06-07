@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
 import { GestureHandlerRootView} from "react-native-gesture-handler";
 import { StatusBar } from "expo-status-bar";
@@ -11,6 +12,18 @@ import { TouchableOpacity } from "react-native";
 import { isBancoNome } from "@/utils/banco";
 import { getCards } from "@/services/cardService";
 //import { linearGradient } from "expo-linear-gradient";
+=======
+import { BlurCarousel } from "@/components/molecules/blur-carousel";
+import { useAppTheme } from "@/hooks/useAppTheme";
+import BancoIcon from "@/services/apiBanco";
+import { BANK_COLORS, getBancoNomeSafe } from "@/utils/banco";
+import { FontAwesome } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { useCallback, useState } from "react";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+>>>>>>> 42f8d6f0e518dbe868e58a0dd48137161c5e06d7
 
 type CardItem = {
   id: string;
@@ -26,6 +39,7 @@ type CardItem = {
   }>;
 };
 
+<<<<<<< HEAD
 const dataBackgroundColors = {
   nubank: {
     fundo: '#820AD1',
@@ -109,6 +123,8 @@ const dataBackgroundColors = {
     fundo: '#ffffff',
   }
 };
+=======
+>>>>>>> 42f8d6f0e518dbe868e58a0dd48137161c5e06d7
 
 const DATA: CardItem[] = [
   {
@@ -164,11 +180,15 @@ export default function App() {
   const [currentCard, setCurrentCard] = useState<CardItem | null>(DATA[0]);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
 
   const getBackgroundColor = (title: string) => {
-    return dataBackgroundColors[title.toLocaleLowerCase() as keyof typeof dataBackgroundColors]?.fundo || '#ec0192';
+    const key = title.toLowerCase().replace(/\s/g, "");
+    return BANK_COLORS[key] ?? "#ec0192";
   };
 
+<<<<<<< HEAD
   function getBancoNomeSafe(title: string) {
     return isBancoNome(title) ? title : "nubank";
   }
@@ -223,6 +243,8 @@ export default function App() {
     loadCards();
   }, []);
 
+=======
+>>>>>>> 42f8d6f0e518dbe868e58a0dd48137161c5e06d7
   const renderTransactions = () => {
     if (!currentCard || !currentCard.transactions?.length) {
       return (
@@ -363,7 +385,8 @@ export default function App() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
+ StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#100420",

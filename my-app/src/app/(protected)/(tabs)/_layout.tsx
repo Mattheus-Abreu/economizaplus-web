@@ -1,11 +1,11 @@
-import TabBar from '@/components/tabBar/TabBar'
-import { Tabs } from 'expo-router'
+import TabBar from '@/components/tabBar/TabBar';
+import { Tabs } from 'expo-router';
 
 function TabLayout() {
   return (
-    <Tabs tabBar={props => <TabBar {...props}/>} screenOptions={{ headerShown: false }}>
+    <Tabs tabBar={props => <TabBar {...props}/>} screenOptions={{ headerShown: false }} initialRouteName="index">
       <Tabs.Screen name="index" options={{ title: "Home" }} />
-      <Tabs.Screen name="grafics" options={{ title: "Gráficos" }} />
+      <Tabs.Screen name="wallet" options={{ title: "Carteiras" }} />
       <Tabs.Screen name="cards" options={{ title: "Cartões" }} />
       <Tabs.Screen name="profile" options={{ title: "Perfil" }} />
     </Tabs>

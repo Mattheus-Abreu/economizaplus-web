@@ -1,15 +1,18 @@
-import theme from "@/app/themes/theme";
 import Button from "@/components/Button";
 import Screen from "@/components/Screen";
 import Input from "@/components/inputs/Input";
+import AppModal, { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
+import { useCard } from "@/contexts/cardContext";
+import { useCategory } from "@/contexts/categoryContext";
+import { useGoals } from "@/contexts/goalContext";
+import { useTransactions } from "@/contexts/transactionContext";
+import { useWallets } from "@/contexts/walletContext";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
-import DateTimePickerModal from "react-native-modal-datetime-picker";
-import { useLocalSearchParams, useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { BaseButton } from "react-native-gesture-handler";
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -18,11 +21,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useTransactions } from "@/contexts/transactionContext";
-import { useGoals } from "@/contexts/goalContext";
-import { useCategory } from "@/contexts/categoryContext";
-import { useWallets } from "@/contexts/walletContext";
-import { useCard } from "@/contexts/cardContext";
+import { BaseButton } from "react-native-gesture-handler";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 
 type TransactionType = "INCOME" | "EXPENSE" | "TRANSFER";
 type PaymentMethod = "CASH" | "CREDIT_CARD" | "DEBIT_CARD" | "PIX" | "BANK_TRANSFER";
@@ -35,6 +35,9 @@ function CreateTransaction() {
   const { categories } = useCategory();
   const { wallets } = useWallets();
   const { cards } = useCard();
+  const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
 
   const params = useLocalSearchParams<{
     id?: string;
@@ -148,18 +151,39 @@ function CreateTransaction() {
 
   async function handleSubmit() {
     if (!type || !amount || !transactionDate || !walletId) {
-      return Alert.alert(
-        "Atenção",
-        "Preencha tipo, valor, data e carteira!"
-      );
+      return setModal({
+        visible: true,
+        variant: "error",
+        title: "Dados incompletos",
+        description: "Preencha tipo, valor, data e carteira!"
+      })
     }
 
     if (isTransfer && !destinationWalletId) {
-      return Alert.alert("Atenção", "Selecione a carteira de destino!");
+      return setModal({
+        visible: true,
+        variant: "error",
+        title: "Dados incompletos",
+        description: "Selecione a carteira de destino!"
+      });
     }
 
     if (isCreditCard && !cardId) {
-      return Alert.alert("Atenção", "Selecione o cartão de crédito!");
+      return setModal({
+        visible: true,
+        variant: "error",
+        title: "Dados incompletos",
+        description: "Selecione o cartão de crédito!"
+      });
+    }
+
+    if (!categoryId) {
+      return setModal({
+        visible: true,
+        variant: "error",
+        title: "Categoria obrigatória",
+        description: "Selecione uma categoria!",
+      });
     }
 
     try {
@@ -169,7 +193,12 @@ function CreateTransaction() {
           amount: Number(amount),
           transactionDate,
         });
-        Alert.alert("Sucesso", "Transação atualizada com sucesso!");
+        setModal({
+          visible: true,
+          variant: "success",
+          title: "Transação atualizada",
+          description: "As informações da transação foram atualizadas com sucesso."
+        })
       } else {
         await addTransaction({
           type,
@@ -181,16 +210,26 @@ function CreateTransaction() {
           description: description || undefined,
           transactionDate,
           goal_id: goal_id || undefined,
-          categoryId: categoryId || undefined,
+          categoryId: categoryId,
           isInstallment: isParcelado,
           totalInstallments: isParcelado ? Number(totalInstallments) : undefined,
         });
-        Alert.alert("Sucesso", "Transação criada com sucesso!");
+        setModal({
+          visible: true,
+          variant: "success",
+          title: "Transação criada",
+          description: "Sua nova transação foi criada com sucesso."
+        })
       }
       router.back();
     } catch (error: any) {
       console.log(error);
-      Alert.alert("Erro", error.message || "Erro ao salvar transação!");
+      setModal({
+        visible: true,
+        variant: "error",
+        title: "Erro",
+        description: error.message || "Ocorreu um erro ao salvar a transação."
+      })
     }
   }
 
@@ -278,10 +317,10 @@ function CreateTransaction() {
                 {isTransfer ? "Carteira de origem" : "Carteira"}
               </Text>
               <View style={styles.typeContainer}>
-                {wallets.length === 0 ? (
+                {wallets?.length === 0 ? (
                   <Text style={styles.emptyField}>Nenhuma carteira cadastrada</Text>
                 ) : (
-                  wallets.map((w) => (
+                  wallets?.map((w) => (
                     <TouchableOpacity
                       key={w.id}
                       onPress={() => setWalletId(w.id)}
@@ -303,11 +342,11 @@ function CreateTransaction() {
               <View style={styles.field}>
                 <Text style={styles.fieldLabel}>Carteira de destino</Text>
                 <View style={styles.typeContainer}>
-                  {wallets.filter((w) => w.id !== walletId).length === 0 ? (
+                  {wallets?.filter((w) => w.id !== walletId).length === 0 ? (
                     <Text style={styles.emptyField}>Nenhuma outra carteira disponível</Text>
                   ) : (
                     wallets
-                      .filter((w) => w.id !== walletId)
+                      ?.filter((w) => w.id !== walletId)
                       .map((w) => (
                         <TouchableOpacity
                           key={w.id}
@@ -470,10 +509,10 @@ function CreateTransaction() {
             <View style={styles.field}>
               <Text style={styles.fieldLabel}>Meta (opcional)</Text>
               <View style={styles.typeContainer}>
-                {goals.length === 0 ? (
+                {goals?.length === 0 ? (
                   <Text style={styles.emptyField}>Nenhuma meta cadastrada</Text>
                 ) : (
-                  goals.map((g) => (
+                  goals?.map((g) => (
                     <TouchableOpacity
                       key={g.id}
                       onPress={() => setGoal_id(goal_id === g.id ? "" : g.id)}
@@ -494,10 +533,10 @@ function CreateTransaction() {
             <View style={styles.field}>
               <Text style={styles.fieldLabel}>Categoria (opcional)</Text>
               <View style={styles.typeContainer}>
-                {categories.length === 0 ? (
+                {categories?.length === 0 ? (
                   <Text style={styles.emptyField}>Nenhuma categoria cadastrada</Text>
                 ) : (
-                  categories.map((c) => (
+                  categories?.map((c) => (
                     <TouchableOpacity
                       key={c.id}
                       onPress={() =>
@@ -589,7 +628,7 @@ function CreateTransaction() {
                 )}
                 {isTransfer && destinationWalletId && (
                   <Text style={styles.previewAmount}>
-                    → {wallets.find((w) => w.id === destinationWalletId)?.name}
+                    → {wallets?.find((w) => w.id === destinationWalletId)?.name}
                   </Text>
                 )}
               </View>
@@ -603,12 +642,21 @@ function CreateTransaction() {
             />
           </View>
         </ScrollView>
+        <AppModal
+          visible={modal.visible}
+          onClose={() => setModal(MODAL_HIDDEN)}
+          variant={modal.variant}
+          title={modal.title}
+          description={modal.description}
+          buttons={modal.buttons}
+        />
       </Screen>
     </KeyboardAvoidingView>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+StyleSheet.create({
   header: {
     paddingTop: 56,
     paddingHorizontal: 24,

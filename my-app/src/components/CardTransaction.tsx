@@ -1,9 +1,14 @@
 import Dropdown from "@/components/dropdown";
+import { useCategory } from "@/contexts/categoryContext";
+import { useGoals } from "@/contexts/goalContext";
 import { useTransactions } from "@/contexts/transactionContext";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import Transaction from "@/types/transaction";
-import { Ionicons } from "@expo/vector-icons";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { Alert, StyleSheet, Text, View } from "react-native";
+import { useMemo, useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import AppModal, { MODAL_HIDDEN, ModalConfig } from "./modal/modal";
 
 type Props = {
   item: Transaction;
@@ -12,13 +17,39 @@ type Props = {
 function CardTransaction({ item }: Props) {
   const router = useRouter();
   const { deleteTransaction } = useTransactions();
+  const { categories } = useCategory();
+  const { goals } = useGoals();
+  const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
+
+  const category = useMemo(() => {
+    return (categories ?? []).find((c) => c.id === item.categoryId);
+  }, [categories, item.categoryId]);
+
+  const goal = useMemo(() => {
+    return goals?.find(g => g.id === item.goalId);
+  }, [goals, item.goalId]);
 
   function formatAmount(value: number): string {
     if (!value) return "–";
     return value.toLocaleString("pt-BR", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      style: "currency",
+      currency: "BRL",
     });
+  }
+
+  function getTypeColor(type: string) {
+    switch (type) {
+      case "INCOME":
+        return "#22C55E";
+      case "EXPENSE":
+        return "#F43F5E";
+      case "TRANSFER":
+        return "#FF9800";
+      default:
+        return "#fff";
+    }
   }
 
   function getTypeName(type: string) {
@@ -34,17 +65,24 @@ function CardTransaction({ item }: Props) {
     }
   }
 
-  function getTypeColor(type: string) {
-    switch (type) {
-      case "INCOME":
-        return "#22C55E"; 
-      case "EXPENSE":
-        return "#F43F5E"; 
-      case "TRANSFER":
-        return "#7C3AED"; 
-      default:
-        return "#fff";
-    }
+  function formatDate(dateString: string) {
+    const date = new Date(dateString);
+    const today = new Date();
+
+    const normalize = (d: Date) =>
+      new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+    const diff =
+      (normalize(today).getTime() - normalize(date).getTime()) /
+      (1000 * 60 * 60 * 24);
+
+    if (diff === 0) return "Hoje";
+    if (diff === 1) return "Ontem";
+
+    return date.toLocaleDateString("pt-BR", {
+      day: "numeric",
+      month: "short",
+    });
   }
 
   function handleEdit() {
@@ -61,142 +99,228 @@ function CardTransaction({ item }: Props) {
         goal_id: item.goalId,
         categoryId: item.categoryId,
         isInstallment: String(item.isInstallment),
-
       },
     });
   }
 
   function handleDelete() {
-    Alert.alert(
-      "Deletar transação",
-      "Tem certeza que deseja excluir essa transação?",
-      [
-        { text: "Cancelar", style: "cancel" },
+    setModal({
+      visible: true,
+      variant: "warning",
+      title: "Excluir transação",
+      description: "Tem certeza que deseja excluir?",
+      buttons: [
         {
-          text: "Excluir",
-          style: "destructive",
-          onPress: () => deleteTransaction(item.id),
+          label: "Cancelar",
+          onPress: () => setModal(MODAL_HIDDEN),
+          variant: "secondary",
         },
-      ]
-    );
+        {
+          label: "Excluir",
+          onPress: async () => {
+            await deleteTransaction(item.id);
+            setModal(MODAL_HIDDEN);
+          },
+          variant: "danger",
+        },
+      ],
+    });
   }
 
   return (
-    <View style={styles.card}>
-      <View style={styles.header}>
-        <View style={{ flex: 1 }}>
-          <Text
-            style={[
-              styles.title,
-              { color: getTypeColor(item.type) },
-            ]}
-          >
-            {getTypeName(item.type)}
+    <Pressable
+      onPress={() => {}}
+      style={({ pressed }) => [
+        styles.card,
+        pressed && styles.cardPressed,
+      ]}
+    >
+      <View
+        style={[
+          styles.typeIndicator,
+          { backgroundColor: getTypeColor(item.type) },
+        ]}
+      />
+
+      <View style={styles.container}>
+        <View
+          style={[
+            styles.iconContainer,
+            {
+              backgroundColor: (category?.color ?? "#7C3AED") + "20",
+            },
+          ]}
+        >
+          <FontAwesome
+            name={category?.icon ?? "question"}
+            size={20}
+            color={category?.color ?? "#7C3AED"}
+          />
+        </View>
+
+        <View style={styles.content}>
+          <Text style={styles.title}>
+            {category?.name ?? goal?.name ?? item.description}
           </Text>
 
-          <Text style={styles.amount}>
-            R$ {formatAmount(item.amount)}
-          </Text>
-
-          {item.description && (
+          {(goal?.description || item.description) && (
             <Text style={styles.subtitle}>
-              {item.description}
+              {goal?.description || item.description}
             </Text>
           )}
 
-          <Text style={styles.date}>
-            {new Date(item.transactionDate).toLocaleDateString("pt-BR")}
-          </Text>
+          <View style={styles.metaRow}>
+            <Text style={styles.date}>
+              {formatDate(item.transactionDate)}
+            </Text>
+          </View>
         </View>
 
-        <Dropdown>
-          <Dropdown.Trigger style={styles.trigger}>
-            <Ionicons name="ellipsis-horizontal" size={20} color="#fff" />
-          </Dropdown.Trigger>
+        <View style={styles.right}>
+          <Dropdown>
+            <Dropdown.Trigger style={styles.trigger}>
+              <Ionicons name="ellipsis-horizontal" size={18} color={theme.colors.text} />
+            </Dropdown.Trigger>
 
-          <Dropdown.Content style={styles.menu}>
-            <Dropdown.Item onPress={handleEdit}>
-              <Text style={styles.itemText}>Editar</Text>
-              <Ionicons name="pencil" size={16} color="#111" />
-            </Dropdown.Item>
+            <Dropdown.Content style={styles.menu}>
+              <Dropdown.Item onPress={handleEdit}>
+                <Text style={styles.itemText}>Editar</Text>
+                <Ionicons name="pencil" size={16} color={theme.colors.foreground}/>
+              </Dropdown.Item>
 
-            <Dropdown.Item onPress={handleDelete}>
-              <Text style={[styles.itemText, styles.destructive]}>
-                Deletar
-              </Text>
-              <Ionicons name="trash-outline" size={16} color="#dc2626" />
-            </Dropdown.Item>
-          </Dropdown.Content>
-        </Dropdown>
+              <Dropdown.Item onPress={handleDelete}>
+                <Text style={[styles.itemText, styles.destructive]}>
+                  Deletar
+                </Text>
+                <Ionicons name="trash" size={16} color={theme.colors.destructive} />
+              </Dropdown.Item>
+            </Dropdown.Content>
+          </Dropdown>
+
+          <Text
+            style={[
+              styles.amount,
+              { color: getTypeColor(item.type) },
+            ]}
+          >
+            {item.type === "INCOME" ? "+" : "−"} {formatAmount(item.amount)}
+          </Text>
+        </View>
       </View>
-    </View>
+
+      <AppModal
+        visible={modal.visible}
+        onClose={() => setModal(MODAL_HIDDEN)}
+        variant={modal.variant}
+        title={modal.title}
+        description={modal.description}
+        buttons={modal.buttons}
+      />
+    </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: ReturnType<typeof useAppTheme>) => 
+StyleSheet.create({
   card: {
-    width: "100%",
     borderRadius: 20,
-    padding: 16,
-    backgroundColor: "#1A0F2E",
-    shadowColor: "#000",
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 4,
+    padding: 18,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.glass,
+    overflow: "hidden",
   },
 
-  header: {
+  cardPressed: {
+    transform: [{ scale: 0.98 }],
+    opacity: 0.9,
+  },
+
+  typeIndicator: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+    borderTopLeftRadius: 20,
+    borderBottomLeftRadius: 20,
+  },
+
+  container: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+  },
+
+  iconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  content: {
+    flex: 1,
+    gap: 2,
   },
 
   title: {
     fontSize: 16,
     fontWeight: "600",
-  },
-
-  amount: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#fff",
-    marginTop: 4,
+    color: theme.colors.text,
   },
 
   subtitle: {
     fontSize: 13,
-    color: "rgba(255,255,255,0.6)",
+    color: theme.colors.textSecondary,
+  },
+
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
     marginTop: 4,
   },
 
   date: {
     fontSize: 12,
-    color: "rgba(255,255,255,0.4)",
-    marginTop: 4,
+    color: theme.colors.textSecondary,
+  },
+
+  right: {
+    alignItems: "flex-end",
+    gap: 6,
+  },
+
+  amount: {
+    fontSize: 18,
+    fontWeight: "800",
   },
 
   trigger: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.08)",
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: theme.colors.glass,
     justifyContent: "center",
     alignItems: "center",
   },
 
   menu: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: theme.colors.surface,
     borderRadius: 14,
     paddingVertical: 6,
   },
 
   itemText: {
     fontSize: 15,
-    color: "#111",
+    color: theme.colors.foreground,
     fontWeight: "500",
   },
 
   destructive: {
-    color: "#FF4D4D",
+    color: theme.colors.destructive,
   },
 });
 

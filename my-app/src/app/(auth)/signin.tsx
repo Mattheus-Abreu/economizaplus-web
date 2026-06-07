@@ -2,27 +2,30 @@ import { api } from "@/api/api";
 import Button from "@/components/Button";
 import Input from "@/components/inputs/Input";
 import Logo from "@/components/Logo";
+import AppModal, { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
 import Screen from "@/components/Screen";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import useAuth from "@/hooks/useAuth";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import * as Google from "expo-auth-session/providers/google";
 import { Link } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    Text,
-    View,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
-import signinStyle from "../../styles/signinStyle";
-import theme from "../themes/theme";
 
 function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { signIn } = useAuth();
+  const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
+  const theme = useAppTheme();
+  const styles = createStyles(theme);
 
   const redirectUri = "https://auth.expo.io/@rdavila_mesquita/my-app";
 
@@ -43,18 +46,25 @@ function SignInPage() {
 
       const idToken = response.authentication?.idToken;
       if (!idToken) {
-        Alert.alert("Erro", "Não foi possível obter o token do Google");
+        setModal({
+          visible: true,
+          variant: "warning",
+          title: "Erro",
+          description: "Erro ao autenticar com Google",
+        });
         return;
       }
 
       try {
         const res = await api.post("/api/login/google", { idToken });
-        signIn(res.data.token);
+        signIn(res.data.token, res.data.user);
       } catch (error: any) {
-        Alert.alert(
-          "Erro",
-          error.response?.data?.error || "Erro ao autenticar com Google",
-        );
+        setModal({
+          visible: true,
+          variant: "warning",
+          title: "Erro",
+          description: "Erro ao autenticar com Google",
+        })
       }
     }
 
@@ -63,28 +73,37 @@ function SignInPage() {
 
   async function handleSignIn() {
     if (!email.trim() || !password.trim()) {
-      return Alert.alert("Entrar", "Preencha e-mail e senha para entrar!");
+      return setModal({
+        visible: true,
+        variant: "warning",
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha todos os campos para continuar",
+      })
     }
     try {
       const response = await api.post("/api/login", {
         email,
         password,
       });
-      signIn(response.data.token);
+      signIn(response.data.token, response.data.user);
     } catch (error: any) {
       console.log(error.response?.data);
-      Alert.alert(
-        "Erro",
-        error.response?.data.message || "erro ao fazer login!",
-      );
+      setModal({
+        visible: true,
+        variant: "warning",
+        title: "Erro",
+        description: error.response?.data.message,
+      })
     }
   }
   async function handleForgotPassword() {
     if (!email.trim()) {
-      return Alert.alert(
-        "Esqueci minha senha",
-        "Informe seu e-mail para recuperar a senha!",
-      );
+      return setModal({
+        visible: true,
+        variant: "warning",
+        title: "Esqueci minha senha",
+        description: "Por favor, informe seu email para recuperar sua senha",
+      })
     }
   }
 
@@ -93,29 +112,29 @@ function SignInPage() {
       style={{ flex: 1 }}
       behavior={Platform.select({ ios: "padding", android: "padding" })}
     >
-      <Screen style={signinStyle.screen}>
+      <Screen style={styles.screen}>
         <ScrollView
           contentContainerStyle={{ flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={signinStyle.header}>
-            <View style={signinStyle.logoArea}>
+          <View style={styles.header}>
+            <View style={styles.logoArea}>
               <Logo size="lg" />
             </View>
-            <Text style={signinStyle.title}>Bem-vindo de volta</Text>
-            <Text style={signinStyle.subtitle}>
+            <Text style={styles.title}>Bem-vindo de volta</Text>
+            <Text style={styles.subtitle}>
               Entre na sua conta para continuar
             </Text>
           </View>
 
-          <View style={signinStyle.form}>
-            <View style={signinStyle.field}>
-              <Text style={signinStyle.fieldLabel}>email</Text>
+          <View style={styles.form}>
+            <View style={styles.field}>
+              <Text style={styles.fieldLabel}>email</Text>
               <View
                 style={[
-                  signinStyle.fieldInput,
-                  email.length > 0 && signinStyle.fieldInputActive,
+                  styles.fieldInput,
+                  email.length > 0 && styles.fieldInputActive,
                 ]}
               >
                 <FontAwesome
@@ -124,7 +143,7 @@ function SignInPage() {
                   color={email.length > 0 ? theme.colors.primary : "#94A3B8"}
                 />
                 <Input
-                  style={signinStyle.inlineInput}
+                  style={styles.inlineInput}
                   placeholder="Ex.: fulano@example.com"
                   placeholderTextColor={theme.colors.textSecondary}
                   keyboardType="email-address"
@@ -133,12 +152,12 @@ function SignInPage() {
                 />
               </View>
             </View>
-            <View style={signinStyle.field}>
-              <Text style={signinStyle.fieldLabel}>senha</Text>
+            <View style={styles.field}>
+              <Text style={styles.fieldLabel}>senha</Text>
               <View
                 style={[
-                  signinStyle.fieldInput,
-                  password.length > 0 && signinStyle.fieldInputActive,
+                  styles.fieldInput,
+                  password.length > 0 && styles.fieldInputActive,
                 ]}
               >
                 <Ionicons
@@ -147,7 +166,7 @@ function SignInPage() {
                   color={password.length > 0 ? theme.colors.primary : "#94A3B8"}
                 />
                 <Input
-                  style={signinStyle.inlineInput}
+                  style={styles.inlineInput}
                   placeholder="Senha"
                   placeholderTextColor={theme.colors.textSecondary}
                   secureTextEntry
@@ -157,7 +176,7 @@ function SignInPage() {
               </View>
             </View>
             <Text
-              style={signinStyle.forgotPassword}
+              style={styles.forgotPassword}
               onPress={handleForgotPassword}
             >
               Esqueci minha senha
@@ -165,31 +184,168 @@ function SignInPage() {
             <Button label="Entrar" onPress={handleSignIn} />
           </View>
 
-          <View style={signinStyle.dividerRow}>
-            <View style={signinStyle.divider} />
-            <Text style={signinStyle.dividerLabel}>ou</Text>
-            <View style={signinStyle.divider} />
+          <View style={styles.dividerRow}>
+            <View style={styles.divider} />
+            <Text style={styles.dividerLabel}>ou</Text>
+            <View style={styles.divider} />
           </View>
 
           <Button
             label="Entrar com Google"
             onPress={handleGoogleSignin}
-            style={signinStyle.googleButton}
+            style={styles.googleButton}
             textStyle={{ color: "#000" }}
           >
             <FontAwesome name="google" size={24} color="black" />
           </Button>
 
-          <Text style={signinStyle.footerText}>
+          <Text style={styles.footerText}>
             Não tem conta?{" "}
-            <Link href="/signup" style={signinStyle.footerLink}>
+            <Link href="/signup" style={styles.footerLink}>
               Cadastre-se aqui
             </Link>
           </Text>
         </ScrollView>
+        <AppModal
+        visible={modal.visible}
+        onClose={() => setModal(MODAL_HIDDEN)}
+        variant={modal.variant}
+        title={modal.title}
+        description={modal.description}
+        buttons={modal.buttons}
+        />
       </Screen>
     </KeyboardAvoidingView>
   );
 }
+const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
+  StyleSheet.create({
+    screen: {
+    padding: 24,
+    justifyContent: "center",
+  },
+  logoArea: {
+    alignItems: "center",
+    marginBottom: 36,
+  },
+  logo:{
+    paddingTop: 20,
+    paddingBottom: 20
+  },
+  header:{
+    paddingTop: 100,
+    paddingBottom: 30,
+    justifyContent: "center",
+    alignItems:"center"
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: theme.colors.text,
+    lineHeight: 34,
+  },
+  subtitle:{
+    fontSize: theme.fontSize.text,
+    fontWeight: 400,
+    color: theme.colors.textSecondary
+  },
+  orText: {
+    textAlign: "center",
+    padding: 12,
+    fontSize: theme.fontSize.text,
+    fontWeight: 400,
+    color: theme.colors.text,
+  },
+  illustration: {
+    resizeMode: "contain",
+    marginTop: 62,
+  },
+  form: {
+    marginTop: 24,
+    gap: 16,
+  },
+  field: {
+    gap: 6,
+  },
+  fieldLabel: {
+    fontSize: 11,
+    fontWeight: "500",
+    color: theme.colors.textSecondary,
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    paddingLeft: 2,
+  },
+  fieldInput: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderRadius: 14,
+    height: 54,
+    paddingHorizontal: 16,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    borderWidth: 0.5,
+    borderColor: "rgba(255,255,255,0.1)",
+  },
+  fieldInputActive: {
+    borderColor: theme.colors.primary,
+    backgroundColor: "rgba(124,58,237,0.06)",
+  },
+  inlineInput: {
+    flex: 1,
+    height: 54,
+    backgroundColor: "transparent",
+    borderWidth: 0,
+    borderRadius: 0,
+    paddingHorizontal: 0,
+  },
+  googleButton: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 14,
+    width: "100%",
+    height: 54,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 16,
+    fontWeight: 800,
+  },
+  forgotPassword: {
+    fontSize: 12,
+    textAlign: "right",
+    color: theme.colors.textSecondary,
+    marginBottom: 20,
+  },
+  footerText: {
+    textAlign: "center",
+    marginTop: 24,
+    color: theme.colors.textSecondary,
+  },
+  footerLink: {
+    color: theme.colors.primary,
+    fontWeight: 700,
+  },
+    dividerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 24,
+    marginTop: 16,
+    marginBottom: 16,
+    gap: 12,
+  },
+  divider: {
+    flex: 1,
+    height: 0.5,
+    backgroundColor: "rgba(255,255,255,0.08)",
+  },
+  dividerLabel: {
+    fontSize: 11,
+    fontWeight: "500",
+    color: theme.colors.textSecondary,
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+  },
+  })
 
 export default SignInPage;
