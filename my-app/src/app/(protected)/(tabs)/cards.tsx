@@ -1,18 +1,3 @@
-<<<<<<< HEAD
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
-import { GestureHandlerRootView} from "react-native-gesture-handler";
-import { StatusBar } from "expo-status-bar";
-import { useState, useEffect, useCallback } from "react";
-import { BlurCarousel } from "@/components/molecules/blur-carousel";
-import BancoIcon from "@/components/iconsBank/BankIcons";
-import  theme  from "@/app/themes/theme";
-import { useRouter } from "expo-router";
-import { FontAwesome } from "@expo/vector-icons";
-import { TouchableOpacity } from "react-native";
-import { isBancoNome } from "@/utils/banco";
-import { getCards } from "@/services/cardService";
-//import { linearGradient } from "expo-linear-gradient";
-=======
 import { BlurCarousel } from "@/components/molecules/blur-carousel";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import BancoIcon from "@/services/apiBanco";
@@ -21,9 +6,8 @@ import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useState } from "react";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
->>>>>>> 42f8d6f0e518dbe868e58a0dd48137161c5e06d7
 
 type CardItem = {
   id: string;
@@ -39,92 +23,6 @@ type CardItem = {
   }>;
 };
 
-<<<<<<< HEAD
-const dataBackgroundColors = {
-  nubank: {
-    fundo: '#820AD1',
-  },
-  cora: {
-    fundo: '#FE3E6D',
-  },
-  itau: {
-    fundo: '#EC7000',
-  },
-  inter: {
-    fundo: '#FF7A00',
-  },
-  bancodobrasil: {
-    fundo: '#F9DD16',
-  },
-  bradesco: {
-    fundo: '#CC092F',
-  },
-  santander: {
-    fundo: '#EC0000',
-  },
-  caixa: {
-    fundo: '#0066A1',
-  },
-  btg: {
-    fundo: '#001E62',
-  },
-  xp: {
-    fundo: '#ffffff',
-  },
-  infinitepay: {
-    fundo: '#171527',
-  },
-  picpay: {
-    fundo: '#21C25E',
-  },
-  mercadopago: {
-    fundo: '#333333',
-  },
-  pagbank: {
-    fundo: '#42A936',
-  },
-  c6: {
-    fundo: '#121212',
-  },
-  digio: {
-    fundo: '#00275C',
-  },
-  sicoob: {
-    fundo: '#003B43',
-  },
-  neon: {
-    fundo: '#161C3E',
-  },
-  pan: {
-    fundo: '#FFFFFF',
-  },
-  safra: {
-    fundo: '#151D43',
-  },
-  wise: {
-    fundo: '#9FE870',
-  },
-  paypal: {
-    fundo: '#ffffff',
-  },
-  stripe: {
-    fundo: '#635BFF',
-  },
-  stone: {
-    fundo: '#ffffff',
-  },
-  next: {
-    fundo: '#00FF5F',
-  },
-  original: {
-    fundo: '#00A857',
-  },
-  sicredi: {
-    fundo: '#ffffff',
-  }
-};
-=======
->>>>>>> 42f8d6f0e518dbe868e58a0dd48137161c5e06d7
 
 const DATA: CardItem[] = [
   {
@@ -175,10 +73,10 @@ const DATA: CardItem[] = [
   },
 ];
 
-export default function App() {
+export default function cardPage() {
   const [cards, setCards] = useState<CardItem[]>(DATA);
   const [currentCard, setCurrentCard] = useState<CardItem | null>(DATA[0]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const theme = useAppTheme();
   const styles = createStyles(theme);
@@ -188,63 +86,26 @@ export default function App() {
     return BANK_COLORS[key] ?? "#ec0192";
   };
 
-<<<<<<< HEAD
-  function getBancoNomeSafe(title: string) {
-    return isBancoNome(title) ? title : "nubank";
-  }
-
   const formatCurrency = (value?: number | string) => {
     if (value === undefined || value === null || value === "") {
       return "-";
     }
 
-    const numberValue = typeof value === "number"
-      ? value
-      : Number(String(value).replace(/[^0-9,-]/g, "").replace(",", "."));
+    const numericValue =
+      typeof value === "string"
+        ? parseFloat(value.replace(/\s/g, "").replace(/,/g, ".").replace(/[^0-9.-]/g, ""))
+        : value;
 
-    if (Number.isNaN(numberValue)) {
+    if (numericValue === undefined || numericValue === null || Number.isNaN(numericValue)) {
       return "-";
     }
 
-    return numberValue.toLocaleString("pt-BR", {
+    return numericValue.toLocaleString("pt-BR", {
       style: "currency",
       currency: "BRL",
     });
   };
 
-  const normalizeApiCards = (apiCards: any[]): CardItem[] => {
-    return apiCards.map((card) => ({
-      id: String(card.id ?? card._id ?? card.last4Digits ?? Math.random()),
-      title: card.name ?? card.brand ?? card.title ?? "Cartão",
-      type: card.type === "CREDIT" ? "Cartão de Crédito" : card.type === "DEBIT" ? "Cartão de Débito" : card.type ?? "Cartão",
-      lastDigits: card.last4Digits ? `**** ${card.last4Digits}` : card.lastDigits ? `**** ${card.lastDigits}` : "**** xxxx",
-      invoiceAmount: card.invoiceAmount ?? card.faturaAmount ?? card.currentInvoiceAmount ?? card.limitRemaining ?? 0,
-      CardExpiry: card.CardExpiry ?? card.expiryDate ?? card.expirationDate ?? card.validThru ?? card.dueDate ?? "--",
-      transactions: card.transactions ?? [],
-    }));
-  };
-
-  const loadCards = async () => {
-    try {
-      const apiCards = await getCards();
-      const normalizedCards = Array.isArray(apiCards) ? normalizeApiCards(apiCards) : normalizeApiCards([apiCards]);
-      setCards(normalizedCards);
-      if (normalizedCards.length > 0) {
-        setCurrentCard(normalizedCards[0]);
-      }
-    } catch (error) {
-      console.error("Erro ao carregar cartões:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadCards();
-  }, []);
-
-=======
->>>>>>> 42f8d6f0e518dbe868e58a0dd48137161c5e06d7
   const renderTransactions = () => {
     if (!currentCard || !currentCard.transactions?.length) {
       return (
@@ -311,7 +172,7 @@ export default function App() {
 
               <View style={styles.cardTop}>
                 <View style={styles.cardIcon}>
-                  <BancoIcon bankName={getBancoNomeSafe(item.title)} size={45} />
+                  <BancoIcon nome={getBancoNomeSafe(item.title) as any} tamanho={45} />
                 </View>
 
                 <View style={styles.cardBottom}>
@@ -384,7 +245,6 @@ export default function App() {
     </GestureHandlerRootView>
   );
 }
-
 const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
  StyleSheet.create({
   container: {
@@ -564,9 +424,4 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     fontSize: 12,
     fontWeight: '400',
   },
-
-
-
-
-
 });
