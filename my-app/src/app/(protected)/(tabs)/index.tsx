@@ -215,12 +215,6 @@ function Home() {
                   />
                 </View>
               )}
-              <Link 
-                href="/admin/adminPage"
-                style={{ margin: 30, alignSelf: "center", color: theme.colors.textSecondary, fontSize: theme.fontSize.title}}
-              >
-              Admin
-              </Link>
             </View>
           </ShimmerGroup>
         </ScrollView>
