@@ -4,7 +4,6 @@
     "strict": true,
     "jsx": "react-jsx",
     "baseUrl": ".",
-    "ignoreDeprecations": "6.0",
     "paths": {
       "@/*": ["./src/*"]
     }
@@ -19,8 +18,5 @@
     "expo-env.d.ts",
     "svg.d.ts"
   ],
-  "exclude": [
-    "node_modules",
-    ".expo"
-  ]
+  "exclude": ["node_modules", ".expo"]
 }
