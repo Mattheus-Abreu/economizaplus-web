@@ -231,6 +231,7 @@ function CreateTransaction() {
         description: error.message || "Ocorreu um erro ao salvar a transação."
       })
     }
+
   }
 
   return (
@@ -531,7 +532,7 @@ function CreateTransaction() {
             </View>
 
             <View style={styles.field}>
-              <Text style={styles.fieldLabel}>Categoria (opcional)</Text>
+              <Text style={styles.fieldLabel}>Categoria</Text>
               <View style={styles.typeContainer}>
                 {categories?.length === 0 ? (
                   <Text style={styles.emptyField}>Nenhuma categoria cadastrada</Text>
@@ -666,11 +667,12 @@ StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.06)",
+    backgroundColor: theme.colors.glass + "10",
     borderWidth: 0.5,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderColor: theme.colors.glass,
     alignItems: "center",
     justifyContent: "center",
+    marginTop: 4,
   },
   hero: {
     paddingHorizontal: 24,

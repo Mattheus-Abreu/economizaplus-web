@@ -1,8 +1,7 @@
-import Category from "@/types/category";
-import { createContext, use, useContext, useEffect, useState } from "react";
-import { AuthContext } from "./authContext";
 import * as categoryService from "@/services/categoryService";
-import { DEFAULT_CATEGORIES } from "@/constants/defaultCategories";
+import Category from "@/types/category";
+import { createContext, useContext, useEffect, useState } from "react";
+import { AuthContext } from "./authContext";
 
 type CategoryContextType = {
     categories: Category[] | undefined;
@@ -19,13 +18,12 @@ const CategoryContext = createContext({} as CategoryContextType);
 export function CategoryProvider({ children }: any) {
   const [userCategories, setUserCategories] = useState<Category[] | undefined>(undefined);
   const {token, isReady} = useContext(AuthContext);
-  const allCategories = userCategories ? [...DEFAULT_CATEGORIES, ...userCategories] : undefined;
-
+  const allCategories = userCategories;
+  
   async function loadCategories() {
     const data = await categoryService.loadCategorires();
-
-    const userOnly = data.filter((c: Category) => c.type !== "default");
-    setUserCategories(userOnly);
+    
+    setUserCategories(data);
   }
 
   async function addCategory(category: Omit<Category, "id">) {

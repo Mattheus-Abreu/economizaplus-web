@@ -125,7 +125,7 @@ function goalPage() {
 
       {/* Empty state */}
       {!isLoading && filteredGoals.length === 0 && (
-        <SafeAreaView style={[styles.container, { marginTop: -40 }]}>
+        <SafeAreaView style={[styles.container]}>
           <Empty>
             <EmptyHeader>
               <EmptyMedia
@@ -151,22 +151,12 @@ function goalPage() {
                   ? `Nenhuma meta encontrada para "${search}"`
                   : "Nenhuma meta cadastrada"}
               </EmptyTitle>
-              <View
-                style={{
-                  position: "absolute",
-                  bottom: -320,
-                  left: 0,
-                  gap: 15,
-                  alignItems: "center",
-                }}
-              >
+
                 <EmptyDescription>
                   {search
                     ? `Tente buscar por outro nome`
                     : "Que tal começar criando uma meta"}
                 </EmptyDescription>
-                
-              </View>
             </EmptyHeader>
           </Empty>
         </SafeAreaView>
