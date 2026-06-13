@@ -1,4 +1,4 @@
-import { api } from "../api/api";
+import { api } from "@/api/api";
 
 export async function loadCategorires() {
   const response = await api.get("/api/categories");

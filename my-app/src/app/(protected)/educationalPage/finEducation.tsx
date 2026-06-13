@@ -1,5 +1,6 @@
 import Button from "@/components/Button";
 import Checkbox from "@/components/inputs/Checkbox";
+import AppModal, { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
 import { Pagination } from "@/components/pagination/Pagination";
 import Screen from "@/components/Screen";
 import { useAppTheme } from "@/hooks/useAppTheme";
@@ -8,7 +9,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  Alert,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -71,6 +71,7 @@ function finEducation() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [displayIndex, setDisplayIndex] = useState(0);
   const [goal, setGoal] = useState<string[]>([]);
+  const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
   const router = useRouter();
   const theme = useAppTheme();
   const styles = createStyles(theme);
@@ -110,7 +111,12 @@ function finEducation() {
 
   function handleSubmit() {
     if (goal.length === 0) {
-      Alert.alert("Atenção", "Selecione pelo menos um plano para continuar!");
+      setModal({
+        visible: true,
+        variant: "error",
+        title: "Erro",
+        description: "Escolha pelo menos um objetivo."
+      })
       return;
     }
     // Passa goals nos params → IAScreen detecta e faz POST
@@ -214,6 +220,14 @@ function finEducation() {
           Pular por agora
         </Link>
       )}
+      <AppModal
+        visible={modal.visible}
+        onClose={() => setModal(MODAL_HIDDEN)}
+        variant={modal.variant}
+        title={modal.title}
+        description={modal.description}
+        buttons={modal.buttons}
+      />
     </Screen>
   );
 }
