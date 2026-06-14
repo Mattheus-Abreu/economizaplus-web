@@ -1,10 +1,12 @@
-import { api } from "@/api/api";
 import Dropdown from "@/components/dropdown";
 import AppModal, { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
 import { PayInvoiceModal } from "@/components/modal/payInvoceModal";
 import { BlurCarousel } from "@/components/molecules/blur-carousel";
 import { Shimmer } from "@/components/shimmer/Shimmer";
 import { useCard } from "@/contexts/cardContext";
+import { useCategory } from "@/contexts/categoryContext";
+import { useTransactions } from "@/contexts/transactionContext";
+import { useWallets } from "@/contexts/walletContext";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import BancoIcon from "@/services/apiBanco";
 import Card from "@/types/card";
@@ -30,6 +32,9 @@ export default function cardPage() {
   const [currentCard, setCurrentCard] = useState<Card | null>(null);
   const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
   const [payInvoiceVisible, setPayInvoiceVisible] = useState(false);
+  const { addTransaction } = useTransactions();
+  const { wallets } = useWallets();
+  const { categories } = useCategory();
   const router = useRouter();
   const theme = useAppTheme();
   const styles = createStyles(theme);
@@ -78,22 +83,10 @@ export default function cardPage() {
       .toLocaleDateString("pt-BR", { day: "numeric", month: "long" });
   };
 
-  const getComputedLimitRemaining = (card: Card) => {
-    const total = Number(card.limitTotal ?? 0);
-    if (!total) return Number(card.limitRemaining ?? 0);
-  
-    const spent = (card.transactions ?? []).reduce((acc, t) => {
-      const amount = Math.abs(Number(t.amount ?? 0));
-      return t.type === "EXPENSE" ? acc + amount : acc - amount;
-    }, 0);
-  
-    return Math.max(0, total - spent);
-  };
-
   // ── Limite usado em % ─────────────────────────────────────────────────────
   const getLimitUsedPercent = (card: Card) => {
     const total = Number(card.limitTotal ?? 0);
-    const remaining = getComputedLimitRemaining(card);
+    const remaining = Number(card.limitRemaining ?? 0);
     if (!total) return 0;
     return Math.min(100, Math.round(((total - remaining) / total) * 100));
   };
@@ -128,27 +121,36 @@ export default function cardPage() {
     setPayInvoiceVisible(true);
   }
 
-    async function handleConfirmPayment(amount: number) {
-      setPayInvoiceVisible(false);
-      try {
-        await api.patch(`/api/cards/${currentCard!.id}/pay-invoice`, { amount });
-        await loadCards();
-        setTimeout(() => setModal({
-          visible: true,
-          variant: "success",
-          title: "Fatura paga!",
-          description: `Pagamento de ${formatCurrency(amount)} registrado.`,
-        }), 300);
-      } catch (error: any) {
-        console.log("❌ Erro ao pagar fatura:", JSON.stringify(error?.response?.data ?? error?.message ?? error, null, 2));
-        setTimeout(() => setModal({
-          visible: true,
-          variant: "error",
-          title: "Erro",
-          description: "Não foi possível registrar o pagamento.",
-        }), 300);
-      }
+  async function handleConfirmPayment(amount: number, walletId: string) {
+    setPayInvoiceVisible(false);
+
+  const invoiceCategory = categories?.find((c) => c.name === "Fatura do Cartão");
+    try {
+      await addTransaction({
+        type: "EXPENSE",
+        paymentMethod: "BANK_TRANSFER",
+        walletId,
+        amount,
+        transactionDate: new Date().toISOString(),
+        description: `Fatura ${currentCard!.name} •••• ${currentCard!.last4Digits}`,
+        categoryId: invoiceCategory?.id,
+        cardId: undefined,
+      });
+    } catch (error: any) {
+      const message = error?.response?.data?.message || error?.message || "";
+      const isInsufficientBalance = message.toLowerCase().includes("saldo insuficiente");
+    
+      setTimeout(() => setModal({
+        visible: true,
+        variant: "error",
+        title: isInsufficientBalance ? "Saldo insuficiente" : "Erro",
+        description: isInsufficientBalance
+          ? "A carteira selecionada não possui saldo suficiente para pagar esse valor."
+          : "Não foi possível registrar o pagamento. Tente novamente.",
+      }), 300);
+      return;
     }
+  }
 
   function handleEditCard() {
     if (!currentCard) return;
@@ -267,14 +269,11 @@ export default function cardPage() {
               <Text style={styles.dropdownItemText}>Novo cartão</Text>
             </Dropdown.Item>
 
-          
-
             <Dropdown.Item onPress={handleRegister} style={styles.dropdownItem}>
               <Ionicons name="add-circle-outline" size={16} color={theme.colors.text} />
               <Text style={styles.dropdownItemText}>Regis. transação</Text>
             </Dropdown.Item>
 
-           
             {currentCard?.type === "CREDIT" && (
               <Dropdown.Item onPress={handlePayInvoice} style={styles.dropdownItem}>
                 <Ionicons name="cash-outline" size={16} color={theme.colors.text} />
@@ -376,17 +375,30 @@ export default function cardPage() {
         {/* Resumo do cartão atual */}
         {currentCard && (
           <View style={styles.summaryRow}>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>Limite total</Text>
-              <Text style={styles.summaryValue}>{formatCurrency(currentCard.limitTotal)}</Text>
-            </View>
-            <View style={styles.summaryDivider} />
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>Disponível</Text>
-              <Text style={[styles.summaryValue, { color: "#4ade80" }]}>
-                {formatCurrency(getComputedLimitRemaining(currentCard))}
-              </Text>
-            </View>
+            {currentCard.type === "CREDIT" ? (
+              <>
+                <View style={styles.summaryItem}>
+                  <Text style={styles.summaryLabel}>Limite total</Text>
+                  <Text style={styles.summaryValue}>{formatCurrency(currentCard.limitTotal)}</Text>
+                </View>
+                <View style={styles.summaryDivider} />
+                <View style={styles.summaryItem}>
+                <Text style={styles.summaryLabel}>Disponível</Text>
+                <Text style={[styles.summaryValue, { color: "#4ade80" }]}>
+                  {formatCurrency(Number(currentCard.limitRemaining ?? 0))}
+                </Text>
+              </View>
+              </>
+            ) : (
+              <View style={styles.summaryItem}>
+                <Text style={styles.summaryLabel}>Saldo da carteira</Text>
+                <Text style={[styles.summaryValue, { color: "#4ade80" }]}>
+                  {formatCurrency(
+                    Number(wallets?.find((w) => w.id === currentCard.walletId)?.balance ?? 0)
+                  )}
+                </Text>
+              </View>
+            )}
             <View style={styles.summaryDivider} />
             <View style={styles.summaryItem}>
               <Text style={styles.summaryLabel}>Fechamento</Text>
@@ -426,7 +438,12 @@ export default function cardPage() {
       />
       <PayInvoiceModal
         visible={payInvoiceVisible}
-        totalDue={getComputedLimitUsed(currentCard ?? { transactions: [] } as any)}
+        totalDue={
+          Math.max(
+            0,
+            Number(currentCard?.limitTotal ?? 0) - Number(currentCard?.limitRemaining ?? 0)
+          )
+        }
         onClose={() => setPayInvoiceVisible(false)}
         onConfirm={handleConfirmPayment}
       />
@@ -667,8 +684,6 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
       paddingVertical: 12,
       paddingHorizontal: 12,
       borderRadius: 8,
-      borderBottomWidth: 0.5,                     
-      borderBottomColor: theme.colors.border,
     },
     dropdownItemText: {
       fontSize: 14,
@@ -677,7 +692,7 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     },
     dropdownDivider: {
       height: 0.5,
-      backgroundColor: "rgba(255,255,255,0.08)",
+      backgroundColor: theme.colors.border,
       marginHorizontal: 8,
     },
 

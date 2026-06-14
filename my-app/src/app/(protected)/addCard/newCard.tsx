@@ -1,27 +1,27 @@
-import Dropdown from "@/components/dropdown";
+import Button from "@/components/Button";
 import Input from "@/components/inputs/Input";
 import AppModal, { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
+import Screen from "@/components/Screen";
 import { useCard } from "@/contexts/cardContext";
+import { useWallets } from "@/contexts/walletContext";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  Keyboard,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  TouchableWithoutFeedback,
   View,
 } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 
-// ─── Dados dos selects ────────────────────────────────────────────────────────
+// ─── Dados ────────────────────────────────────────────────────────────────────
+
+import Dropdown from "@/components/dropdown";
 
 const bancos = [
   { label: "Nubank", value: "nubank" },
@@ -64,7 +64,7 @@ const brandsCards = [
   { label: "Hipercard", value: "hipercard" },
 ];
 
-// ─── Componente de Select reutilizável ────────────────────────────────────────
+// ─── SelectField ──────────────────────────────────────────────────────────────
 
 type SelectOption = { label: string; value: string };
 
@@ -114,7 +114,6 @@ function SelectField({
             style={{ marginLeft: "auto" }}
           />
         </Dropdown.Trigger>
-
         <Dropdown.Content
           style={{
             backgroundColor: theme.colors.surface,
@@ -163,6 +162,7 @@ export default function newCard() {
   const router = useRouter();
   const theme = useAppTheme();
   const styles = createStyles(theme);
+  const { wallets } = useWallets();
   const { addCard, updateCard } = useCard();
   const [modal, setModal] = useState<ModalConfig>(MODAL_HIDDEN);
 
@@ -175,6 +175,7 @@ export default function newCard() {
     limitTotal?: string;
     closingDay?: string;
     dueDay?: string;
+    walletId?: string;
   }>();
 
   const isEditing = !!dataCard.id;
@@ -187,69 +188,41 @@ export default function newCard() {
   const [closingDay, setClosingDay] = useState(dataCard.closingDay || "");
   const [dueDay, setDueDay] = useState(dataCard.dueDay || "");
   const [isLoading, setIsLoading] = useState(false);
+  const [walletId, setWalletId] = useState(dataCard.walletId ?? "");
+
+  useEffect(() => {
+    if (typeCard !== "CREDIT") setLimitTotal("");
+  }, [typeCard]);
 
   const validateInputs = (): boolean => {
     if (!nameBank.trim()) {
-      setModal({
-        visible: true,
-        variant: "error",
-        title: "Erro",
-        description: "Por favor informe o nome do banco."
-      })
+      setModal({ visible: true, variant: "error", title: "Erro", description: "Por favor informe o nome do banco." });
       return false;
     }
     if (!brandBank.trim()) {
-      setModal({
-        visible: true,
-        variant: "error",
-        title: "Erro",
-        description: "Por favor informe a bandeira do cartão."
-      })
+      setModal({ visible: true, variant: "error", title: "Erro", description: "Por favor informe a bandeira do cartão." });
       return false;
     }
     if (!lastDigits.trim() || lastDigits.length !== 4 || isNaN(Number(lastDigits))) {
-      setModal({
-        visible: true,
-        variant: "error",
-        title: "Erro",
-        description: "Os últimos 4 dígitos devem ter exatamente 4 números."
-      })
+      setModal({ visible: true, variant: "error", title: "Erro", description: "Os últimos 4 dígitos devem ter exatamente 4 números." });
       return false;
     }
     if (!typeCard.trim()) {
-      setModal({
-        visible: true,
-        variant: "error",
-        title: "Erro",
-        description: "Por favor informe o tipo do cartão."
-      })
+      setModal({ visible: true, variant: "error", title: "Erro", description: "Por favor informe o tipo do cartão." });
       return false;
     }
-    if (!limitTotal.trim() || isNaN(Number(limitTotal.replace(",", ".")))) {
-      setModal({
-        visible: true,
-        variant: "error",
-        title: "Erro",
-        description: "O limite deve ser um número válido."
-      })
-      return false;
+    if (typeCard === "CREDIT") {
+      if (!limitTotal.trim() || isNaN(Number(limitTotal.replace(",", ".")))) {
+        setModal({ visible: true, variant: "error", title: "Erro", description: "O limite deve ser um número válido." });
+        return false;
+      }
     }
     if (!closingDay.trim()) {
-      setModal({
-        visible: true,
-        variant: "error",
-        title: "Erro",
-        description: "Por favor informe o dia do fechamento."
-      })
+      setModal({ visible: true, variant: "error", title: "Erro", description: "Por favor informe o dia do fechamento." });
       return false;
     }
     if (!dueDay.trim()) {
-      setModal({
-        visible: true,
-        variant: "error",
-        title: "Erro",
-        description: "Por favor informe o dia do vencimento."
-      })
+      setModal({ visible: true, variant: "error", title: "Erro", description: "Por favor informe o dia do vencimento." });
       return false;
     }
     return true;
@@ -265,10 +238,11 @@ export default function newCard() {
         brand: brandBank.trim(),
         type: typeCard as "CREDIT" | "DEBIT",
         last4Digits: lastDigits.trim(),
-        limitTotal: parseFloat(limitTotal.replace(",", ".")),
-        limitRemaining: parseFloat(limitTotal.replace(",", ".")),
+        limitTotal: typeCard === "CREDIT" ? parseFloat(limitTotal.replace(",", ".")) : 0,
+        limitRemaining: typeCard === "CREDIT" ? parseFloat(limitTotal.replace(",", ".")) : 0,
         closingDay: parseInt(closingDay, 10),
         dueDay: parseInt(dueDay, 10),
+        walletId: walletId || null, // ← adicionar
       };
 
       if (isEditing && dataCard.id) {
@@ -281,25 +255,11 @@ export default function newCard() {
         visible: true,
         variant: "success",
         title: "Sucesso",
-        description: isEditing
-          ? "Cartão atualizado com sucesso!"
-          : "Cartão adicionado com sucesso!",
-        buttons: [
-          {
-            label: "OK",
-            onPress: () => {
-              router.back();
-              setModal(MODAL_HIDDEN);
-            },
-            variant: "primary",
-          },
-        ],
+        description: isEditing ? "Cartão atualizado com sucesso!" : "Cartão adicionado com sucesso!",
+        buttons: [{ label: "OK", onPress: () => { router.back(); setModal(MODAL_HIDDEN); }, variant: "primary" }],
       });
     } catch (error: any) {
-      const isDuplicate =
-        error?.response?.status === 409 ||
-        error?.message?.toLowerCase().includes("unique");
-    
+      const isDuplicate = error?.response?.status === 409 || error?.message?.toLowerCase().includes("unique");
       setModal({
         visible: true,
         variant: "error",
@@ -307,13 +267,7 @@ export default function newCard() {
         description: isDuplicate
           ? "Já existe um cartão com esses últimos 4 dígitos cadastrado."
           : "Ocorreu um erro ao salvar o cartão. Tente novamente.",
-        buttons: [
-          {
-            label: "OK",
-            onPress: () => setModal(MODAL_HIDDEN),
-            variant: "primary",
-          },
-        ],
+        buttons: [{ label: "OK", onPress: () => setModal(MODAL_HIDDEN), variant: "primary" }],
       });
     } finally {
       setIsLoading(false);
@@ -321,33 +275,41 @@ export default function newCard() {
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{ flex: 1 }}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
-    >
-      <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-        <GestureHandlerRootView style={styles.container}>
-          <StatusBar style="light" />
-
+    <Screen style={{ padding: 0 }}>
+      <StatusBar style="light" />
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.select({ ios: "padding", android: "padding" })}
+      >
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-              <FontAwesome name="chevron-left" size={16} color={theme.colors.textSecondary} />
+              <FontAwesome name="arrow-left" size={16} color={theme.colors.textSecondary} />
             </TouchableOpacity>
           </View>
 
-          <View style={styles.titleContainer}>
-            <Text style={styles.title}>
-              {isEditing ? "Editar Cartão" : "Novo Cartão"}
+          {/* Hero */}
+          <View style={styles.hero}>
+            <Text style={styles.heroLabel}>
+              {isEditing ? "Editar cartão" : "Novo cartão"}
+            </Text>
+            <Text style={styles.heroTitle}>
+              {isEditing ? "Edite seu\ncartão" : "Adicione um\nnovo cartão"}
+            </Text>
+            <Text style={styles.heroSub}>
+              {isEditing
+                ? "Atualize as informações do seu cartão"
+                : "Preencha os dados do seu cartão bancário"}
             </Text>
           </View>
 
-          <ScrollView
-            style={styles.form}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{ paddingBottom: 24 }}
-          >
+          {/* Form */}
+          <View style={styles.form}>
             <SelectField
               label="Banco"
               placeholder="Selecione um banco"
@@ -371,10 +333,11 @@ export default function newCard() {
             <View style={styles.field}>
               <Text style={styles.fieldLabel}>Últimos 4 dígitos</Text>
               <View style={[styles.fieldInput, lastDigits.length > 0 && styles.fieldInputActive]}>
-                <Ionicons name="card" size={20} color={theme.colors.textSecondary} />
+                <Ionicons name="card" size={18} color={lastDigits.length > 0 ? theme.colors.primary : "#94A3B8"} />
                 <Input
                   style={styles.inlineInput}
                   placeholder="Digite os últimos 4 dígitos"
+                  placeholderTextColor={theme.colors.textSecondary}
                   value={lastDigits}
                   onChangeText={(text) => setLastDigits(text.replace(/\D/g, "").slice(0, 4))}
                   keyboardType="numeric"
@@ -383,36 +346,72 @@ export default function newCard() {
               </View>
             </View>
 
-            <SelectField
-              label="Tipo do cartão"
-              placeholder="Selecione o tipo"
-              options={typesCards}
-              value={typeCard}
-              onChange={setTypeCard}
-              icon={<Ionicons name="card-outline" size={20} color={theme.colors.textSecondary} />}
-              styles={styles}
-              theme={theme}
-            />
-
             <View style={styles.field}>
-              <Text style={styles.fieldLabel}>Limite do cartão</Text>
-              <View style={[styles.fieldInput, limitTotal.length > 0 && styles.fieldInputActive]}>
-                <Ionicons name="cash-outline" size={20} color={theme.colors.textSecondary} />
-                <Input
-                  style={styles.inlineInput}
-                  placeholder="Digite o limite do seu cartão"
-                  placeholderTextColor={theme.colors.textSecondary}
-                  value={limitTotal}
-                  onChangeText={(text) => setLimitTotal(text.replace(/[^0-9,]/g, ""))}
-                  keyboardType="numeric"
-                />
+              <Text style={styles.fieldLabel}>Tipo do cartão</Text>
+              <View style={styles.typeContainer}>
+                {typesCards.map((option) => (
+                  <TouchableOpacity
+                    key={option.value}
+                    onPress={() => setTypeCard(typeCard === option.value ? "" : option.value)}
+                    style={[
+                      styles.typeButton,
+                      typeCard === option.value && styles.typeButtonActive,
+                    ]}
+                  >
+                    <Text style={{ color: typeCard === option.value ? "#fff" : theme.colors.text }}>
+                      {option.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               </View>
             </View>
 
             <View style={styles.field}>
+              <Text style={styles.fieldLabel}>Escolha uma carteira</Text>
+              <View style={styles.typeContainer}>
+                {(wallets ?? []).length === 0 ? (
+                  <Text style={styles.emptyField}>Nenhuma carteira cadastrada</Text>
+                ) : (
+                  (wallets ?? []).map((w) => (
+                    <TouchableOpacity
+                      key={w.id}
+                      onPress={() => setWalletId(w.id)}
+                      style={[
+                        styles.typeButton,
+                        walletId === w.id && styles.typeButtonActive,
+                      ]}
+                    >
+                      <Text style={{ color: walletId === w.id ? "#fff" : theme.colors.text }}>
+                        {w.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))
+                )}
+              </View>
+            </View>
+
+            {typeCard === "CREDIT" && (
+              <View style={styles.field}>
+                <Text style={styles.fieldLabel}>Limite do cartão</Text>
+                <View style={[styles.fieldInput, limitTotal.length > 0 && styles.fieldInputActive]}>
+                  <Ionicons name="cash-outline" size={18} color={limitTotal.length > 0 ? theme.colors.primary : "#94A3B8"} />
+                  <Text style={styles.currencyPrefix}>R$</Text>
+                  <Input
+                    style={[styles.inlineInput, styles.amountInput]}
+                    placeholder="0"
+                    placeholderTextColor={theme.colors.textSecondary}
+                    value={limitTotal}
+                    onChangeText={(text) => setLimitTotal(text.replace(/[^0-9,]/g, ""))}
+                    keyboardType="numeric"
+                  />
+                </View>
+              </View>
+            )}
+
+            <View style={styles.field}>
               <Text style={styles.fieldLabel}>Dia de fechamento</Text>
               <View style={[styles.fieldInput, closingDay.length > 0 && styles.fieldInputActive]}>
-                <Ionicons name="calendar-outline" size={20} color={theme.colors.textSecondary} />
+                <Ionicons name="calendar-outline" size={18} color={closingDay.length > 0 ? theme.colors.primary : "#94A3B8"} />
                 <Input
                   style={styles.inlineInput}
                   placeholder="Ex: 05"
@@ -428,7 +427,7 @@ export default function newCard() {
             <View style={styles.field}>
               <Text style={styles.fieldLabel}>Dia de vencimento</Text>
               <View style={[styles.fieldInput, dueDay.length > 0 && styles.fieldInputActive]}>
-                <Ionicons name="calendar" size={20} color={theme.colors.textSecondary} />
+                <Ionicons name="calendar" size={18} color={dueDay.length > 0 ? theme.colors.primary : "#94A3B8"} />
                 <Input
                   style={styles.inlineInput}
                   placeholder="Ex: 10"
@@ -440,32 +439,18 @@ export default function newCard() {
                 />
               </View>
             </View>
-          </ScrollView>
+          </View>
 
-          <View style={styles.save}>
-            <Pressable
-              style={({ pressed }) => [
-                styles.submitBtn,
-                pressed && styles.submitBtnPressed,
-                isLoading && styles.submitBtnLoading,
-              ]}
+          <View style={styles.cta}>
+            <Button
+              label={isEditing ? "Atualizar cartão" : "Adicionar cartão"}
               onPress={saveCard}
               disabled={isLoading}
-            >
-              {isLoading ? (
-                <Ionicons name="hourglass" size={20} color="#fff" />
-              ) : (
-                <>
-                  <Text style={styles.submitText}>
-                    {isEditing ? "Atualizar cartão" : "Adicionar novo cartão"}
-                  </Text>
-                  <Ionicons name="arrow-forward" size={18} color="#fff" />
-                </>
-              )}
-            </Pressable>
+            />
           </View>
-        </GestureHandlerRootView>
-      </TouchableWithoutFeedback>
+        </ScrollView>
+      </KeyboardAvoidingView>
+
       <AppModal
         visible={modal.visible}
         onClose={() => setModal(MODAL_HIDDEN)}
@@ -474,7 +459,7 @@ export default function newCard() {
         description={modal.description}
         buttons={modal.buttons}
       />
-    </KeyboardAvoidingView>
+    </Screen>
   );
 }
 
@@ -482,14 +467,10 @@ export default function newCard() {
 
 const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
   StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
-    },
     header: {
       paddingTop: 56,
       paddingHorizontal: 24,
-      paddingBottom: 24,
+      paddingBottom: 4,
     },
     backBtn: {
       width: 40,
@@ -502,30 +483,45 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
       justifyContent: "center",
       marginTop: 4,
     },
-    titleContainer: {
+    hero: {
       paddingHorizontal: 24,
-      marginBottom: 16,
+      paddingTop: 24,
+      paddingBottom: 28,
     },
-    title: {
-      fontSize: 24,
+    heroLabel: {
+      fontSize: 11,
+      fontWeight: "600",
+      color: theme.colors.primary,
+      letterSpacing: 1.4,
+      textTransform: "uppercase",
+      marginBottom: 8,
+    },
+    heroTitle: {
+      fontSize: 28,
       fontWeight: "700",
       color: theme.colors.text,
+      lineHeight: 34,
+    },
+    heroSub: {
+      fontSize: 13,
+      color: theme.colors.textSecondary,
+      marginTop: 8,
+      lineHeight: 18,
     },
     form: {
       paddingHorizontal: 24,
+      gap: 16,
     },
     field: {
       gap: 6,
-      marginBottom: 12,
     },
     fieldLabel: {
-      fontSize: 13,
-      fontWeight: "600",
+      fontSize: 11,
+      fontWeight: "500",
       color: theme.colors.textSecondary,
       letterSpacing: 0.8,
       textTransform: "uppercase",
-      paddingLeft: 5,
-      paddingTop: 7,
+      paddingLeft: 2,
     },
     fieldInput: {
       flexDirection: "row",
@@ -542,18 +538,44 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
       borderColor: theme.colors.primary,
       backgroundColor: "rgba(124,58,237,0.06)",
     },
+    typeContainer: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 10,
+    },
+    typeButton: {
+      padding: 10,
+      borderRadius: 10,
+      borderWidth: 1.5,
+      borderColor: theme.colors.glass,
+      backgroundColor: theme.colors.surface,
+    },
+    typeButtonActive: {
+      backgroundColor: theme.colors.primary,
+      borderColor: theme.colors.primary,
+    },
+    emptyField: {
+      color: theme.colors.textSecondary,
+      padding: 10,
+      borderRadius: 10,
+      borderWidth: 1.5,
+      borderColor: theme.colors.glass,
+      backgroundColor: theme.colors.surface,
+    },
     dropdownText: {
       flex: 1,
-      fontSize: 12,
+      fontSize: 14,
       color: theme.colors.text,
     },
     dropdownItem: {
       paddingVertical: 12,
       paddingHorizontal: 12,
       borderRadius: 8,
+      borderBottomWidth: 0.5,                     
+      borderBottomColor: theme.colors.border,
     },
     dropdownItemActive: {
-      backgroundColor: "rgba(124,58,237,0.15)",
+      backgroundColor: theme.colors.surface,
     },
     dropdownItemText: {
       fontSize: 14,
@@ -566,37 +588,23 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     inlineInput: {
       flex: 1,
       height: 54,
+      backgroundColor: "transparent",
       borderWidth: 0,
       borderRadius: 0,
-      paddingLeft: 0,
-      color: theme.colors.text,
-      fontSize: 12,
+      paddingHorizontal: 0,
     },
-    save: {
+    currencyPrefix: {
+      fontSize: 15,
+      color: theme.colors.textSecondary,
+      flexShrink: 0,
+    },
+    amountInput: {
+      fontSize: 18,
+      fontWeight: "600",
+    },
+    cta: {
       paddingHorizontal: 24,
       paddingTop: 20,
-      paddingBottom: 55,
-    },
-    submitBtn: {
-      width: "100%",
-      height: 54,
-      backgroundColor: theme.colors.primary,
-      borderRadius: 16,
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 8,
-    },
-    submitBtnPressed: {
-      opacity: 0.85,
-      transform: [{ scale: 0.98 }],
-    },
-    submitText: {
-      fontSize: 16,
-      fontWeight: "600",
-      color: "#fff",
-    },
-    submitBtnLoading: {
-      backgroundColor: theme.colors.primary + "80",
+      paddingBottom: 32,
     },
   });
