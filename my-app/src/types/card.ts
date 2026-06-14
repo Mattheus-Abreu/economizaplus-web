@@ -20,6 +20,7 @@ type Card = {
   closingDay: number;
   type: CardType;
   transactions?: CardTransaction[];
+  walletId: string | null;
 };
 
 export default Card;

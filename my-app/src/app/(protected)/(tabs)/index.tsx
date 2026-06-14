@@ -44,9 +44,9 @@ function Home() {
     InterBold: require("@/assets/fonts/Inter-Bold.otf"),
   });
 
-  const filteredCategories = (categories ?? []).filter(
-    (category) => category.type === "default"
-  );
+  const filteredCategories = (categories ?? [])
+  .filter((category) => category.type === "default")
+  .slice(0, 7);
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
