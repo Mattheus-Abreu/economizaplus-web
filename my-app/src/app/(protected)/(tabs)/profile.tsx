@@ -1,3 +1,4 @@
+import { api } from "@/api/api";
 import AppModal, { MODAL_HIDDEN, ModalConfig } from "@/components/modal/modal";
 import Screen from "@/components/Screen";
 import { useTheme } from "@/components/theme-switch/hooks";
@@ -109,7 +110,7 @@ function profile() {
   const gearRef = useRef<View>(null);
   const pendingTheme = useRef<{ touchX: number; touchY: number } | null>(null);
 
-  const { user } = useAuth();
+  const { user, updateUserPlan } = useAuth();
 
   const memberSince = user?.createdAt
     ? new Date(user.createdAt).toLocaleDateString("pt-BR", { month: "2-digit", year: "numeric" }).replace("/", ".")
@@ -158,6 +159,41 @@ function profile() {
           onPress: async () => {
             await signOut();
             setModal(MODAL_HIDDEN);
+          },
+          variant: "danger",
+        },
+      ],
+    });
+  }
+
+  function handlePlanPress() {
+    if (user?.plan !== "PREMIUM") {
+      router.push("/(protected)/checkout/checkoutScreen");
+      return;
+    }
+
+    setModal({
+      visible: true,
+      variant: "warning",
+      title: "Voltar para o Básico",
+      description: "Tem certeza que deseja cancelar o Premium e voltar para o plano Básico?",
+      buttons: [
+        {
+          label: "Cancelar",
+          onPress: () => setModal(MODAL_HIDDEN),
+          variant: "secondary",
+        },
+        {
+          label: "Reverter plano",
+          onPress: async () => {
+            try {
+              await api.patch("/api/users/plan", { plan: "BASIC" });
+              await updateUserPlan("BASIC");
+            } catch {
+              // mock: sem feedback de erro detalhado por ora
+            } finally {
+              setModal(MODAL_HIDDEN);
+            }
           },
           variant: "danger",
         },
@@ -361,9 +397,6 @@ function profile() {
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Meu perfil</Text>
           <View style={styles.headerActions}>
-            <TouchableOpacity style={styles.editBtn}>
-              <Text style={styles.editBtnText}>Editar</Text>
-            </TouchableOpacity>
             <View ref={gearRef}>
               <TouchableOpacity style={styles.iconBtn} onPress={openSettings}>
                 <Ionicons name="settings-outline" size={20} color={colors.text} />
@@ -552,7 +585,18 @@ function profile() {
           )}
 
           {/* Cartão mais usado */}
-          <View style={[styles.card, { flexDirection: "row", padding: 0 }]}>
+          <TouchableOpacity
+            style={[styles.card, { flexDirection: "row", padding: 0 }]}
+            activeOpacity={topCard ? 0.85 : 1}
+            disabled={!topCard}
+            onPress={() => {
+              if (!topCard) return;
+              router.push({
+                pathname: "/(protected)/(tabs)/cards",
+                params: { cardId: topCard.card.id },
+              });
+            }}
+          >
             <LinearGradient
               colors={topCard
                 ? [getBankColor(topCard.card.name), darken(getBankColor(topCard.card.name))]
@@ -585,7 +629,7 @@ function profile() {
               </View>
               <Text style={styles.cardSublabel}>{topCard?.purchases ?? 0} compras</Text>
             </View>
-          </View>
+          </TouchableOpacity>
 
           {/* Pagamentos próximos + Plano */}
           <View style={styles.gridRow}>
@@ -615,11 +659,15 @@ function profile() {
               )}
             </View>
 
-            <View style={[styles.card, styles.planCard]}>
-              <Ionicons name="pricetag-outline" size={32} color={colors.text} />
-              <Text style={styles.planName}>{USER.plan}</Text>
+            <TouchableOpacity
+              style={[styles.card, styles.planCard]}
+              onPress={handlePlanPress}
+              activeOpacity={0.75}
+            >
+              <Ionicons name="pricetag-outline" size={32} color={user?.plan === "PREMIUM" ? "#A855F7" : colors.text} />
+              <Text style={[styles.planName, user?.plan === "PREMIUM" && { color: "#A855F7" }]}>{USER.plan}</Text>
               <Text style={styles.cardSublabel}>Meu plano</Text>
-            </View>
+            </TouchableOpacity>
           </View>
 
         </View>
@@ -644,11 +692,6 @@ const createStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
   },
   headerTitle: { fontSize: 28, fontWeight: "700", color: colors.text },
   headerActions: { flexDirection: "row", alignItems: "center", gap: 10 },
-  editBtn: {
-    paddingHorizontal: 18, paddingVertical: 8,
-    borderRadius: 20, borderWidth: 1, borderColor: "rgba(255,255,255,0.3)",
-  },
-  editBtnText: { color: colors.text, fontSize: 14, fontWeight: "500" },
   iconBtn: {
     width: 40, height: 40, borderRadius: 20,
     backgroundColor: "rgba(255,255,255,0.08)",

@@ -12,7 +12,7 @@ import BancoIcon from "@/services/apiBanco";
 import Card from "@/types/card";
 import { BANK_COLORS, getBancoNomeSafe } from "@/utils/banco";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -38,6 +38,7 @@ export default function cardPage() {
   const router = useRouter();
   const theme = useAppTheme();
   const styles = createStyles(theme);
+  const { cardId } = useLocalSearchParams<{ cardId?: string }>();
 
   useFocusEffect(
     useCallback(() => {
@@ -47,12 +48,16 @@ export default function cardPage() {
 
   useEffect(() => {
     if (cards.length > 0) {
-      const updated = currentCard
+      // Prioriza o cartão vindo por parâmetro de rota (ex.: clique no card
+      // "Cartão + usado" do perfil), depois mantém o já selecionado, senão o primeiro.
+      const updated = cardId
+        ? cards.find((c) => c.id === cardId) ?? cards[0]
+        : currentCard
         ? cards.find((c) => c.id === currentCard.id) ?? cards[0]
         : cards[0];
       setCurrentCard(updated);
     }
-  }, [cards]);
+  }, [cards, cardId]);
 
   
 
