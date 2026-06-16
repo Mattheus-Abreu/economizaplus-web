@@ -22,6 +22,8 @@ type AuthState = {
   signUp: (token: string, user: User) => Promise<void>;
   signOut: () => Promise<void>;
   clearFirstLogin: () => Promise<void>;
+  updateUserPlan: (plan: string) => Promise<void>;
+  refreshUser: () => Promise<void>;
 };
 
 type SessionState = {
@@ -79,6 +81,29 @@ export function AuthProvider({ children }: PropsWithChildren) {
     await AsyncStorage.setItem(ONBOARDING_KEY, "true");
   }
 
+  async function updateUserPlan(plan: string) {
+    setSession((prev) => {
+      if (!prev.user) return prev;
+      const updated = { ...prev, user: { ...prev.user, plan } };
+      AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ isLoggedIn: true, token: prev.token, user: updated.user }));
+      return updated;
+    });
+  }
+
+  async function refreshUser() {
+    try {
+      const response = await api.get("/api/users/profile");
+      const updatedUser: User = response.data;
+      setSession((prev) => {
+        const next = { ...prev, user: updatedUser };
+        AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ isLoggedIn: true, token: prev.token, user: updatedUser }));
+        return next;
+      });
+    } catch {
+      // silently ignore refresh failures
+    }
+  }
+
   useEffect(() => {
     async function loadStorageState() {
       try {
@@ -132,6 +157,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
         signUp,
         signOut,
         clearFirstLogin,
+        updateUserPlan,
+        refreshUser,
       }}
     >
       {children}
